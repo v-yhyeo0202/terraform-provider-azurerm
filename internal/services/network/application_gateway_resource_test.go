@@ -930,6 +930,7 @@ func TestAccApplicationGateway_sslPolicy_disabledProtocols(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("ssl_policy.0.disabled_protocols.0").HasValue("TLSv1_0"),
 				check.That(data.ResourceName).Key("ssl_policy.0.disabled_protocols.1").HasValue("TLSv1_1"),
+				check.That(data.ResourceName).Key("ssl_policy.0.disabled_protocols.2").HasValue("TLSv1_2"),
 			),
 		},
 	})
@@ -6114,7 +6115,7 @@ resource "azurerm_application_gateway" "test" {
 
   ssl_policy {
     policy_type          = "Custom"
-    min_protocol_version = "TLSv1_2"
+    min_protocol_version = "TLSv1_1"
     cipher_suites        = ["TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_RSA_WITH_AES_128_GCM_SHA256"]
   }
 
@@ -6280,7 +6281,7 @@ resource "azurerm_application_gateway" "test" {
   }
 
   ssl_policy {
-    disabled_protocols = ["TLSv1_0", "TLSv1_1"]
+    disabled_protocols = ["TLSv1_0", "TLSv1_1", "TLSv1_2"]
   }
 
   gateway_ip_configuration {

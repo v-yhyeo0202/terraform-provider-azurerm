@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/features"
 	keyVaultValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/keyvault/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/network/parse"
 	networkValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/network/validate"
@@ -47,7 +48,7 @@ func base64EncodedStateFunc(v interface{}) string {
 }
 
 func sslProfileSchema(computed bool) *pluginsdk.Schema {
-	return &pluginsdk.Schema{
+	schema := &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
 		Optional: true,
 		MaxItems: 1,
@@ -60,8 +61,6 @@ func sslProfileSchema(computed bool) *pluginsdk.Schema {
 					Elem: &pluginsdk.Schema{
 						Type: pluginsdk.TypeString,
 						ValidateFunc: validation.StringInSlice([]string{
-							string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneZero),
-							string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneOne),
 							string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneTwo),
 							string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneThree),
 						}, false),
@@ -96,8 +95,6 @@ func sslProfileSchema(computed bool) *pluginsdk.Schema {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
 					ValidateFunc: validation.StringInSlice([]string{
-						string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneZero),
-						string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneOne),
 						string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneTwo),
 						string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneThree),
 					}, false),
@@ -105,6 +102,26 @@ func sslProfileSchema(computed bool) *pluginsdk.Schema {
 			},
 		},
 	}
+
+	if !features.FivePointOh() {
+		schema.Elem.(*pluginsdk.Resource).Schema["disabled_protocols"].Elem.(*pluginsdk.Schema).ValidateFunc = validation.StringInSlice([]string{
+			string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneZero),
+			string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneOne),
+			string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneTwo),
+			string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneThree),
+		}, false)
+		schema.Elem.(*pluginsdk.Resource).Schema["disabled_protocols"].Elem.(*pluginsdk.Schema).Deprecated = "`disabled_protocols` property values, `TLSv1_0` and `TLSv1_1` are deprecated and will be removed in v5.0 of AzureRM Provider."
+
+		schema.Elem.(*pluginsdk.Resource).Schema["min_protocol_version"].ValidateFunc = validation.StringInSlice([]string{
+			string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneZero),
+			string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneOne),
+			string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneTwo),
+			string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneThree),
+		}, false)
+		schema.Elem.(*pluginsdk.Resource).Schema["min_protocol_version"].Deprecated = "`min_protocol_version` property values, `TLSv1_0` and `TLSv1_1` are deprecated and will be removed in v5.0 of AzureRM Provider."
+	}
+
+	return schema
 }
 
 func resourceApplicationGateway() *pluginsdk.Resource {
@@ -4714,8 +4731,11 @@ func checkSslPolicy(sslPolicy []interface{}) error {
 		v := sslPolicy[0].(map[string]interface{})
 		disabledProtocols := v["disabled_protocols"].([]interface{})
 		policyType := v["policy_type"].(string)
-		if len(disabledProtocols) > 0 && policyType != "" {
-			return fmt.Errorf("setting disabled_protocols is not allowed when policy_type is defined")
+		if len(disabledProtocols) > 0 {
+			if policyType != "" {
+				return fmt.Errorf("setting disabled_protocols is not allowed when policy_type is defined")
+			}
+
 		}
 	}
 	return nil
@@ -4798,6 +4818,34 @@ func applicationGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceD
 
 		if (strings.EqualFold(tier, string(applicationgateways.ApplicationGatewayTierStandardVTwo)) || strings.EqualFold(tier, string(applicationgateways.ApplicationGatewayTierWAFVTwo))) && (capacity.(int) < 1 || capacity.(int) > 125) {
 			return fmt.Errorf("the value '%d' exceeds the maximum capacity allowed for a %q V2 SKU, the %q SKU must have a capacity value between 1 and 125", capacity, tier, tier)
+		}
+	}
+
+	if !features.FivePointOh() {
+		disabledProtocols, hasDisabledProtocols := d.GetOk("ssl_policy.0.disabled_protocols")
+
+		if hasDisabledProtocols {
+			TLSvOneZeroDisabled := false
+			TLSvOneOneDisabled := false
+
+			for _, v := range disabledProtocols.([]interface{}) {
+				switch v.(string) {
+				case string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneZero):
+					TLSvOneZeroDisabled = true
+				case string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneOne):
+					TLSvOneOneDisabled = true
+				}
+			}
+
+			if !(TLSvOneZeroDisabled && TLSvOneOneDisabled) && d.HasChange("ssl_policy.0.disabled_protocols") {
+				return fmt.Errorf("\"TLSv1_0\" and \"TLSv1_1\" are no longer supported, please add both \"TLSv1_0\" and \"TLSv1_1\" to \"disabled_protocols\" property")
+			}
+		} else {
+			minProtocolVersion, hasMinProtocolVersion := d.GetOk("ssl_policy.0.min_protocol_version")
+
+			if hasMinProtocolVersion && (minProtocolVersion.(string) == string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneZero) || minProtocolVersion.(string) == string(applicationgateways.ApplicationGatewaySslProtocolTLSvOneOne) && d.HasChange("ssl_policy.0.min_protocol_version")) {
+				return fmt.Errorf("\"TLSv1_0\" and \"TLSv1_1\" are no longer supported, please specify either \"TLSv1_2\" or \"TLSv1_3\" in \"min_protocol_version\" property")
+			}
 		}
 	}
 
