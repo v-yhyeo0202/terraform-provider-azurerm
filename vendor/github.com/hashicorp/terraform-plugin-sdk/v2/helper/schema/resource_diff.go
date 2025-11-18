@@ -594,6 +594,7 @@ func (d *ResourceDiff) getChange(key string) (getResult, getResult, bool) {
 	for p := range d.updatedKeys {
 		if childAddrOf(key, p) {
 			newValue = d.getExact(strings.Split(key, "."), "newDiff")
+			fmt.Println("getChange end d.getExact")
 			return oldValue, newValue, true
 		}
 	}
@@ -618,6 +619,7 @@ func (d *ResourceDiff) get(addr []string, source string) getResult {
 	fmt.Println("get start")
 	result, err := d.multiReader.ReadFieldMerge(addr, source)
 	if err != nil {
+		fmt.Println("get panic")
 		panic(err)
 	}
 	fmt.Println("get end")

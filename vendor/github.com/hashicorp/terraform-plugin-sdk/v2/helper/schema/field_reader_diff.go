@@ -54,12 +54,14 @@ func (r *DiffFieldReader) ReadField(address []string) (FieldReadResult, error) {
 	// for the life of this DiffFieldReader.
 	cacheKey := strings.Join(address, "|")
 	if cached, ok := r.cache[cacheKey]; ok {
+		fmt.Println("ReadField DiffFieldReader end r.cache[cacheKey]")
 		return cached.val, cached.err
 	}
 
 	schemaList := addrToSchema(address, r.Schema)
 	if len(schemaList) == 0 {
 		r.cache[cacheKey] = cachedFieldReadResult{}
+		fmt.Println("ReadField DiffFieldReader end cacheFieldReadResult")
 		return FieldReadResult{}, nil
 	}
 
@@ -99,6 +101,7 @@ func (r *DiffFieldReader) readMap(
 	// First read the map from the underlying source
 	source, err := r.Source.ReadField(address)
 	if err != nil {
+		fmt.Println("readMap end r.Source.ReadField")
 		return FieldReadResult{}, err
 	}
 	if source.Exists {
@@ -134,6 +137,7 @@ func (r *DiffFieldReader) readMap(
 	key := address[len(address)-1]
 	err = mapValuesToPrimitive(key, result, schema)
 	if err != nil {
+		fmt.Println("readMap end mapValuesToPrimitive")
 		return FieldReadResult{}, nil //nolint:nilerr // Leave legacy flatmap handling
 	}
 
@@ -153,11 +157,13 @@ func (r *DiffFieldReader) readPrimitive(
 	fmt.Println("readPrimitive start")
 	result, err := r.Source.ReadField(address)
 	if err != nil {
+		fmt.Println("readPrimitive end err")
 		return FieldReadResult{}, err
 	}
 
 	attrD, ok := r.Diff.Attributes[strings.Join(address, ".")]
 	if !ok {
+		fmt.Println("readPrimitive end !ok")
 		return result, nil
 	}
 
@@ -167,6 +173,7 @@ func (r *DiffFieldReader) readPrimitive(
 		if attrD.NewExtra != nil {
 			result.ValueProcessed = resultVal
 			if err := mapstructure.WeakDecode(attrD.NewExtra, &resultVal); err != nil {
+				fmt.Println("readPrimitive end mapstructure.WeakDecode")
 				return FieldReadResult{}, err
 			}
 		}
@@ -176,6 +183,7 @@ func (r *DiffFieldReader) readPrimitive(
 	result.Exists = true
 	result.Value, err = stringToPrimitive(resultVal, false, schema)
 	if err != nil {
+		fmt.Println("readPrimitive end stringToPrimitive")
 		return FieldReadResult{}, err
 	}
 	fmt.Println("readPrimitive end")
@@ -213,10 +221,12 @@ func (r *DiffFieldReader) readSet(
 
 		raw, err := r.ReadField(append(address, idx))
 		if err != nil {
+			fmt.Println("readSet end r.ReadField")
 			return FieldReadResult{}, err
 		}
 		if !raw.Exists {
 			// This shouldn't happen because we just verified it does exist
+			fmt.Println("readSet panic")
 			panic("missing field in set: " + k + "." + idx)
 		}
 
@@ -239,9 +249,11 @@ func (r *DiffFieldReader) readSet(
 	if !exists {
 		result, err := r.Source.ReadField(address)
 		if err != nil {
+			fmt.Println("readSet end r.Source.ReadField")
 			return FieldReadResult{}, err
 		}
 		if result.Exists {
+			fmt.Println("readSet end result.Exists")
 			return result, nil
 		}
 	}

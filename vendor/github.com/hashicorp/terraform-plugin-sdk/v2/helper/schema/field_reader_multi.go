@@ -29,12 +29,14 @@ func (r *MultiLevelFieldReader) ReadFieldExact(
 	fmt.Println("ReadFieldExact start")
 	reader, ok := r.Readers[level]
 	if !ok {
+		fmt.Println("ReadFieldExact end r.Readers")
 		return FieldReadResult{}, fmt.Errorf(
 			"Unknown reader level: %s", level)
 	}
 
 	result, err := reader.ReadField(address)
 	if err != nil {
+		fmt.Println("ReadFieldExact end reader.ReadField")
 		return FieldReadResult{}, fmt.Errorf(
 			"Error reading level %s: %s", level, err)
 	}
@@ -50,6 +52,7 @@ func (r *MultiLevelFieldReader) ReadFieldMerge(
 		if r, ok := r.Readers[l]; ok {
 			out, err := r.ReadField(address)
 			if err != nil {
+				fmt.Println("ReadFieldMerge end r.ReadField ", address)
 				return FieldReadResult{}, fmt.Errorf(
 					"Error reading level %s: %s", l, err)
 			}

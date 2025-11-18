@@ -20,6 +20,7 @@ func (r *MapFieldReader) ReadField(address []string) (FieldReadResult, error) {
 	k := strings.Join(address, ".")
 	schemaList := addrToSchema(address, r.Schema)
 	if len(schemaList) == 0 {
+		fmt.Println("ReadField addrToSchema")
 		return FieldReadResult{}, nil
 	}
 
@@ -68,12 +69,13 @@ func (r *MapFieldReader) readMap(k string, schema *Schema) (FieldReadResult, err
 				result[key] = v
 			}
 		}
-
+		fmt.Println("readMap end result[key]")
 		return true
 	})
 
 	err := mapValuesToPrimitive(k, result, schema)
 	if err != nil {
+		fmt.Println("readMap end mapValuesToPrimitive")
 		return FieldReadResult{}, nil //nolint:nilerr // Leave legacy flatmap handling
 	}
 
@@ -94,11 +96,13 @@ func (r *MapFieldReader) readPrimitive(
 	k := strings.Join(address, ".")
 	result, ok := r.Map.Access(k)
 	if !ok {
+		fmt.Println("readPrimitive end r.Map.Access")
 		return FieldReadResult{}, nil
 	}
 
 	returnVal, err := stringToPrimitive(result, false, schema)
 	if err != nil {
+		fmt.Println("readPrimitive end stringToPrimitive")
 		return FieldReadResult{}, err
 	}
 	fmt.Println("readPrimitive end")
@@ -118,6 +122,7 @@ func (r *MapFieldReader) readSet(
 	countRaw, err := r.readPrimitive(
 		append(address, "#"), &Schema{Type: TypeInt})
 	if err != nil {
+		fmt.Println("readSet end readPrimitive")
 		return FieldReadResult{}, err
 	}
 	if !countRaw.Exists {
@@ -130,6 +135,7 @@ func (r *MapFieldReader) readSet(
 
 	// If we have an empty list, then return an empty list
 	if countRaw.Computed || countRaw.Value.(int) == 0 {
+		fmt.Println("readSet end countRaw.Computed")
 		return FieldReadResult{
 			Value:    set,
 			Exists:   countRaw.Exists,
@@ -143,10 +149,12 @@ func (r *MapFieldReader) readSet(
 	countActual := make(map[string]struct{})
 	completed := r.Map.Range(func(k, _ string) bool {
 		if !strings.HasPrefix(k, prefix) {
+			fmt.Println("readSet end r.Map.Range")
 			return true
 		}
 		if strings.HasPrefix(k, prefix+"#") {
 			// Ignore the count field
+			fmt.Println("readSet end strings.HasPrefix")
 			return true
 		}
 
@@ -157,10 +165,12 @@ func (r *MapFieldReader) readSet(
 		var raw FieldReadResult
 		raw, err = r.ReadField(append(address, idx))
 		if err != nil {
+			fmt.Println("readSet end r.ReadField")
 			return false
 		}
 		if !raw.Exists {
 			// This shouldn't happen because we just verified it does exist
+			fmt.Println("readSet panic")
 			panic("missing field in set: " + k + "." + idx)
 		}
 
@@ -172,10 +182,11 @@ func (r *MapFieldReader) readSet(
 		// "ports.1", but the "state" map might have those plus "ports.2".
 		// We don't want "ports.2"
 		countActual[idx] = struct{}{}
-
+		fmt.Println("readSet end countActual[idx]")
 		return len(countActual) < countExpected
 	})
 	if !completed && err != nil {
+		fmt.Println("readSet end !completed")
 		return FieldReadResult{}, err
 	}
 	fmt.Println("readSet end")

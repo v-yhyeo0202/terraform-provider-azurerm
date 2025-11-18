@@ -183,6 +183,7 @@ func readListField(
 	// Get the number of elements in the list
 	countResult, err := r.ReadField(addrPadded)
 	if err != nil {
+		fmt.Println("readListField end r.ReadField 0")
 		return FieldReadResult{}, err
 	}
 	if !countResult.Exists {
@@ -192,6 +193,7 @@ func readListField(
 
 	// If we have an empty list, then return an empty list
 	if countResult.Computed || countResult.Value.(int) == 0 {
+		fmt.Println("readListField, countResult.Computed")
 		return FieldReadResult{
 			Value:    []interface{}{},
 			Exists:   countResult.Exists,
@@ -206,6 +208,7 @@ func readListField(
 		addrPadded[len(addrPadded)-1] = is
 		rawResult, err := r.ReadField(addrPadded)
 		if err != nil {
+			fmt.Println("readListField end r.ReadField 1")
 			return FieldReadResult{}, err
 		}
 		if !rawResult.Exists {
@@ -240,6 +243,7 @@ func readObjectField(
 		addrRead = append(addrRead, field)
 		rawResult, err := r.ReadField(addrRead)
 		if err != nil {
+			fmt.Println("readObjectField end r.ReadField")
 			return FieldReadResult{}, err
 		}
 		if rawResult.Exists {
