@@ -75,6 +75,7 @@ func (r *DiffFieldReader) ReadField(address []string) (FieldReadResult, error) {
 		res, err = r.readMap(address, schema)
 	case TypeSet:
 		res, err = r.readSet(address, schema)
+		fmt.Println("debug1 ", res)
 	case typeObject:
 		res, err = readObjectField(r, address, schema.Elem.(map[string]*Schema))
 	default:
