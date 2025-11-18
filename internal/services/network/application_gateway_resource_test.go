@@ -4225,9 +4225,8 @@ resource "azurerm_application_gateway" "test" {
       body        = ""
       status_code = ["404-500"]
     }
-    */
   }
-
+  */
   http_listener {
     name                           = local.listener_name
     frontend_ip_configuration_name = local.frontend_ip_configuration_name
