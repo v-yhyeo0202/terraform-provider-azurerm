@@ -4985,7 +4985,7 @@ func applicationGatewayProbeHash(v interface{}) int {
 		}
 		if match, ok := m["match"]; ok {
 			fmt.Println("debug11 ", match)
-			if attrs := match.([]interface{}); len(attrs) == 1 /*&& attrs[0] != nil*/ {
+			if attrs := match.([]interface{}); len(attrs) == 1 && attrs[0] != nil {
 				attr := attrs[0].(map[string]interface{})
 				if attr["body"].(string) != "" || len(attr["status_code"].([]interface{})) != 0 {
 					buf.WriteString(fmt.Sprintf("%s-%+v", attr["body"].(string), attr["status_code"].([]interface{})))
