@@ -196,24 +196,30 @@ func (s *Set) init() {
 }
 
 func (s *Set) add(item interface{}, computed bool) string {
+	fmt.Println("debug11")
 	s.once.Do(s.init)
-
+	fmt.Println("debug12")
 	code := s.hash(item)
+	fmt.Println("debug13")
 	if computed {
+		fmt.Println("debug14")
 		code = "~" + code
 		tmpCode := code
 		count := 0
+		fmt.Println("debug15")
 		for _, exists := s.m[tmpCode]; exists; _, exists = s.m[tmpCode] {
 			count++
 			tmpCode = fmt.Sprintf("%s%d", code, count)
 		}
+		fmt.Println("debug16")
 		code = tmpCode
 	}
-
+	fmt.Println("debug16")
 	if _, ok := s.m[code]; !ok {
+		fmt.Println("debug17")
 		s.m[code] = item
 	}
-
+	fmt.Println("debug18")
 	return code
 }
 

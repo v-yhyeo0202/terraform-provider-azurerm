@@ -230,8 +230,9 @@ func (r *DiffFieldReader) readSet(
 			fmt.Println("readSet panic")
 			panic("missing field in set: " + k + "." + idx)
 		}
-		fmt.Println("debug4")
+		fmt.Println("debug4 ", raw.Value)
 		set.Add(raw.Value)
+		fmt.Println("debug10")
 	}
 	fmt.Println("debug5")
 	// Determine if the set "exists". It exists if there are items or if
