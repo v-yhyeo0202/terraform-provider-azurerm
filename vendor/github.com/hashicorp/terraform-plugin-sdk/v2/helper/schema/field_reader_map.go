@@ -31,7 +31,7 @@ func (r *MapFieldReader) ReadField(address []string) (FieldReadResult, error) {
 	case TypeMap:
 		return r.readMap(k, schema)
 	case TypeSet:
-		fmt.Println("debug2")
+		fmt.Println("debug2 ", address)
 		return r.readSet(address, schema)
 	case typeObject:
 		return readObjectField(r, address, schema.Elem.(map[string]*Schema))

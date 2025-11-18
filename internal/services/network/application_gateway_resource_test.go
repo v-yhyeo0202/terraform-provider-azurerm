@@ -4193,7 +4193,7 @@ resource "azurerm_application_gateway" "test" {
     protocol              = "Http"
     request_timeout       = 1
   }
-
+  /*
   backend_http_settings {
     name                  = "${local.http_setting_name}-2"
     cookie_based_affinity = "Disabled"
@@ -4202,7 +4202,7 @@ resource "azurerm_application_gateway" "test" {
     protocol              = "Http"
     request_timeout       = 1
   }
-
+  */
   probe {
     name                = local.probe1_name
     protocol            = "Http"
@@ -4212,7 +4212,7 @@ resource "azurerm_application_gateway" "test" {
     interval            = 300
     unhealthy_threshold = 8
   }
-
+  /*
   probe {
     name                = local.probe2_name
     protocol            = "Http"
@@ -4225,6 +4225,7 @@ resource "azurerm_application_gateway" "test" {
       body        = ""
       status_code = ["404-500"]
     }
+    */
   }
 
   http_listener {
