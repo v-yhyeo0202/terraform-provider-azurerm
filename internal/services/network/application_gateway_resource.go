@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 
@@ -4829,6 +4830,38 @@ func applicationGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceD
 		}
 	}
 
+	fmt.Println("debug0 ", oldProbe, " ", newProbe)
+	fmt.Println("debug1 ", reflect.TypeOf(oldProbe))
+	fmt.Println("debug2 ", oldProbe.(*schema.Set).List())
+
+	if len(oldProbe.(*schema.Set).List()) > 0 {
+		fmt.Println("debug3 ", reflect.TypeOf(oldProbe.(*schema.Set).List()[0]))
+		fmt.Println("debug4 ", oldProbe.(*schema.Set).List()[0].(map[string]interface{}))
+		fmt.Println("debug5 ", reflect.TypeOf(oldProbe.(*schema.Set).List()[0].(map[string]interface{})["match"]))
+		fmt.Println("debug6 ", oldProbe.(*schema.Set).List()[0].(map[string]interface{})["match"])
+
+		if len(oldProbe.(*schema.Set).List()[0].(map[string]interface{})["match"].([]interface{})) > 0 {
+			fmt.Println("debug7 ", reflect.TypeOf(oldProbe.(*schema.Set).List()[0].(map[string]interface{})["match"].([]interface{})[0]))
+			fmt.Println("debug8 ", oldProbe.(*schema.Set).List()[0].(map[string]interface{})["match"].([]interface{})[0])
+			fmt.Println("debug9 ", reflect.TypeOf(oldProbe.(*schema.Set).List()[0].(map[string]interface{})["match"].([]interface{})[0].(map[string]interface{})["status_code"]))
+			fmt.Println("debug10 ", oldProbe.(*schema.Set).List()[0].(map[string]interface{})["match"].([]interface{})[0].(map[string]interface{})["status_code"])
+		}
+	}
+
+	fmt.Println("debug2 ", newProbe.(*schema.Set).List())
+
+	if len(newProbe.(*schema.Set).List()) > 0 {
+		fmt.Println("debug4 ", newProbe.(*schema.Set).List()[0].(map[string]interface{}))
+		fmt.Println("debug6 ", newProbe.(*schema.Set).List()[0].(map[string]interface{})["match"])
+
+		if len(newProbe.(*schema.Set).List()[0].(map[string]interface{})["match"].([]interface{})) > 0 {
+			fmt.Println("debug8 ", newProbe.(*schema.Set).List()[0].(map[string]interface{})["match"].([]interface{})[0])
+			fmt.Println("debug10 ", newProbe.(*schema.Set).List()[0].(map[string]interface{})["match"].([]interface{})[0].(map[string]interface{})["status_code"])
+		}
+	}
+
+	fmt.Println()
+
 	return nil
 }
 
@@ -4981,6 +5014,7 @@ func applicationGatewayProbeHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%d", v.(int)))
 		}
 		if match, ok := m["match"]; ok {
+			fmt.Println("debug11 ", match)
 			if attrs := match.([]interface{}); len(attrs) == 1 {
 				attr := attrs[0].(map[string]interface{})
 				if attr["body"].(string) != "" || len(attr["status_code"].([]interface{})) != 0 {
