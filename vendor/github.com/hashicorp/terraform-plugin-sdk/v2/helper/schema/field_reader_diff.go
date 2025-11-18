@@ -220,6 +220,7 @@ func (r *DiffFieldReader) readSet(
 		idx := parts[0]
 
 		raw, err := r.ReadField(append(address, idx))
+		fmt.Println("debug3 back2ReadSet")
 		if err != nil {
 			fmt.Println("readSet end r.ReadField")
 			return FieldReadResult{}, err
@@ -229,13 +230,14 @@ func (r *DiffFieldReader) readSet(
 			fmt.Println("readSet panic")
 			panic("missing field in set: " + k + "." + idx)
 		}
-
+		fmt.Println("debug4")
 		set.Add(raw.Value)
 	}
-
+	fmt.Println("debug5")
 	// Determine if the set "exists". It exists if there are items or if
 	// the diff explicitly wanted it empty.
 	exists := set.Len() > 0
+	fmt.Println("debug6 ", exists)
 	if !exists {
 		// We could check if the diff value is "0" here but I think the
 		// existence of "#" on its own is enough to show it existed. This
@@ -243,11 +245,14 @@ func (r *DiffFieldReader) readSet(
 		// "0" to "" breaking us (if that were to happen).
 		if _, ok := r.Diff.Attributes[prefix+"#"]; ok {
 			exists = true
+			fmt.Println("debug7")
 		}
 	}
 
 	if !exists {
+		fmt.Println("debug8")
 		result, err := r.Source.ReadField(address)
+		fmt.Println("debug9 ", result)
 		if err != nil {
 			fmt.Println("readSet end r.Source.ReadField")
 			return FieldReadResult{}, err
