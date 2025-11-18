@@ -588,6 +588,7 @@ func (d *ResourceDiff) GetRawPlan() cty.Value {
 // results from the exact levels for the new diff, then from state and diff as
 // per normal.
 func (d *ResourceDiff) getChange(key string) (getResult, getResult, bool) {
+	fmt.Println("getChange start")
 	oldValue := d.get(strings.Split(key, "."), "state")
 	var newValue getResult
 	for p := range d.updatedKeys {
@@ -597,6 +598,7 @@ func (d *ResourceDiff) getChange(key string) (getResult, getResult, bool) {
 		}
 	}
 	newValue = d.get(strings.Split(key, "."), "newDiff")
+	fmt.Println("getChange end")
 	return oldValue, newValue, false
 }
 
@@ -613,26 +615,29 @@ func (d *ResourceDiff) removed(k string) bool {
 // get performs the appropriate multi-level reader logic for ResourceDiff,
 // starting at source. Refer to newResourceDiff for the level order.
 func (d *ResourceDiff) get(addr []string, source string) getResult {
+	fmt.Println("get start")
 	result, err := d.multiReader.ReadFieldMerge(addr, source)
 	if err != nil {
 		panic(err)
 	}
-
+	fmt.Println("get end")
 	return d.finalizeResult(addr, result)
 }
 
 // getExact gets an attribute from the exact level referenced by source.
 func (d *ResourceDiff) getExact(addr []string, source string) getResult {
+	fmt.Println("getExact start")
 	result, err := d.multiReader.ReadFieldExact(addr, source)
 	if err != nil {
 		panic(err)
 	}
-
+	fmt.Println("getExact end")
 	return d.finalizeResult(addr, result)
 }
 
 // finalizeResult does some post-processing of the result produced by get and getExact.
 func (d *ResourceDiff) finalizeResult(addr []string, result FieldReadResult) getResult {
+	fmt.Println("finalizeResult start")
 	// If the result doesn't exist, then we set the value to the zero value
 	var schema *Schema
 	if schemaL := addrToSchema(addr, d.schema); len(schemaL) > 0 {
@@ -642,7 +647,7 @@ func (d *ResourceDiff) finalizeResult(addr []string, result FieldReadResult) get
 	if result.Value == nil && schema != nil {
 		result.Value = result.ValueOrZero(schema)
 	}
-
+	fmt.Println("finalizeResult end")
 	// Transform the FieldReadResult into a getResult. It might be worth
 	// merging these two structures one day.
 	return getResult{

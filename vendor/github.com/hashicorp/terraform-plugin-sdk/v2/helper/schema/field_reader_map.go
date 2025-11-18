@@ -16,6 +16,7 @@ type MapFieldReader struct {
 }
 
 func (r *MapFieldReader) ReadField(address []string) (FieldReadResult, error) {
+	fmt.Println("ReadField MapFieldReader start")
 	k := strings.Join(address, ".")
 	schemaList := addrToSchema(address, r.Schema)
 	if len(schemaList) == 0 {
@@ -25,22 +26,28 @@ func (r *MapFieldReader) ReadField(address []string) (FieldReadResult, error) {
 	schema := schemaList[len(schemaList)-1]
 	switch schema.Type {
 	case TypeBool, TypeInt, TypeFloat, TypeString:
+		fmt.Println("debug2 readPrimitive ", address)
 		return r.readPrimitive(address, schema)
 	case TypeList:
+		fmt.Println("debug2 readListField ", address)
 		return readListField(r, address)
 	case TypeMap:
+		fmt.Println("debug2 readMap ", address)
 		return r.readMap(k, schema)
 	case TypeSet:
-		fmt.Println("debug2 ", address)
+		fmt.Println("debug2 readSet ", address)
 		return r.readSet(address, schema)
 	case typeObject:
+		fmt.Println("debug2 readObjectField ", address)
 		return readObjectField(r, address, schema.Elem.(map[string]*Schema))
 	default:
+		fmt.Println("debug2 panic ", address)
 		panic(fmt.Sprintf("Unknown type: %s", schema.Type))
 	}
 }
 
 func (r *MapFieldReader) readMap(k string, schema *Schema) (FieldReadResult, error) {
+	fmt.Println("readMap start")
 	result := make(map[string]interface{})
 	resultSet := false
 
@@ -74,7 +81,7 @@ func (r *MapFieldReader) readMap(k string, schema *Schema) (FieldReadResult, err
 	if resultSet {
 		resultVal = result
 	}
-
+	fmt.Println("readMap end")
 	return FieldReadResult{
 		Value:  resultVal,
 		Exists: resultSet,
@@ -83,6 +90,7 @@ func (r *MapFieldReader) readMap(k string, schema *Schema) (FieldReadResult, err
 
 func (r *MapFieldReader) readPrimitive(
 	address []string, schema *Schema) (FieldReadResult, error) {
+	fmt.Println("readPrimitive start")
 	k := strings.Join(address, ".")
 	result, ok := r.Map.Access(k)
 	if !ok {
@@ -93,7 +101,7 @@ func (r *MapFieldReader) readPrimitive(
 	if err != nil {
 		return FieldReadResult{}, err
 	}
-
+	fmt.Println("readPrimitive end")
 	return FieldReadResult{
 		Value:  returnVal,
 		Exists: true,
@@ -102,6 +110,7 @@ func (r *MapFieldReader) readPrimitive(
 
 func (r *MapFieldReader) readSet(
 	address []string, schema *Schema) (FieldReadResult, error) {
+	fmt.Println("readSet start")
 	// copy address to ensure we don't modify the argument
 	address = append([]string(nil), address...)
 
@@ -169,7 +178,7 @@ func (r *MapFieldReader) readSet(
 	if !completed && err != nil {
 		return FieldReadResult{}, err
 	}
-
+	fmt.Println("readSet end")
 	return FieldReadResult{
 		Value:  set,
 		Exists: true,

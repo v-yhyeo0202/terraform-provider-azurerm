@@ -20,11 +20,13 @@ type MultiLevelFieldReader struct {
 }
 
 func (r *MultiLevelFieldReader) ReadField(address []string) (FieldReadResult, error) {
+	fmt.Println("ReadField MultiLevelFieldReader start")
 	return r.ReadFieldMerge(address, r.Levels[len(r.Levels)-1])
 }
 
 func (r *MultiLevelFieldReader) ReadFieldExact(
 	address []string, level string) (FieldReadResult, error) {
+	fmt.Println("ReadFieldExact start")
 	reader, ok := r.Readers[level]
 	if !ok {
 		return FieldReadResult{}, fmt.Errorf(
@@ -36,12 +38,13 @@ func (r *MultiLevelFieldReader) ReadFieldExact(
 		return FieldReadResult{}, fmt.Errorf(
 			"Error reading level %s: %s", level, err)
 	}
-
+	fmt.Println("ReadFieldExact end")
 	return result, nil
 }
 
 func (r *MultiLevelFieldReader) ReadFieldMerge(
 	address []string, level string) (FieldReadResult, error) {
+	fmt.Println("ReadFieldMerge start")
 	var result FieldReadResult
 	for _, l := range r.Levels {
 		if r, ok := r.Readers[l]; ok {
@@ -61,6 +64,6 @@ func (r *MultiLevelFieldReader) ReadFieldMerge(
 			break
 		}
 	}
-
+	fmt.Println("ReadFieldMerge end")
 	return result, nil
 }

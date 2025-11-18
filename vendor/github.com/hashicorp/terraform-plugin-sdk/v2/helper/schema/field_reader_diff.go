@@ -44,6 +44,7 @@ type cachedFieldReadResult struct {
 }
 
 func (r *DiffFieldReader) ReadField(address []string) (FieldReadResult, error) {
+	fmt.Println("ReadField DiffFieldReader start")
 	if r.cache == nil {
 		r.cache = make(map[string]cachedFieldReadResult)
 	}
@@ -85,11 +86,13 @@ func (r *DiffFieldReader) ReadField(address []string) (FieldReadResult, error) {
 		val: res,
 		err: err,
 	}
+	fmt.Println("ReadField DiffFieldReader end")
 	return res, err
 }
 
 func (r *DiffFieldReader) readMap(
 	address []string, schema *Schema) (FieldReadResult, error) {
+	fmt.Println("readMap start")
 	result := make(map[string]interface{})
 	resultSet := false
 
@@ -138,7 +141,7 @@ func (r *DiffFieldReader) readMap(
 	if resultSet {
 		resultVal = result
 	}
-
+	fmt.Println("readMap end")
 	return FieldReadResult{
 		Value:  resultVal,
 		Exists: resultSet,
@@ -147,6 +150,7 @@ func (r *DiffFieldReader) readMap(
 
 func (r *DiffFieldReader) readPrimitive(
 	address []string, schema *Schema) (FieldReadResult, error) {
+	fmt.Println("readPrimitive start")
 	result, err := r.Source.ReadField(address)
 	if err != nil {
 		return FieldReadResult{}, err
@@ -174,12 +178,13 @@ func (r *DiffFieldReader) readPrimitive(
 	if err != nil {
 		return FieldReadResult{}, err
 	}
-
+	fmt.Println("readPrimitive end")
 	return result, nil
 }
 
 func (r *DiffFieldReader) readSet(
 	address []string, schema *Schema) (FieldReadResult, error) {
+	fmt.Println("readSet start")
 	// copy address to ensure we don't modify the argument
 	address = append([]string(nil), address...)
 
@@ -240,7 +245,7 @@ func (r *DiffFieldReader) readSet(
 			return result, nil
 		}
 	}
-
+	fmt.Println("readSet end")
 	return FieldReadResult{
 		Value:  set,
 		Exists: exists,

@@ -175,6 +175,7 @@ func addrToSchema(addr []string, schemaMap map[string]*Schema) []*Schema {
 // after that point.
 func readListField(
 	r FieldReader, addr []string) (FieldReadResult, error) {
+	fmt.Println("readListField start")
 	addrPadded := make([]string, len(addr)+1)
 	copy(addrPadded, addr)
 	addrPadded[len(addrPadded)-1] = "#"
@@ -216,7 +217,7 @@ func readListField(
 
 		result[i] = rawResult.Value
 	}
-
+	fmt.Println("readListField end")
 	return FieldReadResult{
 		Value:  result,
 		Exists: true,
@@ -230,6 +231,7 @@ func readObjectField(
 	r FieldReader,
 	addr []string,
 	schema map[string]*Schema) (FieldReadResult, error) {
+	fmt.Println("readObjectField start")
 	result := make(map[string]interface{})
 	exists := false
 	for field, s := range schema {
@@ -246,7 +248,7 @@ func readObjectField(
 
 		result[field] = rawResult.ValueOrZero(s)
 	}
-
+	fmt.Println("readObjectField end")
 	return FieldReadResult{
 		Value:  result,
 		Exists: exists,
