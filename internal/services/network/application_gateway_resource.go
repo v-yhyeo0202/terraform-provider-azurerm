@@ -4838,15 +4838,17 @@ func applicationGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceD
 	fmt.Println()
 	fmt.Println()
 
-	fmt.Println("debug7 ", oldProbes.(*schema.Set).List()[0].(map[string]interface{})["match"])
-	fmt.Println()
-	fmt.Println("debug8 ", oldProbes.(*schema.Set).List()[1].(map[string]interface{})["match"])
-	fmt.Println()
-	fmt.Println("debug9 ", newProbes.(*schema.Set).List()[0].(map[string]interface{})["match"])
-	fmt.Println()
-	fmt.Println("debug10 ", newProbes.(*schema.Set).List()[1].(map[string]interface{})["match"])
-	fmt.Println()
-	fmt.Println()
+	if len(oldProbes.(*schema.Set).List()) == 2 {
+		fmt.Println("debug7 ", oldProbes.(*schema.Set).List()[0].(map[string]interface{})["match"])
+		fmt.Println()
+		fmt.Println("debug8 ", oldProbes.(*schema.Set).List()[1].(map[string]interface{})["match"])
+		fmt.Println()
+		fmt.Println("debug9 ", newProbes.(*schema.Set).List()[0].(map[string]interface{})["match"])
+		fmt.Println()
+		fmt.Println("debug10 ", newProbes.(*schema.Set).List()[1].(map[string]interface{})["match"])
+		fmt.Println()
+		fmt.Println()
+	}
 
 	updatedProbes := schema.CopySet(newProbes.(*schema.Set))
 	probeUpdated := false
