@@ -4829,6 +4829,11 @@ func applicationGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceD
 			}
 		}
 	*/
+
+	fmt.Println("debug4 ", oldProbes)
+	fmt.Println("debug5 ", newProbes)
+	fmt.Println("debug6 ", d.Get("probe"))
+
 	updatedProbes := schema.CopySet(newProbes.(*schema.Set))
 	probeUpdated := false
 	newProbeMap := make(map[string]interface{})
