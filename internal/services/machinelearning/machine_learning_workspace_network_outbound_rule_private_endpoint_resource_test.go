@@ -227,7 +227,7 @@ resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpo
 
 func (r WorkspaceNetworkOutboundPrivateEndpointResource) internetOutbound(data acceptance.TestData) string {
 	template := r.template(data)
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 provider "azurerm" {
   features {
     key_vault {
@@ -270,6 +270,10 @@ resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpo
   sub_resource_target = "blob"
 }
 `, template, data.RandomInteger, data.RandomStringOfLength(6))
+
+  fmt.Println("debug0 ", tfCode)
+
+  return tfCode
 }
 
 func (r WorkspaceNetworkOutboundPrivateEndpointResource) withKeyVault(data acceptance.TestData) string {
