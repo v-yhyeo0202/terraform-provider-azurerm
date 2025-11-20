@@ -266,7 +266,7 @@ resource "azurerm_storage_account" "test2" {
 resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpoint" "test" {
   name                = "acctest-MLW-outboundrule-%[3]s"
   workspace_id        = azurerm_machine_learning_workspace.test.id
-  service_resource_id = azurerm_storage_account.test2.id
+  service_resource_id = azurerm_storage_account.test.id
   sub_resource_target = "blob"
 }
 `, template, data.RandomInteger, data.RandomStringOfLength(6))
