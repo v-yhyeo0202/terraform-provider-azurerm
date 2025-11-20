@@ -1338,15 +1338,15 @@ func TestAccApplicationGateway_removeProbesMatch(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
-		}, /*
-			data.ImportStep(),
-			{
-				Config: r.removeProbesMatch(data),
-				Check: acceptance.ComposeTestCheckFunc(
-					check.That(data.ResourceName).ExistsInAzure(r),
-				),
-			},
-			data.ImportStep(),*/
+		},
+		data.ImportStep(),
+		{
+			Config: r.removeProbesMatch(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 

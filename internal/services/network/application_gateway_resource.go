@@ -927,7 +927,7 @@ func resourceApplicationGateway() *pluginsdk.Resource {
 				Type:     pluginsdk.TypeSet,
 				Optional: true,
 				// Note: O+C Azure generates a default to `match` property when `match` property is not configured. This causes discrepancy during plan time. Use O+C together with SetNew in CustomizeDiff to ignore the change
-				Computed: true,
+				// Computed: true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"name": {
@@ -4849,50 +4849,50 @@ func applicationGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceD
 		fmt.Println()
 		fmt.Println()
 	}
+	/*
+		updatedProbes := schema.CopySet(newProbes.(*schema.Set))
+		probeUpdated := false
+		newProbeMap := make(map[string]interface{})
 
-	updatedProbes := schema.CopySet(newProbes.(*schema.Set))
-	probeUpdated := false
-	newProbeMap := make(map[string]interface{})
+		for _, newProbe := range newProbes.(*schema.Set).List() {
+			newProbeMap[newProbe.(map[string]interface{})["name"].(string)] = newProbe
+		}
 
-	for _, newProbe := range newProbes.(*schema.Set).List() {
-		newProbeMap[newProbe.(map[string]interface{})["name"].(string)] = newProbe
-	}
+		for _, oldProbe := range oldProbes.(*schema.Set).List() {
+			if oldProbeMatch := oldProbe.(map[string]interface{})["match"].([]interface{}); len(oldProbeMatch) > 0 {
+				oldProbeMatchBody := oldProbeMatch[0].(map[string]interface{})["body"].(string)
+				oldProbeMatchStatusCodes := oldProbeMatch[0].(map[string]interface{})["status_code"].([]interface{})
+				oldProbeName := oldProbe.(map[string]interface{})["name"].(string)
+				newProbe := newProbeMap[oldProbeName].(map[string]interface{})
+				newProbeMatch := newProbe["match"].([]interface{})
+				fmt.Println("debug0 ", oldProbeName, " ", oldProbeMatchBody, " ", oldProbeMatchStatusCodes, " ", newProbe, " ", newProbeMatch)
+				fmt.Println()
 
-	for _, oldProbe := range oldProbes.(*schema.Set).List() {
-		if oldProbeMatch := oldProbe.(map[string]interface{})["match"].([]interface{}); len(oldProbeMatch) > 0 {
-			oldProbeMatchBody := oldProbeMatch[0].(map[string]interface{})["body"].(string)
-			oldProbeMatchStatusCodes := oldProbeMatch[0].(map[string]interface{})["status_code"].([]interface{})
-			oldProbeName := oldProbe.(map[string]interface{})["name"].(string)
-			newProbe := newProbeMap[oldProbeName].(map[string]interface{})
-			newProbeMatch := newProbe["match"].([]interface{})
-			fmt.Println("debug0 ", oldProbeName, " ", oldProbeMatchBody, " ", oldProbeMatchStatusCodes, " ", newProbe, " ", newProbeMatch)
-			fmt.Println()
-
-			if oldProbeMatchBody == "" && len(oldProbeMatchStatusCodes) == 1 && oldProbeMatchStatusCodes[0].(string) == "200-399" && len(newProbeMatch) == 0 {
-				fmt.Println("debug11 ", updatedProbes)
-				fmt.Println()
-				updatedProbes.Remove(newProbe)
-				fmt.Println("debug1 ", updatedProbes)
-				fmt.Println()
-				updatedProbe := newProbe
-				updatedProbe["match"] = oldProbeMatch
-				fmt.Println("debug2 ", updatedProbe)
-				fmt.Println()
-				updatedProbes.Add(updatedProbe)
-				fmt.Println("debug3 ", updatedProbes)
-				fmt.Println()
-				fmt.Println()
-				probeUpdated = true
+				if oldProbeMatchBody == "" && len(oldProbeMatchStatusCodes) == 1 && oldProbeMatchStatusCodes[0].(string) == "200-399" && len(newProbeMatch) == 0 {
+					fmt.Println("debug11 ", updatedProbes)
+					fmt.Println()
+					updatedProbes.Remove(newProbe)
+					fmt.Println("debug1 ", updatedProbes)
+					fmt.Println()
+					updatedProbe := newProbe
+					updatedProbe["match"] = oldProbeMatch
+					fmt.Println("debug2 ", updatedProbe)
+					fmt.Println()
+					updatedProbes.Add(updatedProbe)
+					fmt.Println("debug3 ", updatedProbes)
+					fmt.Println()
+					fmt.Println()
+					probeUpdated = true
+				}
 			}
 		}
-	}
 
-	if probeUpdated {
-		if err := d.SetNew("probe", updatedProbes); err != nil {
-			return err
+		if probeUpdated {
+			if err := d.SetNew("probe", updatedProbes); err != nil {
+				return err
+			}
 		}
-	}
-
+	*/
 	return nil
 }
 
