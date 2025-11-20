@@ -4844,12 +4844,16 @@ func applicationGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceD
 			oldProbeName := oldProbe.(map[string]interface{})["name"].(string)
 			newProbe := newProbeMap[oldProbeName].(map[string]interface{})
 			newProbeMatch := newProbe["match"].([]interface{})
+			fmt.Println("debug0 ", oldProbeName, " ", oldProbeMatchBody, " ", oldProbeMatchStatusCodes, " ", newProbe, " ", newProbeMatch)
 
 			if oldProbeMatchBody == "" && len(oldProbeMatchStatusCodes) == 1 && oldProbeMatchStatusCodes[0].(string) == "200-399" && len(newProbeMatch) == 0 {
+				updatedProbes.Remove(newProbe)
+				fmt.Println("debug1 ", updatedProbes)
 				updatedProbe := newProbe
 				updatedProbe["match"] = oldProbeMatch
-				updatedProbes.Remove(newProbe)
+				fmt.Println("debug2 ", updatedProbe)
 				updatedProbes.Add(updatedProbe)
+				fmt.Println("debug3 ", updatedProbes)
 				probeUpdated = true
 			}
 		}
