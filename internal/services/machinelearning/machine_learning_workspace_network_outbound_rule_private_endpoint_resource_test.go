@@ -175,7 +175,7 @@ resource "azurerm_storage_account" "test" {
   resource_group_name      = azurerm_resource_group.test.name
   account_tier             = "Standard"
   account_replication_type = "LRS"
-}`, data.RandomInteger, data.Locations.Primary, data.RandomString, data.RandomIntOfLength(10))
+}`, data.RandomInteger, data.Locations.Primary, data.RandomString, data.RandomIntOfLength(14))
 }
 
 func (r WorkspaceNetworkOutboundPrivateEndpointResource) onlyApprovedOutbound(data acceptance.TestData) string {
@@ -253,14 +253,6 @@ resource "azurerm_machine_learning_workspace" "test" {
   identity {
     type = "SystemAssigned"
   }
-}
-
-resource "azurerm_storage_account" "test2" {
-  name                     = "acctestsa%[3]s"
-  location                 = azurerm_resource_group.test.location
-  resource_group_name      = azurerm_resource_group.test.name
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
 }
 
 resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpoint" "test" {
