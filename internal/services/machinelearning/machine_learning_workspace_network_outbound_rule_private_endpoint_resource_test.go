@@ -266,7 +266,7 @@ resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpo
 
 func (r WorkspaceNetworkOutboundPrivateEndpointResource) withKeyVault(data acceptance.TestData) string {
 	template := r.template(data)
-	tfCode := fmt.Sprintf(`
+	return fmt.Sprintf(`
 provider "azurerm" {
   features {
     key_vault {
@@ -327,10 +327,6 @@ resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpo
   sub_resource_target = "vault"
 }
 `, template, data.RandomInteger, data.RandomStringOfLength(6))
-
-	fmt.Println(tfCode)
-
-	return tfCode
 }
 
 func (r WorkspaceNetworkOutboundPrivateEndpointResource) withWorkspace(data acceptance.TestData) string {
@@ -387,7 +383,7 @@ resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpo
 
 func (r WorkspaceNetworkOutboundPrivateEndpointResource) withRedis(data acceptance.TestData) string {
 	template := r.template(data)
-	tfCode := fmt.Sprintf(`
+	return fmt.Sprintf(`
 provider "azurerm" {
   features {
     key_vault {
@@ -429,17 +425,22 @@ resource "azurerm_redis_cache" "test" {
   }
 }
 
+resource "azurerm_role_assignment" "test" {
+  scope                = azurerm_redis_cache.test.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_machine_learning_workspace.test.identity[0].principal_id
+}
+
 resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpoint" "test" {
   name                = "acctest-MLW-outboundrule-%[3]s"
   workspace_id        = azurerm_machine_learning_workspace.test.id
   service_resource_id = azurerm_redis_cache.test.id
   sub_resource_target = "redisCache"
+  depends_on = [
+    azurerm_role_assignment.test
+  ]
 }
 `, template, data.RandomInteger, data.RandomStringOfLength(6))
-
-	fmt.Println(tfCode)
-
-	return tfCode
 }
 
 func (r WorkspaceNetworkOutboundPrivateEndpointResource) requiresImport(data acceptance.TestData) string {
