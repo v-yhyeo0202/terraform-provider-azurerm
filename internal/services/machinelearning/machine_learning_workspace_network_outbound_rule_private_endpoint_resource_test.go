@@ -425,14 +425,22 @@ resource "azurerm_redis_cache" "test" {
   }
 }
 
+resource "null_resource" "test" {}
+
+resource "time_sleep" "test" {
+  depends_on = [
+    null_resource.test
+  ]
+  create_duration = "10m"
+}
+
 resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpoint" "test" {
   name                = "acctest-MLW-outboundrule-%[3]s"
   workspace_id        = azurerm_machine_learning_workspace.test.id
   service_resource_id = azurerm_redis_cache.test.id
   sub_resource_target = "redisCache"
   depends_on = [
-    azurerm_key_vault.test,
-    azurerm_key_vault_access_policy.test
+    time_sleep.test
   ]
 }
 `, template, data.RandomInteger, data.RandomStringOfLength(6))
