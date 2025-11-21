@@ -430,6 +430,9 @@ resource "azurerm_machine_learning_workspace_network_outbound_rule_private_endpo
   workspace_id        = azurerm_machine_learning_workspace.test.id
   service_resource_id = azurerm_redis_cache.test.id
   sub_resource_target = "redisCache"
+  depends_on = [
+    azurerm_key_vault.test
+  ]
 }
 `, template, data.RandomInteger, data.RandomStringOfLength(6))
 }
