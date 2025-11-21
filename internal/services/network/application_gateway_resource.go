@@ -4801,6 +4801,17 @@ func applicationGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceD
 		}
 	}
 
+	oldProbes, newProbes := d.GetChange("probe")
+	newProbesGet := d.Get("probe")
+
+	fmt.Println("debug0 oldProbes ", oldProbes)
+	fmt.Println()
+	fmt.Println("debug1 newProbes ", newProbes)
+	fmt.Println()
+	fmt.Println("debug2 newProbesGet ", newProbesGet)
+	fmt.Println()
+	fmt.Println()
+
 	return nil
 }
 
