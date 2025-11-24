@@ -2991,7 +2991,7 @@ resource "azurerm_application_gateway" "test" {
 }
 
 func (r ApplicationGatewayResource) customFirewallPolicy(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %[1]s
 
 # since these variables are re-used - a locals block makes this more maintainable
@@ -3092,6 +3092,10 @@ resource "azurerm_application_gateway" "test" {
   }
 }
 `, r.template(data), data.RandomInteger)
+
+  fmt.Println(tfCode)
+
+  return tfCode
 }
 
 func (r ApplicationGatewayResource) customHttpListenerFirewallPolicy(data acceptance.TestData) string {
