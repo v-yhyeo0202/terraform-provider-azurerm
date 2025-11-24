@@ -6468,7 +6468,7 @@ resource "azurerm_application_gateway" "test" {
 
   custom_error_configuration {
     status_code           = "HttpStatus403"
-    custom_error_page_url = "http://azure.com/error.html"
+    custom_error_page_url = "http://azure.com/error403_listener.html"
   }
 
   custom_error_configuration {
