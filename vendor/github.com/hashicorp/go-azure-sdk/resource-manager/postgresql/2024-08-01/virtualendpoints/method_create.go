@@ -44,7 +44,6 @@ func (c VirtualEndpointsClient) Create(ctx context.Context, id VirtualEndpointId
 	}
 	fmt.Println("debug0 ", req.URL, "\n")
 	fmt.Println("debug0 ", req.Header, "\n")
-	fmt.Println("debug0 ", req.Body, "\n")
 	var resp *client.Response
 	resp, err = req.Execute(ctx)
 	if resp != nil {
