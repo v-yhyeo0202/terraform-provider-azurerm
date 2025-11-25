@@ -171,7 +171,7 @@ resource "azurerm_postgresql_flexible_server" "test" {
   zone                          = "1"
   storage_mb                    = 32768
   storage_tier                  = "P30"
-  sku_name                      = "GP_Standard_D2ds_v4"
+  sku_name                      = "GP_Standard_D2ads_v5"
 }
 
 resource "azurerm_postgresql_flexible_server" "test_replica" {
@@ -193,7 +193,7 @@ resource "azurerm_postgresql_flexible_server_virtual_endpoint" "test" {
   replica_server_id = azurerm_postgresql_flexible_server.test_replica.id
   type              = "ReadWrite"
 }
-`, data.RandomInteger, "centralus") // force region due to SKU constraints
+`, data.RandomInteger, "westus3") // force region due to SKU constraints
 
 	fmt.Println(tfCode)
 
