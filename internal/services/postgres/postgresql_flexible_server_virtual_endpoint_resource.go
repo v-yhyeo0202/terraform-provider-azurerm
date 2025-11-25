@@ -123,7 +123,7 @@ func (r PostgresqlFlexibleServerVirtualEndpointResource) Create() sdk.ResourceFu
 			if err != nil {
 				return err
 			}
-			fmt.Println("debug2 ", replicaServerId.FlexibleServerName)
+			fmt.Println("debug2 ", replicaServerId.FlexibleServerName, " ", sourceServerId.FlexibleServerName)
 			sourceEndpointId := virtualendpoints.NewVirtualEndpointID(sourceServerId.SubscriptionId, sourceServerId.ResourceGroupName, sourceServerId.FlexibleServerName, virtualEndpoint.Name)
 			replicaEndpointId := virtualendpoints.NewVirtualEndpointID(replicaServerId.SubscriptionId, replicaServerId.ResourceGroupName, replicaServerId.FlexibleServerName, virtualEndpoint.Name)
 			fmt.Println("debug3 ", replicaEndpointId.FlexibleServerName)
@@ -141,7 +141,7 @@ func (r PostgresqlFlexibleServerVirtualEndpointResource) Create() sdk.ResourceFu
 				Name: &virtualEndpoint.Name,
 				Properties: &virtualendpoints.VirtualEndpointResourceProperties{
 					EndpointType: pointer.To(virtualendpoints.VirtualEndpointType(virtualEndpoint.Type)),
-					Members:      &[]string{replicaServerId.FlexibleServerName},
+					Members:      &[]string{sourceServerId.FlexibleServerName},
 				},
 			}); err != nil {
 				return fmt.Errorf("creating %s: %+v", sourceEndpointId, err)
