@@ -193,7 +193,7 @@ resource "azurerm_postgresql_flexible_server_virtual_endpoint" "test" {
   replica_server_id = azurerm_postgresql_flexible_server.test_replica.id
   type              = "ReadWrite"
 }
-`, data.RandomInteger, "eastus2") // force region due to SKU constraints
+`, data.RandomInteger, "centralus") // force region due to SKU constraints
 }
 
 func (PostgresqlFlexibleServerVirtualEndpointResource) update(data acceptance.TestData, replicaId string) string {
