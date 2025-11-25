@@ -150,7 +150,7 @@ func (r PostgresqlFlexibleServerVirtualEndpointResource) Destroy(ctx context.Con
 }
 
 func (PostgresqlFlexibleServerVirtualEndpointResource) basic(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 provider "azurerm" {
   features {}
 }
@@ -194,6 +194,10 @@ resource "azurerm_postgresql_flexible_server_virtual_endpoint" "test" {
   type              = "ReadWrite"
 }
 `, data.RandomInteger, "centralus") // force region due to SKU constraints
+
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (PostgresqlFlexibleServerVirtualEndpointResource) update(data acceptance.TestData, replicaId string) string {
