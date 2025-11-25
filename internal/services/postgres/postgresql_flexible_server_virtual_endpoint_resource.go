@@ -118,15 +118,15 @@ func (r PostgresqlFlexibleServerVirtualEndpointResource) Create() sdk.ResourceFu
 			if err != nil {
 				return err
 			}
-
+			fmt.Println("debug1 ", virtualEndpoint.ReplicaServerId)
 			replicaServerId, err := servers.ParseFlexibleServerID(virtualEndpoint.ReplicaServerId)
 			if err != nil {
 				return err
 			}
-
+			fmt.Println("debug2 ", replicaServerId.FlexibleServerName)
 			sourceEndpointId := virtualendpoints.NewVirtualEndpointID(sourceServerId.SubscriptionId, sourceServerId.ResourceGroupName, sourceServerId.FlexibleServerName, virtualEndpoint.Name)
 			replicaEndpointId := virtualendpoints.NewVirtualEndpointID(replicaServerId.SubscriptionId, replicaServerId.ResourceGroupName, replicaServerId.FlexibleServerName, virtualEndpoint.Name)
-
+			fmt.Println("debug3 ", replicaEndpointId.FlexibleServerName)
 			locks.ByName(sourceEndpointId.FlexibleServerName, postgresqlFlexibleServerResourceName)
 			defer locks.UnlockByName(sourceEndpointId.FlexibleServerName, postgresqlFlexibleServerResourceName)
 
