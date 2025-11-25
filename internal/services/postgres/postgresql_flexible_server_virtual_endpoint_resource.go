@@ -141,10 +141,7 @@ func (r PostgresqlFlexibleServerVirtualEndpointResource) Create() sdk.ResourceFu
 				Name: &virtualEndpoint.Name,
 				Properties: &virtualendpoints.VirtualEndpointResourceProperties{
 					EndpointType: pointer.To(virtualendpoints.VirtualEndpointType(virtualEndpoint.Type)),
-					Members: &[]string{
-						sourceServerId.FlexibleServerName,
-						replicaServerId.FlexibleServerName,
-					},
+					Members:      &[]string{replicaServerId.FlexibleServerName},
 				},
 			}); err != nil {
 				return fmt.Errorf("creating %s: %+v", sourceEndpointId, err)
