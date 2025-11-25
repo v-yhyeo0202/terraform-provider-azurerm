@@ -42,7 +42,7 @@ func (c VirtualEndpointsClient) Create(ctx context.Context, id VirtualEndpointId
 	if err = req.Marshal(input); err != nil {
 		return
 	}
-
+	fmt.Println("debug0 ", req)
 	var resp *client.Response
 	resp, err = req.Execute(ctx)
 	if resp != nil {
