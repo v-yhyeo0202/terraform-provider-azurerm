@@ -264,6 +264,8 @@ func (tf *Terraform) buildPlanArgs(ctx context.Context, c planConfig) ([]string,
 		args = append(args, "-allow-deferral")
 	}
 
+	fmt.Println("debug37 ", args)
+
 	return args, nil
 }
 
