@@ -6,6 +6,7 @@ package network_test
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -19,10 +20,8 @@ import (
 
 type CustomIpPrefixResource struct{}
 
-const (
-	ipv4TestCidr = "194.41.20.0/24"
-	ipv6TestCidr = "2620:10c:5001::/48"
-)
+var ipv4TestCidr = fmt.Sprintf("194.%d.%d.0/24", rand.Intn(256), rand.Intn(256))
+var ipv6TestCidr = fmt.Sprintf("2620:%x:%x::/48", rand.Intn(65536), rand.Intn(65536))
 
 func TestAccCustomIpPrefixV4(t *testing.T) {
 	acceptance.RunTestsInSequence(t, map[string]map[string]func(t *testing.T){
