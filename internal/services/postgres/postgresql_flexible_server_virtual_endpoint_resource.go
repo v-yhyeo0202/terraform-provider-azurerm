@@ -193,7 +193,7 @@ func (r PostgresqlFlexibleServerVirtualEndpointResource) Read() sdk.ResourceFunc
 							log.Printf("[INFO] %s does not exist - removing from state", metadata.ResourceData.Id())
 							return metadata.MarkAsGone(id)
 						}
-						fmt.Println("retrieving %s: %+v", id, err)
+
 						return fmt.Errorf("retrieving %s: %+v", id, err)
 					}
 					failOverHasOccurred = true
