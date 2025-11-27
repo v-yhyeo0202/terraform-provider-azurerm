@@ -886,7 +886,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-postgresql-%[1]d"
-  location = "eastus"
+  location = "eastus2"
 }
 
 resource "azurerm_postgresql_flexible_server" "test" {
