@@ -174,18 +174,26 @@ func (r PostgresqlFlexibleServerVirtualEndpointResource) Read() sdk.ResourceFunc
 			failOverHasOccurred := false
 			virtualEndpointId := *id.First
 			resp, err := client.Get(ctx, virtualEndpointId)
+			fmt.Println("debug38 ", response.WasNotFound(resp.HttpResponse), " ", response.WasBadRequest(resp.HttpResponse))
+			fmt.Println("debug38 ", resp.HttpResponse)
+			fmt.Println("debug38 ", err)
+			fmt.Println()
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) || response.WasBadRequest(resp.HttpResponse) { // Can return a 400 if attempting to query the replica for the virtual endpoint resource
 					virtualEndpointId = *id.Second
 					// if the endpoint doesn't exist under the source server, look for it under the replica server
 					resp, err = client.Get(ctx, virtualEndpointId)
+					fmt.Println("debug39 ", response.WasNotFound(resp.HttpResponse), " ", response.WasBadRequest(resp.HttpResponse))
+					fmt.Println("debug39 ", resp.HttpResponse)
+					fmt.Println("debug39 ", err)
+					fmt.Println()
 					if err != nil {
-						if response.WasNotFound(resp.HttpResponse) || response.WasBadRequest(resp.HttpResponse) {
+						if response.WasNotFound(resp.HttpResponse) || response.WasBadRequest(resp.HttpResponse) { // Can return a 400 if attempting to query the replica for the virtual endpoint resource
 							// the endpoint was not found under the source or the replica server so it can safely be removed from state
 							log.Printf("[INFO] %s does not exist - removing from state", metadata.ResourceData.Id())
 							return metadata.MarkAsGone(id)
 						}
-
+						fmt.Println("retrieving %s: %+v", id, err)
 						return fmt.Errorf("retrieving %s: %+v", id, err)
 					}
 					failOverHasOccurred = true
