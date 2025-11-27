@@ -886,7 +886,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-postgresql-%[1]d"
-  location = "westus3"
+  location = "westus"
 }
 
 resource "azurerm_postgresql_flexible_server" "test" {
@@ -911,7 +911,7 @@ func (r PostgresqlFlexibleServerResource) geoRestore(data acceptance.TestData) s
 resource "azurerm_postgresql_flexible_server" "geo_restore" {
   name                              = "acctest-fs-restore-%d"
   resource_group_name               = azurerm_resource_group.test.name
-  location                          = "westus"
+  location                          = "eastus2"
   create_mode                       = "GeoRestore"
   source_server_id                  = azurerm_postgresql_flexible_server.test.id
   point_in_time_restore_time_in_utc = "%s"
