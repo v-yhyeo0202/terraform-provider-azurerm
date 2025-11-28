@@ -108,6 +108,11 @@ func (r *Request) Marshal(payload interface{}) error {
 			r.Body = io.NopCloser(bytes.NewReader(body))
 		}
 
+		bodyByte := make([]byte, 1000)
+		r.Body.Read(bodyByte)
+		fmt.Println("debug11 ", string(bodyByte))
+		fmt.Println("debug12 ", bodyByte)
+
 		return nil
 
 	case strings.Contains(contentType, "application/xml") || strings.Contains(contentType, "text/xml"):

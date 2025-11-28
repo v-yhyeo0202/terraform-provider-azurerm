@@ -197,7 +197,6 @@ func resourceVPNServerConfiguration() *pluginsdk.Resource {
 										Type:         pluginsdk.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringIsNotEmpty,
-										Sensitive:    true,
 									},
 
 									"secret": {
