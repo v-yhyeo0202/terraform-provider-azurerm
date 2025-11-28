@@ -300,6 +300,7 @@ func resourceVPNServerConfigurationCreate(d *pluginsdk.ResourceData, meta interf
 	ipSecPolicies := expandVpnServerConfigurationIPSecPolicies(ipSecPoliciesRaw)
 
 	radius := expandVpnServerConfigurationRadius(d.Get("radius").([]interface{}))
+	fmt.Println("debug2 ", (*radius.servers)[0].RadiusServerSecret)
 
 	vpnProtocolsRaw := d.Get("vpn_protocols").(*pluginsdk.Set).List()
 	vpnProtocols := expandVpnServerConfigurationVPNProtocols(vpnProtocolsRaw)
@@ -349,14 +350,16 @@ func resourceVPNServerConfigurationCreate(d *pluginsdk.ResourceData, meta interf
 	}
 
 	if supportsRadius {
+		fmt.Println("debug3")
 		if radius == nil {
 			return fmt.Errorf("`radius` must be specified when `vpn_authentication_type` is set to `Radius`")
 		}
 
 		if radius.servers != nil && len(*radius.servers) != 0 {
+			fmt.Println("debug4 ", (*radius.servers)[0].RadiusServerSecret)
 			props.RadiusServers = radius.servers
 		}
-
+		fmt.Println("debug5 ", (*props.RadiusServers)[0].RadiusServerSecret)
 		props.RadiusServerAddress = utils.String(radius.address)
 		props.RadiusServerSecret = utils.String(radius.secret)
 
@@ -366,12 +369,13 @@ func resourceVPNServerConfigurationCreate(d *pluginsdk.ResourceData, meta interf
 
 	location := azure.NormalizeLocation(d.Get("location").(string))
 	t := d.Get("tags").(map[string]interface{})
+	fmt.Println("debug6 ", (*props.RadiusServers)[0].RadiusServerSecret)
 	parameters := virtualwans.VpnServerConfiguration{
 		Location:   utils.String(location),
 		Properties: &props,
 		Tags:       tags.Expand(t),
 	}
-
+	fmt.Println("debug7 ", (*parameters.Properties.RadiusServers)[0].RadiusServerSecret)
 	if err := client.VpnServerConfigurationsCreateOrUpdateThenPoll(ctx, id, parameters); err != nil {
 		return fmt.Errorf("creating %s: %+v", id, err)
 	}
@@ -812,6 +816,8 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 			})
 		}
 	}
+
+	fmt.Println("debug1 ", radiusServers[0].RadiusServerSecret)
 
 	return &vpnServerConfigurationRadius{
 		address:                address,
