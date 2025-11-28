@@ -806,7 +806,7 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 			v := raw.(map[string]interface{})
 			radiusServers = append(radiusServers, virtualwans.RadiusServer{
 				RadiusServerAddress: v["address"].(string),
-				RadiusServerSecret:  utils.String(v["secret"].(string)),
+				RadiusServerSecret:  v["secret"].(string),
 				RadiusServerScore:   utils.Int64(int64(v["score"].(int))),
 			})
 		}
@@ -871,7 +871,7 @@ func flattenVpnServerConfigurationRadius(input *virtualwans.VpnServerConfigurati
 		for _, v := range *input.RadiusServers {
 			servers = append(servers, map[string]interface{}{
 				"address": v.RadiusServerAddress,
-				"secret":  pointer.From(v.RadiusServerSecret),
+				"secret":  v.RadiusServerSecret,
 				"score":   pointer.From(v.RadiusServerScore),
 			})
 		}

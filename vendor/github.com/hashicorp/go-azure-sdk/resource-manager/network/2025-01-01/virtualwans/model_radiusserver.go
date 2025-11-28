@@ -4,7 +4,7 @@ package virtualwans
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type RadiusServer struct {
-	RadiusServerAddress string  `json:"radiusServerAddress"`
-	RadiusServerScore   *int64  `json:"radiusServerScore,omitempty"`
-	RadiusServerSecret  *string `json:"radiusServerSecret"`
+	RadiusServerAddress string `json:"radiusServerAddress"`
+	RadiusServerScore   *int64 `json:"radiusServerScore,omitempty"`
+	RadiusServerSecret  string `json:"radiusServerSecret"`
 }
