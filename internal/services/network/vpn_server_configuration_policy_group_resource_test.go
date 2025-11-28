@@ -115,7 +115,7 @@ func (r VPNServerConfigurationPolicyGroupResource) Exists(ctx context.Context, c
 }
 
 func (r VPNServerConfigurationPolicyGroupResource) basic(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_vpn_server_configuration_policy_group" "test" {
@@ -129,6 +129,10 @@ resource "azurerm_vpn_server_configuration_policy_group" "test" {
   }
 }
 `, r.template(data), data.RandomInteger)
+
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (r VPNServerConfigurationPolicyGroupResource) requiresImport(data acceptance.TestData) string {
