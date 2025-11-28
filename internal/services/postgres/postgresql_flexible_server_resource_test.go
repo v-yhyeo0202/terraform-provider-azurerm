@@ -905,7 +905,7 @@ resource "azurerm_postgresql_flexible_server" "test" {
 }
 
 func (r PostgresqlFlexibleServerResource) geoRestore(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_postgresql_flexible_server" "geo_restore" {
@@ -917,6 +917,10 @@ resource "azurerm_postgresql_flexible_server" "geo_restore" {
   point_in_time_restore_time_in_utc = "%s"
 }
 `, r.geoRestoreSource(data), data.RandomInteger, time.Now().Add(time.Duration(15)*time.Minute).UTC().Format(time.RFC3339))
+
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (r PostgresqlFlexibleServerResource) requiresImport(data acceptance.TestData) string {
