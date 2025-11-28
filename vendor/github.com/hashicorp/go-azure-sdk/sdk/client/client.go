@@ -422,6 +422,8 @@ func (c *Client) NewRequest(ctx context.Context, input RequestOptions) (*Request
 
 // Execute is used by the package to send an HTTP request to the API
 func (c *Client) Execute(ctx context.Context, req *Request) (*Response, error) {
+	bodyByte, _ := io.ReadAll(req.Body)
+	fmt.Println("debug13 ", string(bodyByte))
 	if req.Request == nil {
 		return nil, fmt.Errorf("req.Request was nil")
 	}
@@ -507,6 +509,8 @@ func (c *Client) Execute(ctx context.Context, req *Request) (*Response, error) {
 
 	// Send the request
 	resp := &Response{}
+	bodyByte, _ = io.ReadAll(req.Body)
+	fmt.Println("debug14 ", string(bodyByte))
 	resp.Response, err = client.Do(req.Request)
 	if err != nil {
 		return resp, err
