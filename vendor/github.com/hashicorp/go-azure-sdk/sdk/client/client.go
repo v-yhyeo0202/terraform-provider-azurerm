@@ -102,7 +102,7 @@ func (r *Request) Marshal(payload interface{}) error {
 	switch {
 	case strings.Contains(contentType, "application/json"):
 		body, err := json.Marshal(payload)
-		fmt.Println("debug9 ", body)
+		fmt.Println("debug9 ", string(body))
 		if err == nil {
 			r.ContentLength = int64(len(body))
 			r.Body = io.NopCloser(bytes.NewReader(body))
@@ -112,7 +112,7 @@ func (r *Request) Marshal(payload interface{}) error {
 
 	case strings.Contains(contentType, "application/xml") || strings.Contains(contentType, "text/xml"):
 		body, err := xml.Marshal(payload)
-		fmt.Println("debug10 ", body)
+		fmt.Println("debug10 ", string(body))
 		if err == nil {
 			// Prepend the xml doctype declaration if not detected
 			if !strings.HasPrefix(strings.TrimSpace(strings.ToLower(string(body[0:5]))), "<?xml") {
