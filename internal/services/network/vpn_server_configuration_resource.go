@@ -358,8 +358,6 @@ func resourceVPNServerConfigurationCreate(d *pluginsdk.ResourceData, meta interf
 		}
 
 		props.RadiusServerAddress = utils.String(radius.address)
-		props.RadiusServerSec = utils.String(radius.secret)
-
 		props.RadiusClientRootCertificates = radius.clientRootCertificates
 		props.RadiusServerRootCertificates = radius.serverRootCertificates
 	}
@@ -536,7 +534,6 @@ func resourceVPNServerConfigurationUpdate(d *pluginsdk.ResourceData, meta interf
 	if d.HasChange("radius") {
 		// if radius has changed, we'll nil out the radius attributes and update them to new values if needed
 		payload.Properties.RadiusServerAddress = nil
-		payload.Properties.RadiusServerSec = nil
 		payload.Properties.RadiusClientRootCertificates = nil
 		payload.Properties.RadiusServerRootCertificates = nil
 		payload.Properties.RadiusServers = nil
@@ -552,8 +549,6 @@ func resourceVPNServerConfigurationUpdate(d *pluginsdk.ResourceData, meta interf
 			}
 
 			payload.Properties.RadiusServerAddress = utils.String(radius.address)
-			payload.Properties.RadiusServerSec = utils.String(radius.secret)
-
 			payload.Properties.RadiusClientRootCertificates = radius.clientRootCertificates
 			payload.Properties.RadiusServerRootCertificates = radius.serverRootCertificates
 		}
@@ -763,7 +758,6 @@ func flattenVpnServerConfigurationIPSecPolicies(input *[]virtualwans.IPsecPolicy
 
 type vpnServerConfigurationRadius struct {
 	address                string
-	secret                 string
 	servers                *[]virtualwans.RadiusServer
 	clientRootCertificates *[]virtualwans.VpnServerConfigRadiusClientRootCertificate
 	serverRootCertificates *[]virtualwans.VpnServerConfigRadiusServerRootCertificate
@@ -798,7 +792,6 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 
 	radiusServers := make([]virtualwans.RadiusServer, 0)
 	address := ""
-	secret := ""
 
 	if val["server"] != nil {
 		radiusServersRaw := val["server"].([]interface{})
@@ -814,7 +807,6 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 
 	return &vpnServerConfigurationRadius{
 		address:                address,
-		secret:                 secret,
 		servers:                &radiusServers,
 		clientRootCertificates: &clientRootCertificates,
 		serverRootCertificates: &serverRootCertificates,

@@ -13,7 +13,6 @@ type VpnServerConfigurationProperties struct {
 	RadiusClientRootCertificates *[]VpnServerConfigRadiusClientRootCertificate `json:"radiusClientRootCertificates,omitempty"`
 	RadiusServerAddress          *string                                       `json:"radiusServerAddress,omitempty"`
 	RadiusServerRootCertificates *[]VpnServerConfigRadiusServerRootCertificate `json:"radiusServerRootCertificates,omitempty"`
-	RadiusServerSec              *string                                       `json:"radiusServerSec,omitempty"`
 	RadiusServers                *[]RadiusServer                               `json:"radiusServers,omitempty"`
 	VpnAuthenticationTypes       *[]VpnAuthenticationType                      `json:"vpnAuthenticationTypes,omitempty"`
 	VpnClientIPsecPolicies       *[]IPsecPolicy                                `json:"vpnClientIpsecPolicies,omitempty"`
