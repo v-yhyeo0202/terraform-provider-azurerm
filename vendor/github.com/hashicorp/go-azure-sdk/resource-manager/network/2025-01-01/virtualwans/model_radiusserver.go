@@ -6,5 +6,5 @@ package virtualwans
 type RadiusServer struct {
 	RadiusServerAddress string  `json:"radiusServerAddress"`
 	RadiusServerScore   *int64  `json:"radiusServerScore,omitempty"`
-	RadiusServerSecret  *string `json:"radiusServerSecret,omitempty"`
+	RadiusServerSecret  *string `json:"radiusServerSecret"`
 }
