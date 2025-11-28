@@ -458,7 +458,7 @@ func dataSourceFlattenVpnServerConfigurationRadius(input *virtualwans.VpnServerC
 		for _, v := range *input.RadiusServers {
 			servers = append(servers, ServerModel{
 				Address: v.RadiusServerAddress,
-				Secret:  pointer.ToString(v.RadiusServerSecret),
+				Secret:  v.RadiusServerSecret,
 				Score:   pointer.ToInt64(v.RadiusServerScore),
 			})
 		}
