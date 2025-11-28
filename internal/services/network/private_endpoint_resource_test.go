@@ -566,7 +566,7 @@ resource "azurerm_private_endpoint" "test" {
 }
 
 func (PrivateEndpointResource) privateDnsZoneGroup(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 provider "azurerm" {
   features {}
 }
@@ -636,6 +636,11 @@ resource "azurerm_private_endpoint" "test" {
   }
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
+
+	fmt.Println("debug0")
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (PrivateEndpointResource) privateDnsZoneGroupRemove(data acceptance.TestData) string {
@@ -714,7 +719,7 @@ resource "azurerm_private_endpoint" "test" {
 }
 
 func (PrivateEndpointResource) privateDnsZoneGroupUpdate(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 provider "azurerm" {
   features {}
 }
@@ -796,6 +801,11 @@ resource "azurerm_private_endpoint" "test" {
   }
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
+
+	fmt.Println("debug1")
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (PrivateEndpointResource) privateDnsZoneGroupIdsUpdate(data acceptance.TestData) string {
