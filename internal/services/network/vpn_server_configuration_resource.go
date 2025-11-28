@@ -358,7 +358,7 @@ func resourceVPNServerConfigurationCreate(d *pluginsdk.ResourceData, meta interf
 		}
 
 		props.RadiusServerAddress = utils.String(radius.address)
-		props.RadiusServerSecret = utils.String(radius.secret)
+		props.RadiusServerSec = utils.String(radius.secret)
 
 		props.RadiusClientRootCertificates = radius.clientRootCertificates
 		props.RadiusServerRootCertificates = radius.serverRootCertificates
@@ -536,7 +536,7 @@ func resourceVPNServerConfigurationUpdate(d *pluginsdk.ResourceData, meta interf
 	if d.HasChange("radius") {
 		// if radius has changed, we'll nil out the radius attributes and update them to new values if needed
 		payload.Properties.RadiusServerAddress = nil
-		payload.Properties.RadiusServerSecret = nil
+		payload.Properties.RadiusServerSec = nil
 		payload.Properties.RadiusClientRootCertificates = nil
 		payload.Properties.RadiusServerRootCertificates = nil
 		payload.Properties.RadiusServers = nil
@@ -552,7 +552,7 @@ func resourceVPNServerConfigurationUpdate(d *pluginsdk.ResourceData, meta interf
 			}
 
 			payload.Properties.RadiusServerAddress = utils.String(radius.address)
-			payload.Properties.RadiusServerSecret = utils.String(radius.secret)
+			payload.Properties.RadiusServerSec = utils.String(radius.secret)
 
 			payload.Properties.RadiusClientRootCertificates = radius.clientRootCertificates
 			payload.Properties.RadiusServerRootCertificates = radius.serverRootCertificates
