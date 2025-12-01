@@ -31,6 +31,7 @@ type userAgentRoundTripper struct {
 }
 
 func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Println("debug12")
 	if _, ok := req.Header["User-Agent"]; !ok {
 		req.Header.Set("User-Agent", rt.userAgent)
 	}

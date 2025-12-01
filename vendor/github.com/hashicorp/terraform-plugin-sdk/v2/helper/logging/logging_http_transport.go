@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
@@ -123,6 +124,7 @@ type loggingHttpTransport struct {
 }
 
 func (t *loggingHttpTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Println("debug13")
 	ctx := req.Context()
 	ctx = t.AddTransactionIdField(ctx)
 

@@ -292,6 +292,7 @@ func configureTransports(t1 *http.Transport) (*Transport, error) {
 type unencryptedTransport Transport
 
 func (t *unencryptedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Println("debug15")
 	return (*Transport)(t).RoundTripOpt(req, RoundTripOpt{allowHTTP: true})
 }
 
@@ -545,6 +546,7 @@ type RoundTripOpt struct {
 }
 
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Println("debug16")
 	return t.RoundTripOpt(req, RoundTripOpt{})
 }
 
@@ -1264,10 +1266,12 @@ func (cc *ClientConn) decrStreamReservationsLocked() {
 }
 
 func (cc *ClientConn) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Println("debug17")
 	return cc.roundTrip(req, nil)
 }
 
 func (cc *ClientConn) roundTrip(req *http.Request, streamf func(*clientStream)) (*http.Response, error) {
+	fmt.Println("debug18")
 	ctx := req.Context()
 	cs := &clientStream{
 		cc:                   cc,
@@ -3204,6 +3208,7 @@ func registerHTTPSProtocol(t *http.Transport, rt noDialH2RoundTripper) (err erro
 type noDialH2RoundTripper struct{ *Transport }
 
 func (rt noDialH2RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Println("debug19")
 	res, err := rt.Transport.RoundTrip(req)
 	if isNoCachedConnError(err) {
 		return nil, http.ErrSkipAltProtocol

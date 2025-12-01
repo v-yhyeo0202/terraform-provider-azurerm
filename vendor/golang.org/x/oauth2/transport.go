@@ -6,6 +6,7 @@ package oauth2
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -30,6 +31,7 @@ type Transport struct {
 // RoundTrip authorizes and authenticates the request with an
 // access token from Transport's Source.
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Println("debug20")
 	reqBodyClosed := false
 	if req.Body != nil {
 		defer func() {

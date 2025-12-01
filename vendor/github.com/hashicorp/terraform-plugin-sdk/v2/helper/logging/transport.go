@@ -6,6 +6,7 @@ package logging
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -18,6 +19,7 @@ type transport struct {
 }
 
 func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Println("debug14")
 	if IsDebugOrHigher() {
 		reqData, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
