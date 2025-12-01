@@ -420,6 +420,12 @@ func (c *Client) Execute(ctx context.Context, req *Request) (*Response, error) {
 		return nil, fmt.Errorf("req.Request was nil")
 	}
 
+	if req.Body != nil {
+		var bodyByte []byte
+		bodyByte, _ = io.ReadAll(req.Body)
+		fmt.Println("debug0 ", string(bodyByte))
+	}
+
 	// Authorize the request
 	if c.AuthorizeRequest != nil {
 		if err := c.AuthorizeRequest(ctx, req.Request, c.Authorizer); err != nil {
