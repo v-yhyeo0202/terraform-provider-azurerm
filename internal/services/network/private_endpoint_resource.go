@@ -1202,7 +1202,7 @@ func normalizePrivateConnectionId(privateConnectionId string) string {
 func privateEndpointCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
 	if d.HasChange("private_service_connection.0.private_connection_resource_id") {
 		fmt.Println("debug2")
-		d.ForceNew("private_service_connection")
+		// d.ForceNew("private_service_connection")
 	}
 
 	return nil

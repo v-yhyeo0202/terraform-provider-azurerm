@@ -261,6 +261,7 @@ func TestAccPrivateEndpoint_privateDnsZoneRemove(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
+			ExpectNonEmptyPlan: true,
 		},
 		data.ImportStep("private_dns_zone_configs", "private_dns_zone_group"),
 		{
@@ -271,6 +272,7 @@ func TestAccPrivateEndpoint_privateDnsZoneRemove(t *testing.T) {
 				check.That(data.ResourceName).Key("private_dns_zone_configs.#").HasValue("1"),
 				check.That(data.ResourceName).Key("private_dns_zone_group.#").HasValue("1"),
 			),
+			ExpectNonEmptyPlan: true,
 		},
 		data.ImportStep("private_dns_zone_configs", "private_dns_zone_group"),
 	})
