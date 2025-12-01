@@ -295,6 +295,8 @@ func resourcePrivateEndpoint() *pluginsdk.Resource {
 
 			"tags": commonschema.Tags(),
 		},
+
+		CustomizeDiff: pluginsdk.CustomizeDiffShim(privateEndpointCustomizeDiff),
 	}
 }
 
@@ -1195,4 +1197,12 @@ func normalizePrivateConnectionId(privateConnectionId string) string {
 		}
 	}
 	return privateConnectionId
+}
+
+func privateEndpointCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
+	if d.HasChange("private_service_connection.0.private_connection_resource_id") {
+		d.ForceNew("private_service_connection.0.private_connection_resource_id")
+	}
+
+	return nil
 }
