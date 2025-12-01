@@ -273,7 +273,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "east" {
   name     = "acctest%[1]d-east"
-  location = "%[3]s"
+  location = "eastus2"
 }
 
 resource "azurerm_virtual_network" "east" {
@@ -384,7 +384,7 @@ resource "azurerm_postgresql_flexible_server_virtual_endpoint" "test" {
 
 resource "azurerm_resource_group" "west" {
   name     = "acctest%[1]d-west"
-  location = "westus"
+  location = "%[2]s"
 }
 
 resource "azurerm_virtual_network" "west" {
