@@ -7,4 +7,5 @@ type RadiusServer struct {
 	RadiusServerAddress string `json:"radiusServerAddress"`
 	RadiusServerScore   *int64 `json:"radiusServerScore,omitempty"`
 	RadiusServerSecret  string `json:"radiusServerSecret"`
+	RadiusDummy string `json:"radiusDummy"`
 }
