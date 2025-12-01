@@ -384,7 +384,7 @@ resource "azurerm_postgresql_flexible_server_virtual_endpoint" "test" {
 
 resource "azurerm_resource_group" "west" {
   name     = "acctest%[1]d-west"
-  location = "%[2]s"
+  location = "westus"
 }
 
 resource "azurerm_virtual_network" "west" {
@@ -483,7 +483,7 @@ resource "azurerm_postgresql_flexible_server" "west" {
     create = "120m"
   }
 }
-`, data.RandomInteger, data.Locations.Primary, data.Locations.Ternary)
+`, data.RandomInteger, data.Locations.Primary)
 }
 
 type alternateSubscription struct {

@@ -783,7 +783,7 @@ resource "azurerm_resource_group" "test" {
   name     = "acctestRG-postgresql-%d"
   location = "%s"
 }
-`, data.RandomInteger, data.Locations.Primary)
+`, data.RandomInteger, data.Locations.Ternary)
 }
 
 func (r PostgresqlFlexibleServerResource) updateOnlyWithStorageTier(data acceptance.TestData, storageTier string) string {
@@ -901,7 +901,7 @@ resource "azurerm_postgresql_flexible_server" "test" {
   zone                         = "1"
   geo_redundant_backup_enabled = true
 }
-`, data.RandomInteger, data.Locations.Primary)
+`, data.RandomInteger, data.Locations.Secondary)
 }
 
 func (r PostgresqlFlexibleServerResource) geoRestore(data acceptance.TestData) string {
@@ -1392,7 +1392,7 @@ resource "azurerm_key_vault_key" "test" {
     azurerm_key_vault_access_policy.server,
   ]
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomString, data.RandomString)
+`, data.RandomInteger, data.Locations.Secondary, data.RandomString, data.RandomString)
 }
 
 func (r PostgresqlFlexibleServerResource) withCustomerManagedKey(data acceptance.TestData) string {
