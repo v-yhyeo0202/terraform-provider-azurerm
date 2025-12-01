@@ -798,7 +798,7 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 
 	radiusServers := make([]virtualwans.RadiusServer, 0)
 	address := ""
-	secret := "dummy"
+	secret := nil
 
 	if val["server"] != nil {
 		radiusServersRaw := val["server"].([]interface{})
