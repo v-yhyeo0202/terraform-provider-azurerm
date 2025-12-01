@@ -783,7 +783,7 @@ resource "azurerm_resource_group" "test" {
   name     = "acctestRG-postgresql-%d"
   location = "%s"
 }
-`, data.RandomInteger, data.Locations.Ternary)
+`, data.RandomInteger, data.Locations.Secondary)
 }
 
 func (r PostgresqlFlexibleServerResource) updateOnlyWithStorageTier(data acceptance.TestData, storageTier string) string {
