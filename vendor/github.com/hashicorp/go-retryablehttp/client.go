@@ -685,6 +685,13 @@ func (c *Client) Do(req *Request) (*http.Response, error) {
 	var attempt int
 	var shouldRetry bool
 	var doErr, respErr, checkErr, prepareErr error
+	var reqBody []byte
+
+	if req.Body != nil {
+		reqBody, _ = io.ReadAll(req.Body)
+		fmt.Println("debug11 ", string(reqBody))
+		req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
+	}
 
 	for i := 0; ; i++ {
 		doErr, respErr, prepareErr = nil, nil, nil
@@ -713,6 +720,12 @@ func (c *Client) Do(req *Request) (*http.Response, error) {
 			default:
 				c.RequestLogHook(nil, req.Request, i)
 			}
+		}
+
+		if req.Body != nil {
+			reqBody, _ = io.ReadAll(req.Body)
+			fmt.Println("debug11 ", string(reqBody))
+			req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
 		}
 
 		// Attempt the request
