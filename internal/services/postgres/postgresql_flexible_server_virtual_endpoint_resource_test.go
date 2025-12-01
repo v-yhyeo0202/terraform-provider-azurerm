@@ -483,7 +483,7 @@ resource "azurerm_postgresql_flexible_server" "west" {
     create = "120m"
   }
 }
-`, data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
+`, data.RandomInteger, data.Locations.Primary, data.Locations.Ternary)
 }
 
 type alternateSubscription struct {
