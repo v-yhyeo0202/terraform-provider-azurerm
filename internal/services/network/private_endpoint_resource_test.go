@@ -261,7 +261,6 @@ func TestAccPrivateEndpoint_privateDnsZoneRemove(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
-			ExpectNonEmptyPlan: true,
 		},
 		data.ImportStep("private_dns_zone_configs", "private_dns_zone_group"),
 		{
@@ -272,7 +271,6 @@ func TestAccPrivateEndpoint_privateDnsZoneRemove(t *testing.T) {
 				check.That(data.ResourceName).Key("private_dns_zone_configs.#").HasValue("1"),
 				check.That(data.ResourceName).Key("private_dns_zone_group.#").HasValue("1"),
 			),
-			ExpectNonEmptyPlan: true,
 		},
 		data.ImportStep("private_dns_zone_configs", "private_dns_zone_group"),
 	})
@@ -681,22 +679,15 @@ resource "azurerm_subnet" "endpoint" {
   private_endpoint_network_policies = "Disabled"
 }
 
-resource "azurerm_postgresql_server" "test" {
-  name                = "acctest-pe-server-%d"
-  location            = azurerm_resource_group.test.location
-  resource_group_name = azurerm_resource_group.test.name
-
-  sku_name = "GP_Gen5_4"
-
-  storage_mb                   = 5120
-  backup_retention_days        = 7
-  geo_redundant_backup_enabled = false
-  auto_grow_enabled            = true
-
-  administrator_login          = "psqladmin"
-  administrator_login_password = "H@Sh1CoR3!"
-  version                      = "9.5"
-  ssl_enforcement_enabled      = true
+resource "azurerm_postgresql_flexible_server" "test" {
+  name                   = "acctest-fs-%d"
+  resource_group_name    = azurerm_resource_group.test.name
+  location               = azurerm_resource_group.test.location
+  administrator_login    = "adminTerraform"
+  administrator_password = "QAZwsx123"
+  version                = "12"
+  sku_name               = "GP_Standard_D2s_v3"
+  zone                   = "2"
 }
 
 resource "azurerm_private_dns_zone" "finance" {
