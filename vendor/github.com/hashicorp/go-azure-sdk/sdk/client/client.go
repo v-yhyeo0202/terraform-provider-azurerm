@@ -419,13 +419,7 @@ func (c *Client) Execute(ctx context.Context, req *Request) (*Response, error) {
 	if req.Request == nil {
 		return nil, fmt.Errorf("req.Request was nil")
 	}
-	/*
-		if req.Body != nil {
-			var bodyByte []byte
-			bodyByte, _ = io.ReadAll(req.Body)
-			fmt.Println("debug0 ", string(bodyByte))
-		}
-	*/
+	
 	// Authorize the request
 	if c.AuthorizeRequest != nil {
 		if err := c.AuthorizeRequest(ctx, req.Request, c.Authorizer); err != nil {
@@ -443,6 +437,7 @@ func (c *Client) Execute(ctx context.Context, req *Request) (*Response, error) {
 	var reqBody []byte
 	if req.Body != nil {
 		reqBody, err = io.ReadAll(req.Body)
+		fmt.Println("debug0 ", string(reqBody))
 		if err != nil {
 			return nil, fmt.Errorf("reading request body: %v", err)
 		}
@@ -503,6 +498,15 @@ func (c *Client) Execute(ctx context.Context, req *Request) (*Response, error) {
 			}
 			req.Request = r
 		}
+	}
+
+	if req.Body != nil {
+		reqBody, err = io.ReadAll(req.Body)
+		fmt.Println("debug1 ", string(reqBody))
+		if err != nil {
+			return nil, fmt.Errorf("reading request body: %v", err)
+		}
+		req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
 	}
 
 	// Send the request
