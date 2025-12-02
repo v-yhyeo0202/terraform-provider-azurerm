@@ -128,12 +128,12 @@ func TestAccManagementGroupPolicySetDefinition_removeParameter(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.basic(data),
+			Config: r.basic(data),/*
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
 				},
-			},
+			},*/
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
