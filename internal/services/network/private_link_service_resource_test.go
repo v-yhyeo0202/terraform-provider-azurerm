@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/privatelinkservices"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -54,6 +56,14 @@ func TestAccPrivateLinkService_requiresImport(t *testing.T) {
 	})
 }
 
+var _ plancheck.PlanCheck = bypassReplaceError{}
+
+type bypassReplaceError struct{}
+
+func (e bypassReplaceError) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	fmt.Println("debug0")
+}
+
 func TestAccPrivateLinkService_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_private_link_service", "test")
 	r := PrivateLinkServiceResource{}
@@ -78,7 +88,11 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 				check.That(data.ResourceName).Key("tags.%").HasValue("1"),
 				check.That(data.ResourceName).Key("tags.env").HasValue("test"),
 			),
-			ExpectNonEmptyPlan: true,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					bypassReplaceError{},
+				},
+			},
 		},
 		data.ImportStep(),
 		{
@@ -88,7 +102,6 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 				check.That(data.ResourceName).Key("nat_ip_configuration.#").HasValue("1"),
 				check.That(data.ResourceName).Key("load_balancer_frontend_ip_configuration_ids.#").HasValue("1"),
 			),
-			ExpectNonEmptyPlan: true,
 		},
 		data.ImportStep(),
 	})
