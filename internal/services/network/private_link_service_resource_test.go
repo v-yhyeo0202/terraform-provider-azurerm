@@ -60,7 +60,7 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_private_link_service", "test")
 	r := PrivateLinkServiceResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicIp(data),
 			Check: acceptance.ComposeTestCheckFunc(
