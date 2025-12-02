@@ -6,6 +6,7 @@ package cosmos
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -63,6 +64,8 @@ type MaintenanceWindow struct {
 type CosmosDbPostgreSQLClusterResource struct{}
 
 var _ sdk.ResourceWithUpdate = CosmosDbPostgreSQLClusterResource{}
+
+var _ sdk.ResourceWithCustomizeDiff = CosmosDbPostgreSQLClusterResource{}
 
 func (r CosmosDbPostgreSQLClusterResource) ResourceType() string {
 	return CosmosDbPostgreSQLClusterResourceName
@@ -621,6 +624,16 @@ func (r CosmosDbPostgreSQLClusterResource) Delete() sdk.ResourceFunc {
 			if err := client.DeleteThenPoll(ctx, *id); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
+
+			return nil
+		},
+	}
+}
+
+func (r CosmosDbPostgreSQLClusterResource) CustomizeDiff() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			log.Printf("[WARN] azurerm_cosmosdb_postgresql_cluster applies elastic clusters, refer to https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-elastic-clusters")
 
 			return nil
 		},

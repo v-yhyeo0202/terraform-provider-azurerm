@@ -175,7 +175,7 @@ resource "azurerm_cosmosdb_postgresql_cluster" "import" {
 }
 
 func (r CosmosDbPostgreSQLClusterResource) complete(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_cosmosdb_postgresql_cluster" "test" {
@@ -212,6 +212,10 @@ resource "azurerm_cosmosdb_postgresql_cluster" "test" {
   }
 }
 `, r.template(data), data.RandomInteger)
+
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (r CosmosDbPostgreSQLClusterResource) update(data acceptance.TestData) string {

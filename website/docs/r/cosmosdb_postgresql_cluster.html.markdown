@@ -3,9 +3,9 @@ subcategory: "CosmosDB (DocumentDB)"
 layout: "azurerm"
 page_title: "Azure Resource Manager: azurerm_cosmosdb_postgresql_cluster"
 description: |-
-  Manages an Azure Cosmos DB for PostgreSQL Cluster.
+  Manages an Azure Cosmos DB for PostgreSQL Cluster. This resource applies [elastic cluster](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-elastic-clusters).
 ---
-
+E
 # azurerm_cosmosdb_postgresql_cluster
 
 Manages an Azure Cosmos DB for PostgreSQL Cluster.
