@@ -298,7 +298,7 @@ resource "azurerm_private_link_service" "test" {
 }
 
 func (r PrivateLinkServiceResource) basicIp(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_subnet" "test" {
@@ -328,6 +328,11 @@ resource "azurerm_private_link_service" "test" {
   ]
 }
 `, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
+
+	fmt.Println("debug0")
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (r PrivateLinkServiceResource) requiresImport(data acceptance.TestData) string {
@@ -385,7 +390,7 @@ resource "azurerm_private_link_service" "test" {
 }
 
 func (r PrivateLinkServiceResource) update(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_subnet" "test" {
@@ -445,6 +450,11 @@ resource "azurerm_private_link_service" "test" {
   }
 }
 `, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
+
+	fmt.Println("debug1")
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (r PrivateLinkServiceResource) moveSetup(data acceptance.TestData) string {
