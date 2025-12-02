@@ -90,7 +90,7 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					bypassReplaceError{},
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
 				},
 			},
 		},
