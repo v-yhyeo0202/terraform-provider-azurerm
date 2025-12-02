@@ -56,14 +56,6 @@ func TestAccPrivateLinkService_requiresImport(t *testing.T) {
 	})
 }
 
-var _ plancheck.PlanCheck = bypassReplaceError{}
-
-type bypassReplaceError struct{}
-
-func (e bypassReplaceError) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
-	fmt.Println("debug0")
-}
-
 func TestAccPrivateLinkService_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_private_link_service", "test")
 	r := PrivateLinkServiceResource{}
@@ -90,7 +82,12 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.1.name", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.2.name", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.3.name", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.1.primary", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.2.primary", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.3.primary", plancheck.ResourceActionReplace),
 				},
 			},
 		},
@@ -102,6 +99,16 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 				check.That(data.ResourceName).Key("nat_ip_configuration.#").HasValue("1"),
 				check.That(data.ResourceName).Key("load_balancer_frontend_ip_configuration_ids.#").HasValue("1"),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction("nat_ip_configuration.1.name", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.2.name", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.3.name", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.1.primary", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.2.primary", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.3.primary", plancheck.ResourceActionReplace),
+				},
+			},
 		},
 		data.ImportStep(),
 	})
