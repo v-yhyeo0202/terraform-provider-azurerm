@@ -634,6 +634,7 @@ func (r CosmosDbPostgreSQLClusterResource) CustomizeDiff() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			log.Printf("[WARN] azurerm_cosmosdb_postgresql_cluster applies elastic clusters, refer to https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-elastic-clusters")
+			fmt.Println("[WARN] azurerm_cosmosdb_postgresql_cluster applies elastic clusters, refer to https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-elastic-clusters")
 
 			return nil
 		},
