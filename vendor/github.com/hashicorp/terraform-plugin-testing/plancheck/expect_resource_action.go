@@ -18,9 +18,10 @@ type expectResourceAction struct {
 // CheckPlan implements the plan check logic.
 func (e expectResourceAction) CheckPlan(ctx context.Context, req CheckPlanRequest, resp *CheckPlanResponse) {
 	foundResource := false
+	fmt.Println("debug3")
 
 	for _, rc := range req.Plan.ResourceChanges {
-		fmt.Println("debug1 ", rc.Address)
+		fmt.Println("debug2 ", rc.Address)
 		if e.resourceAddress != rc.Address {
 			continue
 		}
@@ -84,6 +85,7 @@ func (e expectResourceAction) CheckPlan(ctx context.Context, req CheckPlanReques
 // ExpectResourceAction returns a plan check that asserts that a given resource will have a specific resource change type in the plan.
 // Valid actionType are an enum of type plancheck.ResourceActionType, examples: NoOp, DestroyBeforeCreate, Update (in-place), etc.
 func ExpectResourceAction(resourceAddress string, actionType ResourceActionType) PlanCheck {
+	fmt.Println("debug4")
 	return expectResourceAction{
 		resourceAddress: resourceAddress,
 		actionType:      actionType,
