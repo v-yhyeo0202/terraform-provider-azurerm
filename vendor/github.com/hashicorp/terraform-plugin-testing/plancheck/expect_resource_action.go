@@ -20,6 +20,7 @@ func (e expectResourceAction) CheckPlan(ctx context.Context, req CheckPlanReques
 	foundResource := false
 
 	for _, rc := range req.Plan.ResourceChanges {
+		fmt.Println("debug1 ", rc.Address)
 		if e.resourceAddress != rc.Address {
 			continue
 		}
