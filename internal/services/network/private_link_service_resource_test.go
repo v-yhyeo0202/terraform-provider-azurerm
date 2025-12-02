@@ -82,12 +82,12 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction("nat_ip_configuration.1.name", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),/*
 					plancheck.ExpectResourceAction("nat_ip_configuration.2.name", plancheck.ResourceActionReplace),
 					plancheck.ExpectResourceAction("nat_ip_configuration.3.name", plancheck.ResourceActionReplace),
 					plancheck.ExpectResourceAction("nat_ip_configuration.1.primary", plancheck.ResourceActionReplace),
 					plancheck.ExpectResourceAction("nat_ip_configuration.2.primary", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.3.primary", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.3.primary", plancheck.ResourceActionReplace),*/
 				},
 			},
 		},
@@ -101,12 +101,12 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction("nat_ip_configuration.1.name", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),/*
 					plancheck.ExpectResourceAction("nat_ip_configuration.2.name", plancheck.ResourceActionReplace),
 					plancheck.ExpectResourceAction("nat_ip_configuration.3.name", plancheck.ResourceActionReplace),
 					plancheck.ExpectResourceAction("nat_ip_configuration.1.primary", plancheck.ResourceActionReplace),
 					plancheck.ExpectResourceAction("nat_ip_configuration.2.primary", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.3.primary", plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("nat_ip_configuration.3.primary", plancheck.ResourceActionReplace),*/
 				},
 			},
 		},
