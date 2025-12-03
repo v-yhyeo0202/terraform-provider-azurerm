@@ -898,6 +898,14 @@ resource "azurerm_private_link_service" "test" {
     primary                    = false
   }
 
+  nat_ip_configuration {
+    name                       = "quaternaryIpConfiguration-%d"
+    subnet_id                  = azurerm_subnet.test.id
+    private_ip_address         = "10.5.1.43"
+    private_ip_address_version = "IPv4"
+    primary                    = false
+  }
+
   tags = {
     env = "test"
   }
