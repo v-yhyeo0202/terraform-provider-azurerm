@@ -201,9 +201,23 @@ func resourceVPNServerConfiguration() *pluginsdk.Resource {
 
 									"secret": {
 										Type:         pluginsdk.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringIsNotEmpty,
 										Sensitive:    true,
+									},
+
+									"secret_wo": {
+										Type:         pluginsdk.TypeString,
+										Optional:     true,
+										WriteOnly:    true,
+										ValidateFunc: validation.StringIsNotEmpty,
+										ExactlyOneOf: []string{"secret", "secret_wo"},
+									},
+
+									"secret_wo_version": {
+										Type:         pluginsdk.TypeInt,
+										Optional:     true,
+										RequiredWith: []string{"secret_wo"},
 									},
 
 									"score": {
@@ -266,6 +280,8 @@ func resourceVPNServerConfiguration() *pluginsdk.Resource {
 
 			"tags": commonschema.Tags(),
 		},
+
+		// CustomizeDiff: pluginsdk.CustomizeDiffShim(vpnServerConfigurationCustomizeDiff),
 	}
 }
 
@@ -299,7 +315,13 @@ func resourceVPNServerConfigurationCreate(d *pluginsdk.ResourceData, meta interf
 	ipSecPoliciesRaw := d.Get("ipsec_policy").([]interface{})
 	ipSecPolicies := expandVpnServerConfigurationIPSecPolicies(ipSecPoliciesRaw)
 
-	radius := expandVpnServerConfigurationRadius(d.Get("radius").([]interface{}))
+	secretWoHasChanged := make([]bool, len(d.Get("radius.0.server").([]interface{})))
+
+	for i, _ := range secretWoHasChanged {
+		secretWoHasChanged[i] = true
+	}
+
+	radius := expandVpnServerConfigurationRadius(d.Get("radius").([]interface{}), secretWoHasChanged)
 
 	vpnProtocolsRaw := d.Get("vpn_protocols").(*pluginsdk.Set).List()
 	vpnProtocols := expandVpnServerConfigurationVPNProtocols(vpnProtocolsRaw)
@@ -429,7 +451,8 @@ func resourceVPNServerConfigurationRead(d *pluginsdk.ResourceData, meta interfac
 				return fmt.Errorf("setting `ipsec_policy`: %+v", err)
 			}
 
-			flattenedRadius := flattenVpnServerConfigurationRadius(props)
+			radiusServers := d.Get("radius.0.server").([]interface{})
+			flattenedRadius := flattenVpnServerConfigurationRadius(props, radiusServers)
 			if err := d.Set("radius", flattenedRadius); err != nil {
 				return fmt.Errorf("setting `radius`: %+v", err)
 			}
@@ -541,7 +564,14 @@ func resourceVPNServerConfigurationUpdate(d *pluginsdk.ResourceData, meta interf
 		payload.Properties.RadiusServerRootCertificates = nil
 		payload.Properties.RadiusServers = nil
 
-		radius := expandVpnServerConfigurationRadius(d.Get("radius").([]interface{}))
+		serverCount := len(d.Get("radius.0.server").([]interface{}))
+		secretWoHasChanged := make([]bool, serverCount)
+
+		for i := 0; i < serverCount; i++ {
+			secretWoHasChanged[i] = d.HasChange(fmt.Sprintf("radius.0.server.%d.secret_wo_version", i))
+		}
+
+		radius := expandVpnServerConfigurationRadius(d.Get("radius").([]interface{}), secretWoHasChanged)
 		if supportsRadius {
 			if radius == nil {
 				return fmt.Errorf("`radius` must be specified when `vpn_authentication_type` is set to `Radius`")
@@ -598,6 +628,22 @@ func resourceVPNServerConfigurationDelete(d *pluginsdk.ResourceData, meta interf
 	return nil
 }
 
+/*
+	func vpnServerConfigurationCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
+		if radiusServers, ok := d.GetOk("radius.0.server"); ok {
+			var oldRadiusServerSecretWo interface{}
+
+			for i, _ := range radiusServers.([]interface{}) {
+				if !d.HasChange(fmt.Sprintf("radius.0.server.%d.secret_wo_version", i)) {
+					oldRadiusServerSecretWo, _ = d.GetChange("radius.0.server.%d.secret_wo")
+					d.SetNew("radius.0.server.%d.secret_wo", oldRadiusServerSecretWo)
+				}
+			}
+		}
+
+		return nil
+	}
+*/
 func expandVpnServerConfigurationAADAuthentication(input []interface{}) *virtualwans.AadAuthenticationParameters {
 	if len(input) == 0 {
 		return nil
@@ -769,7 +815,7 @@ type vpnServerConfigurationRadius struct {
 	serverRootCertificates *[]virtualwans.VpnServerConfigRadiusServerRootCertificate
 }
 
-func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigurationRadius {
+func expandVpnServerConfigurationRadius(input []interface{}, secretWoHasChanged []bool) *vpnServerConfigurationRadius {
 	if len(input) == 0 || input[0] == nil {
 		return nil
 	}
@@ -797,18 +843,28 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 	}
 
 	radiusServers := make([]virtualwans.RadiusServer, 0)
+	var radiusServer virtualwans.RadiusServer
 	address := ""
 	secret := ""
 
 	if val["server"] != nil {
 		radiusServersRaw := val["server"].([]interface{})
-		for _, raw := range radiusServersRaw {
+		for i, raw := range radiusServersRaw {
 			v := raw.(map[string]interface{})
-			radiusServers = append(radiusServers, virtualwans.RadiusServer{
+			radiusServer = virtualwans.RadiusServer{
 				RadiusServerAddress: v["address"].(string),
-				RadiusServerSecret:  v["secret"].(string),
 				RadiusServerScore:   utils.Int64(int64(v["score"].(int))),
-			})
+			}
+
+			if v["secret"] != nil {
+				radiusServer.RadiusServerSecret = v["secret"].(string)
+			}
+
+			if v["secret_wo"] != nil && secretWoHasChanged[i] {
+				radiusServer.RadiusServerSecret = v["secret_wo"].(string)
+			}
+
+			radiusServers = append(radiusServers, radiusServer)
 		}
 	}
 
@@ -821,7 +877,7 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 	}
 }
 
-func flattenVpnServerConfigurationRadius(input *virtualwans.VpnServerConfigurationProperties) []interface{} {
+func flattenVpnServerConfigurationRadius(input *virtualwans.VpnServerConfigurationProperties, radiusServers []interface{}) []interface{} {
 	if input == nil || (input.RadiusServerAddress == nil && (input.RadiusServers == nil || len(*input.RadiusServers) == 0)) {
 		return []interface{}{}
 	}
@@ -868,11 +924,12 @@ func flattenVpnServerConfigurationRadius(input *virtualwans.VpnServerConfigurati
 
 	servers := make([]interface{}, 0)
 	if input.RadiusServers != nil && len(*input.RadiusServers) > 0 {
-		for _, v := range *input.RadiusServers {
+		for i, v := range *input.RadiusServers {
 			servers = append(servers, map[string]interface{}{
-				"address": v.RadiusServerAddress,
-				"secret":  v.RadiusServerSecret,
-				"score":   pointer.From(v.RadiusServerScore),
+				"address":           v.RadiusServerAddress,
+				"secret":            v.RadiusServerSecret,
+				"secret_wo_version": radiusServers[i].(map[string]interface{})["secret_wo_verrsion"],
+				"score":             pointer.From(v.RadiusServerScore),
 			})
 		}
 	}
