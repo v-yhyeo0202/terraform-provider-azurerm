@@ -910,7 +910,7 @@ resource "azurerm_private_link_service" "test" {
     env = "test"
   }
 }
-`, data.RandomInteger, "UK South", data.RandomInteger, data.RandomInteger, data.RandomInteger, destinationIPAddress, data.RandomInteger, data.RandomInteger, data.RandomInteger)
+`, data.RandomInteger, "UK South", data.RandomInteger, data.RandomInteger, data.RandomInteger, destinationIPAddress, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
 func (PrivateLinkServiceResource) template(data acceptance.TestData) string {
