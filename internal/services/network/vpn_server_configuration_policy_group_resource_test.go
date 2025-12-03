@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/virtualwans"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -22,12 +24,17 @@ func TestAccVPNServerConfigurationPolicyGroup_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_vpn_server_configuration_policy_group", "test")
 	r := VPNServerConfigurationPolicyGroupResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PostApplyPreRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionUpdate),
+				},
+			},
 		},
 		data.ImportStep(),
 	})
