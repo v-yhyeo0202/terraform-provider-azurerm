@@ -82,12 +82,7 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),/*
-					plancheck.ExpectResourceAction("nat_ip_configuration.2.name", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.3.name", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.1.primary", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.2.primary", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.3.primary", plancheck.ResourceActionReplace),*/
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
 				},
 			},
 		},
@@ -101,12 +96,7 @@ func TestAccPrivateLinkService_update(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),/*
-					plancheck.ExpectResourceAction("nat_ip_configuration.2.name", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.3.name", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.1.primary", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.2.primary", plancheck.ResourceActionReplace),
-					plancheck.ExpectResourceAction("nat_ip_configuration.3.primary", plancheck.ResourceActionReplace),*/
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
 				},
 			},
 		},
@@ -118,7 +108,7 @@ func TestAccPrivateLinkService_move(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_private_link_service", "test")
 	r := PrivateLinkServiceResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.moveSetup(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -138,6 +128,11 @@ func TestAccPrivateLinkService_move(t *testing.T) {
 				check.That(data.ResourceName).Key("nat_ip_configuration.2.private_ip_address").HasValue("10.5.2.19"),
 				check.That(data.ResourceName).Key("nat_ip_configuration.3.private_ip_address").HasValue("10.5.2.20"),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 		},
 		data.ImportStep(),
 		{
@@ -150,6 +145,11 @@ func TestAccPrivateLinkService_move(t *testing.T) {
 				check.That(data.ResourceName).Key("nat_ip_configuration.2.private_ip_address").HasValue("10.5.2.19"),
 				check.That(data.ResourceName).Key("nat_ip_configuration.3.private_ip_address").HasValue("10.5.2.21"),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 		},
 		data.ImportStep(),
 		{
@@ -162,6 +162,11 @@ func TestAccPrivateLinkService_move(t *testing.T) {
 				check.That(data.ResourceName).Key("nat_ip_configuration.2.private_ip_address").HasValue("10.5.2.19"),
 				check.That(data.ResourceName).Key("nat_ip_configuration.3.private_ip_address").HasValue("10.5.2.21"),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 		},
 		data.ImportStep(),
 		{
@@ -174,6 +179,11 @@ func TestAccPrivateLinkService_move(t *testing.T) {
 				check.That(data.ResourceName).Key("nat_ip_configuration.2.private_ip_address").HasValue("10.5.2.19"),
 				check.That(data.ResourceName).Key("nat_ip_configuration.3.private_ip_address").HasValue("10.5.2.18"),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 		},
 		data.ImportStep(),
 	})
