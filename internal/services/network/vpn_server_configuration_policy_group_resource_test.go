@@ -31,7 +31,7 @@ func TestAccVPNServerConfigurationPolicyGroup_basic(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
-				PostApplyPreRefresh: []plancheck.PlanCheck{
+				PostApplyPostRefresh: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionUpdate),
 				},
 			},
