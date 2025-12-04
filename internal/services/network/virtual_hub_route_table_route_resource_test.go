@@ -224,6 +224,7 @@ resource "azurerm_virtual_hub_route_table_route" "test" {
 }
 `, r.template(data), data.RandomInteger)
 
+	fmt.Println("debug0")
 	fmt.Println(tfCode)
 
 	return tfCode
@@ -285,7 +286,7 @@ resource "azurerm_virtual_hub_route_table_route" "test_3" {
 }
 
 func (r VirtualHubRouteTableRouteResource) duplicateDestinations(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_virtual_hub_route_table_route" "test" {
@@ -310,4 +311,9 @@ resource "azurerm_virtual_hub_route_table_route" "duplicate" {
   next_hop          = azurerm_virtual_hub_connection.test.id
 }
 `, r.template(data), data.RandomInteger, data.RandomInteger)
+
+	fmt.Println("debug1")
+	fmt.Println(tfCode)
+
+	return tfCode
 }
