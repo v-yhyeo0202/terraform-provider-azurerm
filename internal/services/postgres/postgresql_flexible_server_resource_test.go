@@ -839,7 +839,7 @@ resource "azurerm_postgresql_flexible_server" "test" {
 }
 
 func (r PostgresqlFlexibleServerResource) basic(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_postgresql_flexible_server" "test" {
@@ -853,6 +853,10 @@ resource "azurerm_postgresql_flexible_server" "test" {
   zone                   = "2"
 }
 `, r.template(data), data.RandomInteger)
+
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (r PostgresqlFlexibleServerResource) withVersion(data acceptance.TestData, versionNum int, creatMode string) string {
