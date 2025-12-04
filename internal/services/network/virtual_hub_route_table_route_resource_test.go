@@ -190,7 +190,7 @@ resource "azurerm_virtual_hub_route_table" "test" {
 }
 
 func (r VirtualHubRouteTableRouteResource) basic(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_virtual_hub_route_table_route" "test" {
@@ -204,6 +204,10 @@ resource "azurerm_virtual_hub_route_table_route" "test" {
   next_hop          = azurerm_virtual_hub_connection.test.id
 }
 `, r.template(data), data.RandomInteger)
+
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (r VirtualHubRouteTableRouteResource) requiresImport(data acceptance.TestData) string {
