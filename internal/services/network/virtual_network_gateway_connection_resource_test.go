@@ -469,7 +469,7 @@ resource "azurerm_virtual_network_gateway_connection" "test" {
 }
 
 func (VirtualNetworkGatewayConnectionResource) expressRoute(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 variable "random" {
   default = "%d"
 }
@@ -577,6 +577,10 @@ resource "azurerm_virtual_network_gateway_connection" "test" {
   routing_weight             = "0"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger)
+
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (VirtualNetworkGatewayConnectionResource) expressRouteWithFastPath(data acceptance.TestData) string {
