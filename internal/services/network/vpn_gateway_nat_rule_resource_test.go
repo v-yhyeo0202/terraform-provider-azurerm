@@ -69,7 +69,7 @@ func TestAccVpnGatewayNatRule_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_vpn_gateway_nat_rule", "test")
 	r := VPNGatewayNatRuleResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
