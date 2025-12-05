@@ -137,7 +137,7 @@ resource "azurerm_data_protection_backup_vault" "test" {
 
   lifecycle {
     replace_triggered_by = [
-      azurerm_data_protection_backup_vault_customer_managed_key.%s
+      azurerm_data_protection_backup_vault_customer_managed_key.%s.infrastructure_encryption_enabled
     ]
   }
 }
