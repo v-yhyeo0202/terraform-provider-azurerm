@@ -291,7 +291,7 @@ resource "azurerm_virtual_hub_bgp_connection" "test" {
   name                          = "acctest-VHub-BgpConnection-%[2]d"
   virtual_hub_id                = azurerm_virtual_hub.test2.id
   peer_asn                      = 65514
-  peer_ip                       = "10.5.0.1"
+  peer_ip                       = "10.6.0.1"
   virtual_network_connection_id = azurerm_virtual_hub_connection.test2.id
 }
 `, r.virtualWanTemplate(data), data.RandomInteger)
