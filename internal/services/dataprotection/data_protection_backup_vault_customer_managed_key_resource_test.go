@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/dataprotection/2024-04-01/backupvaults"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -68,6 +70,33 @@ func TestAccDataProtectionBackupVaultCustomerManagedKey_updated(t *testing.T) {
 	})
 }
 
+func TestAccDataProtectionBackupVaultCustomerManagedKey_updateInfrastructureEncryption(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault_customer_managed_key", "test")
+	r := DataProtectionBackupVaultCustomerManagedKeyResource{}
+	fmt.Println("debug0 ", data.ResourceName)
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.complete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.updateInfrastructureEncryption(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := backupvaults.ParseBackupVaultID(state.ID)
 	if err != nil {
@@ -84,7 +113,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Exists(ctx context.
 	return pointer.To(true), nil
 }
 
-func (r DataProtectionBackupVaultCustomerManagedKeyResource) template(data acceptance.TestData) string {
+func (r DataProtectionBackupVaultCustomerManagedKeyResource) template(data acceptance.TestData, customerManagedKeyName string) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -104,6 +133,12 @@ resource "azurerm_data_protection_backup_vault" "test" {
 
   identity {
     type = "SystemAssigned"
+  }
+
+  lifecycle {
+    replace_triggered_by = [
+      azurerm_data_protection_backup_vault_customer_managed_key.%s
+    ]
   }
 }
 
@@ -182,34 +217,38 @@ resource "azurerm_key_vault_key" "test" {
   ]
 }
 
-`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomString, data.RandomString)
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, customerManagedKeyName, data.RandomString, data.RandomString)
 }
 
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) complete(data acceptance.TestData) string {
-	template := r.template(data)
+	customerManagedKeyName := "test"
+	template := r.template(data, customerManagedKeyName)
 	return fmt.Sprintf(`
 %s
 
-resource "azurerm_data_protection_backup_vault_customer_managed_key" "test" {
+resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
   key_vault_key_id                = azurerm_key_vault_key.test.id
+  infrastructure_encryption_enabled = true
 }
-`, template)
+`, template, customerManagedKeyName)
 }
 
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) requiresImport(data acceptance.TestData) string {
+	customerManagedKeyName := "import"
 	template := r.complete(data)
 	return fmt.Sprintf(`
 %s
-resource "azurerm_data_protection_backup_vault_customer_managed_key" "import" {
+resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   data_protection_backup_vault_id = azurerm_data_protection_backup_vault_customer_managed_key.test.data_protection_backup_vault_id
   key_vault_key_id                = azurerm_data_protection_backup_vault_customer_managed_key.test.key_vault_key_id
 }
-`, template)
+`, template, customerManagedKeyName)
 }
 
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) updated(data acceptance.TestData) string {
-	template := r.template(data)
+	customerManagedKeyName := "test"
+	template := r.template(data, customerManagedKeyName)
 	return fmt.Sprintf(`
 %s
 
@@ -285,9 +324,23 @@ resource "azurerm_key_vault_key" "test2" {
   ]
 }
 
-resource "azurerm_data_protection_backup_vault_customer_managed_key" "test" {
+resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
   key_vault_key_id                = azurerm_key_vault_key.test2.id
 }
-`, template, data.RandomString, data.RandomString)
+`, template, data.RandomString, data.RandomString, customerManagedKeyName)
+}
+
+func (r DataProtectionBackupVaultCustomerManagedKeyResource) updateInfrastructureEncryption(data acceptance.TestData) string {
+	customerManagedKeyName := "test"
+	template := r.template(data, customerManagedKeyName)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
+  data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
+  key_vault_key_id                = azurerm_key_vault_key.test.id
+  infrastructure_encryption_enabled = false
+}
+`, template, customerManagedKeyName)
 }

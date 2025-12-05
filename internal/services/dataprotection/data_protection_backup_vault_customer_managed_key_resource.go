@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -22,11 +23,14 @@ import (
 type DataProtectionBackupVaultCustomerManagedKeyResource struct{}
 
 type DataProtectionBackupVaultCustomerManagedKeyModel struct {
-	DataProtectionBackupVaultID string `tfschema:"data_protection_backup_vault_id"`
-	KeyVaultKeyID               string `tfschema:"key_vault_key_id"`
+	DataProtectionBackupVaultID     string `tfschema:"data_protection_backup_vault_id"`
+	KeyVaultKeyID                   string `tfschema:"key_vault_key_id"`
+	InfrastructureEncryptionEnabled bool   `tfscheme:"infrastructure_encryption_enabled"`
 }
 
 var _ sdk.ResourceWithUpdate = DataProtectionBackupVaultCustomerManagedKeyResource{}
+
+var _ sdk.ResourceWithCustomizeDiff = DataProtectionBackupVaultCustomerManagedKeyResource{}
 
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) ModelObject() interface{} {
 	return &DataProtectionBackupVaultCustomerManagedKeyResource{}
@@ -53,6 +57,11 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Arguments() map[str
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: keyVaultValidate.NestedItemIdWithOptionalVersion,
+		},
+
+		"infrastructure_encryption_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
 		},
 	}
 }
@@ -110,6 +119,12 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 				},
 			}
 
+			if cmk.InfrastructureEncryptionEnabled {
+				payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
+			} else {
+				payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
+			}
+
 			payload.Properties.SecuritySettings.EncryptionSettings.KekIdentity = &backupvaults.CmkKekIdentity{
 				IdentityType: pointer.To(backupvaults.IdentityTypeSystemAssigned),
 			}
@@ -153,6 +168,10 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Read() sdk.Resource
 				if props.SecuritySettings != nil && props.SecuritySettings.EncryptionSettings != nil {
 					if props.SecuritySettings.EncryptionSettings.KeyVaultProperties != nil {
 						state.KeyVaultKeyID = pointer.From(props.SecuritySettings.EncryptionSettings.KeyVaultProperties.KeyUri)
+					}
+
+					if props.SecuritySettings.EncryptionSettings.InfrastructureEncryption != nil {
+						state.InfrastructureEncryptionEnabled = strings.EqualFold(string(pointer.From(props.SecuritySettings.EncryptionSettings.InfrastructureEncryption)), string(backupvaults.InfrastructureEncryptionStateEnabled))
 					}
 				}
 			}
@@ -218,9 +237,29 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Update() sdk.Resour
 				}
 			}
 
+			if metadata.ResourceData.HasChange("infrastructure_encryption_enabled") {
+				if cmk.InfrastructureEncryptionEnabled {
+					payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
+				} else {
+					payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
+				}
+			}
+
 			err = client.CreateOrUpdateThenPoll(ctx, *id, *payload, backupvaults.DefaultCreateOrUpdateOperationOptions())
 			if err != nil {
 				return fmt.Errorf("updating Customer Managed Key for %s: %+v", *id, err)
+			}
+
+			return nil
+		},
+	}
+}
+
+func (r DataProtectionBackupVaultCustomerManagedKeyResource) CustomizeDiff() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			if metadata.ResourceDiff.HasChange("infrastructure_encryption_enabled") {
+
 			}
 
 			return nil
