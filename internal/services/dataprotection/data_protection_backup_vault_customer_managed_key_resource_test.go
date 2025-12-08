@@ -120,8 +120,6 @@ provider "azurerm" {
   features {}
 }
 
-// provider "null" {}
-
 resource "azurerm_resource_group" "test" {
   name     = "acctest-dataprotection-%d"
   location = "%s"
@@ -137,13 +135,6 @@ resource "azurerm_data_protection_backup_vault" "test" {
   identity {
     type = "SystemAssigned"
   }
-  /*
-  lifecycle {
-    replace_triggered_by = [
-      azurerm_data_protection_backup_vault_customer_managed_key.%s.infrastructure_encryption_enabled
-    ]
-  }
-  */
 }
 
 
@@ -220,14 +211,8 @@ resource "azurerm_key_vault_key" "test" {
     "wrapKey",
   ]
 }
-/*
-resource "null_resource" "test" {
-  triggers = {
-    infrastructure_encryption_enabled = false
-  }
-}
-*/
-`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, customerManagedKeyName, data.RandomString, data.RandomString)
+
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomString, data.RandomString)
 }
 
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) complete(data acceptance.TestData) string {
@@ -239,7 +224,6 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) complete(data accep
 resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
   key_vault_key_id                = azurerm_key_vault_key.test.id
-  // infrastructure_encryption_enabled = null_resource.test.triggers.infrastructure_encryption_enabled
   infrastructure_encryption_enabled = true
 }
 `, template, customerManagedKeyName)
