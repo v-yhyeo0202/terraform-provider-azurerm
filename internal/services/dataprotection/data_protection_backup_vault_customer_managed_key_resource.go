@@ -214,15 +214,15 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Update() sdk.Resour
 			if err := metadata.Decode(&cmk); err != nil {
 				return err
 			}
-
+			fmt.Println("debug18 ", cmk.InfrastructureEncryptionEnabled)
 			id, err := backupvaults.ParseBackupVaultID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
-
+			fmt.Println("debug19 ", cmk.InfrastructureEncryptionEnabled)
 			locks.ByID(id.ID())
 			defer locks.UnlockByID(id.ID())
-
+			fmt.Println("debug20 ", cmk.InfrastructureEncryptionEnabled)
 			resp, err := client.Get(ctx, *id)
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
@@ -230,17 +230,17 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Update() sdk.Resour
 				}
 				return fmt.Errorf("retrieving %s: %+v", *id, err)
 			}
-
+			fmt.Println("debug21 ", cmk.InfrastructureEncryptionEnabled)
 			if resp.Model == nil {
 				return fmt.Errorf("retrieving %s: `model` is nil", *id)
 			}
-
+			fmt.Println("debug22 ", cmk.InfrastructureEncryptionEnabled)
 			if resp.Model.Properties.SecuritySettings == nil || resp.Model.Properties.SecuritySettings.EncryptionSettings == nil {
 				return fmt.Errorf("retrieving %s: Customer Managed Key was not found", *id)
 			}
-
+			fmt.Println("debug23 ", cmk.InfrastructureEncryptionEnabled)
 			payload := resp.Model
-
+			fmt.Println("debug24 ", cmk.InfrastructureEncryptionEnabled)
 			if metadata.ResourceData.HasChange("key_vault_key_id") {
 				keyId, err := keyVaultParse.ParseOptionallyVersionedNestedItemID(cmk.KeyVaultKeyID)
 				if err != nil {
@@ -250,14 +250,19 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Update() sdk.Resour
 					KeyUri: pointer.To(keyId.ID()),
 				}
 			}
-
+			fmt.Println("debug24 ", cmk.InfrastructureEncryptionEnabled)
 			if metadata.ResourceData.HasChange("infrastructure_encryption_enabled") {
+				fmt.Println("debug25 ", cmk.InfrastructureEncryptionEnabled)
 				if cmk.InfrastructureEncryptionEnabled {
+					fmt.Println("debug26")
 					payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
 				} else {
+					fmt.Println("debug27")
 					payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
 				}
 			}
+
+			fmt.Println("debug28, ", pointer.From(payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption))
 
 			err = client.CreateOrUpdateThenPoll(ctx, *id, *payload, backupvaults.DefaultCreateOrUpdateOperationOptions())
 			if err != nil {
