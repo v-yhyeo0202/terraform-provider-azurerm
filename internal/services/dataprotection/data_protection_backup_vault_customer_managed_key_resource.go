@@ -25,7 +25,7 @@ type DataProtectionBackupVaultCustomerManagedKeyResource struct{}
 type DataProtectionBackupVaultCustomerManagedKeyModel struct {
 	DataProtectionBackupVaultID     string `tfschema:"data_protection_backup_vault_id"`
 	KeyVaultKeyID                   string `tfschema:"key_vault_key_id"`
-	InfrastructureEncryptionEnabled bool   `tfscheme:"infrastructure_encryption_enabled"`
+	InfrastructureEncryptionEnabled bool   `tfschema:"infrastructure_encryption_enabled"`
 }
 
 var _ sdk.ResourceWithUpdate = DataProtectionBackupVaultCustomerManagedKeyResource{}
