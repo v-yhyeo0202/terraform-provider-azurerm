@@ -30,7 +30,7 @@ type DataProtectionBackupVaultCustomerManagedKeyModel struct {
 
 var _ sdk.ResourceWithUpdate = DataProtectionBackupVaultCustomerManagedKeyResource{}
 
-var _ sdk.ResourceWithCustomizeDiff = DataProtectionBackupVaultCustomerManagedKeyResource{}
+// var _ sdk.ResourceWithCustomizeDiff = DataProtectionBackupVaultCustomerManagedKeyResource{}
 
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) ModelObject() interface{} {
 	return &DataProtectionBackupVaultCustomerManagedKeyResource{}
@@ -274,6 +274,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Update() sdk.Resour
 	}
 }
 
+/*
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) CustomizeDiff() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -285,3 +286,4 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) CustomizeDiff() sdk
 		},
 	}
 }
+*/
