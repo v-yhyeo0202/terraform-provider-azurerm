@@ -74,7 +74,7 @@ func TestAccDataProtectionBackupVaultCustomerManagedKey_updateInfrastructureEncr
 	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault_customer_managed_key", "test")
 	r := DataProtectionBackupVaultCustomerManagedKeyResource{}
 	fmt.Println("debug0 ", data.ResourceName)
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -90,6 +90,7 @@ func TestAccDataProtectionBackupVaultCustomerManagedKey_updateInfrastructureEncr
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+					plancheck.ExpectResourceAction("azurerm_data_protection_backup_vault.test", plancheck.ResourceActionReplace),
 				},
 			},
 		},
@@ -118,6 +119,8 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) template(data accep
 provider "azurerm" {
   features {}
 }
+
+// provider "null" {}
 
 resource "azurerm_resource_group" "test" {
   name     = "acctest-dataprotection-%d"
@@ -217,7 +220,13 @@ resource "azurerm_key_vault_key" "test" {
     "wrapKey",
   ]
 }
-
+/*
+resource "null_resource" "test" {
+  triggers = {
+    infrastructure_encryption_enabled = false
+  }
+}
+*/
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, customerManagedKeyName, data.RandomString, data.RandomString)
 }
 
@@ -230,6 +239,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) complete(data accep
 resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
   key_vault_key_id                = azurerm_key_vault_key.test.id
+  // infrastructure_encryption_enabled = null_resource.test.triggers.infrastructure_encryption_enabled
   infrastructure_encryption_enabled = true
 }
 `, template, customerManagedKeyName)
@@ -243,6 +253,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) requiresImport(data
 resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   data_protection_backup_vault_id = azurerm_data_protection_backup_vault_customer_managed_key.test.data_protection_backup_vault_id
   key_vault_key_id                = azurerm_data_protection_backup_vault_customer_managed_key.test.key_vault_key_id
+  infrastructure_encryption_enabled = azurerm_data_protection_backup_vault_customer_managed_key.test.infrastructure_encryption_enabled
 }
 `, template, customerManagedKeyName)
 }
@@ -328,6 +339,7 @@ resource "azurerm_key_vault_key" "test2" {
 resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
   key_vault_key_id                = azurerm_key_vault_key.test2.id
+  infrastructure_encryption_enabled = true
 }
 `, template, data.RandomString, data.RandomString, customerManagedKeyName)
 }
