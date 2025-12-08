@@ -164,12 +164,18 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Read() sdk.Resource
 			var state DataProtectionBackupVaultCustomerManagedKeyModel
 			state.DataProtectionBackupVaultID = id.ID()
 
+			fmt.Println("debug2")
+
 			if model := existing.Model; model != nil {
+				fmt.Println("debug3")
 				props := model.Properties
 				if props.SecuritySettings != nil && props.SecuritySettings.EncryptionSettings != nil {
+					fmt.Println("debug4")
 					if props.SecuritySettings.EncryptionSettings.KeyVaultProperties != nil {
 						state.KeyVaultKeyID = pointer.From(props.SecuritySettings.EncryptionSettings.KeyVaultProperties.KeyUri)
 					}
+
+					fmt.Println("debug1 ", string(pointer.From(props.SecuritySettings.EncryptionSettings.InfrastructureEncryption)))
 
 					if props.SecuritySettings.EncryptionSettings.InfrastructureEncryption != nil {
 						state.InfrastructureEncryptionEnabled = strings.EqualFold(string(pointer.From(props.SecuritySettings.EncryptionSettings.InfrastructureEncryption)), string(backupvaults.InfrastructureEncryptionStateEnabled))
