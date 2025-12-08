@@ -120,11 +120,17 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 				},
 			}
 
+			fmt.Println("debug5 ", cmk.InfrastructureEncryptionEnabled)
+
 			if cmk.InfrastructureEncryptionEnabled {
+				fmt.Println("debug6 ", backupvaults.InfrastructureEncryptionStateEnabled)
 				payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
 			} else {
+				fmt.Println("debug7 ", backupvaults.InfrastructureEncryptionStateDisabled)
 				payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
 			}
+
+			fmt.Println("debug8 ", pointer.From(payload.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption))
 
 			payload.Properties.SecuritySettings.EncryptionSettings.KekIdentity = &backupvaults.CmkKekIdentity{
 				IdentityType: pointer.To(backupvaults.IdentityTypeSystemAssigned),
