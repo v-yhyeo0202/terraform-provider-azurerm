@@ -731,6 +731,7 @@ func resourceIotHubCreate(d *pluginsdk.ResourceData, meta interface{}) error {
 			MessagingEndpoints:            messagingEndpoints,
 			EnableFileUploadNotifications: &enableFileUploadNotifications,
 			CloudToDevice:                 cloudToDeviceProperties,
+			EnableDataResidency:           pointer.To(true),
 		},
 		Identity: identity,
 		Tags:     tags.Expand(d.Get("tags").(map[string]interface{})),
