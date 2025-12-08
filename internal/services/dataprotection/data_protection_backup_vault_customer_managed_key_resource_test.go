@@ -218,7 +218,7 @@ resource "azurerm_key_vault_key" "test" {
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) complete(data acceptance.TestData) string {
 	customerManagedKeyName := "test"
 	template := r.template(data, customerManagedKeyName)
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
@@ -227,6 +227,11 @@ resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   infrastructure_encryption_enabled = true
 }
 `, template, customerManagedKeyName)
+
+	fmt.Println("debug9")
+	fmt.Println(tfCode)
+
+	return tfCode
 }
 
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) requiresImport(data acceptance.TestData) string {
@@ -331,7 +336,7 @@ resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) updateInfrastructureEncryption(data acceptance.TestData) string {
 	customerManagedKeyName := "test"
 	template := r.template(data, customerManagedKeyName)
-	return fmt.Sprintf(`
+	tfCode := fmt.Sprintf(`
 %s
 
 resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
@@ -340,4 +345,9 @@ resource "azurerm_data_protection_backup_vault_customer_managed_key" "%s" {
   infrastructure_encryption_enabled = false
 }
 `, template, customerManagedKeyName)
+
+	fmt.Println("debug10")
+	fmt.Println(tfCode)
+
+	return tfCode
 }
