@@ -62,6 +62,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Arguments() map[str
 		"infrastructure_encryption_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
+			Default:  false,
 			ForceNew: true,
 		},
 	}
@@ -81,15 +82,15 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 			if err := metadata.Decode(&cmk); err != nil {
 				return err
 			}
-
+			fmt.Println("debug11 ", cmk.InfrastructureEncryptionEnabled)
 			id, err := backupvaults.ParseBackupVaultID(cmk.DataProtectionBackupVaultID)
 			if err != nil {
 				return err
 			}
-
+			fmt.Println("debug12 ", cmk.InfrastructureEncryptionEnabled)
 			locks.ByID(id.ID())
 			defer locks.UnlockByID(id.ID())
-
+			fmt.Println("debug13 ", cmk.InfrastructureEncryptionEnabled)
 			resp, err := client.Get(ctx, *id)
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
@@ -97,22 +98,22 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 				}
 				return fmt.Errorf("retrieving %s: %+v", *id, err)
 			}
-
+			fmt.Println("debug14 ", cmk.InfrastructureEncryptionEnabled)
 			if resp.Model == nil {
 				return fmt.Errorf("retrieving %s: `model` is nil", *id)
 			}
-
+			fmt.Println("debug15 ", cmk.InfrastructureEncryptionEnabled)
 			if resp.Model.Properties.SecuritySettings != nil && resp.Model.Properties.SecuritySettings.EncryptionSettings != nil {
 				return metadata.ResourceRequiresImport(r.ResourceType(), *id)
 			}
-
+			fmt.Println("debug16 ", cmk.InfrastructureEncryptionEnabled)
 			payload := resp.Model
 
 			keyId, err := keyVaultParse.ParseOptionallyVersionedNestedItemID(cmk.KeyVaultKeyID)
 			if err != nil {
 				return err
 			}
-
+			fmt.Println("debug17 ", cmk.InfrastructureEncryptionEnabled)
 			payload.Properties.SecuritySettings.EncryptionSettings = &backupvaults.EncryptionSettings{
 				State: pointer.To(backupvaults.EncryptionStateEnabled),
 				KeyVaultProperties: &backupvaults.CmkKeyVaultProperties{
