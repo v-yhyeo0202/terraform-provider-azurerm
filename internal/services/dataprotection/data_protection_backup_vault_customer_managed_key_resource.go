@@ -266,12 +266,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) CustomizeDiff() sdk
 	return sdk.ResourceFunc{
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			if metadata.ResourceDiff.HasChange("infrastructure_encryption_enabled") {
-				fmt.Println("debug0")
-				fmt.Println(metadata.ResourceDiff.GetRawConfig())
-				fmt.Println("debug1")
-				fmt.Println(metadata.ResourceDiff.GetRawPlan())
-				fmt.Println("debug2")
-				fmt.Println(metadata.ResourceDiff.GetRawState())
+
 			}
 
 			return nil
