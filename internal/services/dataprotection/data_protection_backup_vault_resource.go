@@ -107,7 +107,7 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 			},
 
 			"infrastructure_encryption_enabled": {
-				Type: pluginsdk.TypeBool,
+				Type:     pluginsdk.TypeBool,
 				Optional: true,
 				ForceNew: true,
 			},
