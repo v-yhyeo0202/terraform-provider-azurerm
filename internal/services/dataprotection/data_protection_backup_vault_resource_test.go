@@ -461,28 +461,6 @@ resource "azurerm_key_vault" "test" {
       "Set",
     ]
   }
-
-  access_policy {
-    tenant_id = azurerm_data_protection_backup_vault.test.identity[0].tenant_id
-    object_id = azurerm_data_protection_backup_vault.test.identity[0].principal_id
-
-    key_permissions = [
-      "Create",
-      "Decrypt",
-      "Encrypt",
-      "Delete",
-      "Get",
-      "List",
-      "Purge",
-      "UnwrapKey",
-      "WrapKey",
-      "Verify",
-      "GetRotationPolicy"
-    ]
-    secret_permissions = [
-      "Set",
-    ]
-  }
 }
 
 resource "azurerm_key_vault_key" "test" {
@@ -513,6 +491,30 @@ resource "azurerm_data_protection_backup_vault" "test" {
   identity {
     type = "SystemAssigned"
   }
+}
+
+resource "azurerm_key_vault_access_policy" "test" {
+  key_vault_id = azurerm_key_vault.test.id
+  tenant_id = azurerm_data_protection_backup_vault.test.identity[0].tenant_id
+  object_id = azurerm_data_protection_backup_vault.test.identity[0].principal_id
+
+  key_permissions = [
+  	"Create",
+	"Decrypt",
+	"Encrypt",
+	"Delete",
+	"Get",
+	"List",
+	"Purge",
+	"UnwrapKey",
+	"WrapKey",
+	"Verify",
+	"GetRotationPolicy"
+  ]
+
+  secret_permissions = [
+  	"Set",
+  ]
 }
 `, template, data.RandomString, data.RandomString, data.RandomInteger)
 }
