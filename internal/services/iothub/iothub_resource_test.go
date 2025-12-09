@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -557,7 +559,7 @@ func TestAccIotHub_dataResidencyUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_iothub", "test")
 	r := IotHubResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.standard(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -570,6 +572,11 @@ func TestAccIotHub_dataResidencyUpdate(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 		},
 		data.ImportStep(),
 		{
@@ -577,6 +584,11 @@ func TestAccIotHub_dataResidencyUpdate(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 		},
 		data.ImportStep(),
 	})

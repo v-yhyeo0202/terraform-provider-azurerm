@@ -607,6 +607,7 @@ func resourceIotHub() *pluginsdk.Resource {
 			"data_residency_enabled": {
 				Type:     pluginsdk.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"type": {
