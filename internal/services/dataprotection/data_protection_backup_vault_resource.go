@@ -106,6 +106,12 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				ValidateFunc: validation.StringInSlice(backupvaults.PossibleValuesForImmutabilityState(), false),
 			},
 
+			"infrastructure_encryption_enabled": {
+				Type: pluginsdk.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"identity": commonschema.SystemAssignedUserAssignedIdentityOptional(),
 
 			"tags": commonschema.Tags(),
@@ -205,6 +211,16 @@ func resourceDataProtectionBackupVaultCreateUpdate(d *pluginsdk.ResourceData, me
 		parameters.Properties.SecuritySettings.SoftDeleteSettings.RetentionDurationInDays = pointer.To(v.(float64))
 	}
 
+	if v, ok := d.GetOk("infrastructure_encryption_enabled"); ok {
+		parameters.Properties.SecuritySettings.EncryptionSettings = &backupvaults.EncryptionSettings{}
+
+		if v.(bool) {
+			parameters.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
+		} else {
+			parameters.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
+		}
+	}
+
 	err = client.CreateOrUpdateThenPoll(ctx, id, parameters, backupvaults.DefaultCreateOrUpdateOperationOptions())
 	if err != nil {
 		return fmt.Errorf("creating DataProtection BackupVault (%q): %+v", id, err)
@@ -255,6 +271,11 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 			if softDelete := securitySetting.SoftDeleteSettings; softDelete != nil {
 				d.Set("soft_delete", string(pointer.From(softDelete.State)))
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
+			}
+			if encryptionSettings := securitySetting.EncryptionSettings; encryptionSettings != nil {
+				if infrastructureEncryption := encryptionSettings.InfrastructureEncryption; infrastructureEncryption != nil {
+					d.Set("infrastructure_encryption_enabled", pointer.From(infrastructureEncryption) == backupvaults.InfrastructureEncryptionStateEnabled)
+				}
 			}
 		}
 		d.Set("immutability", string(immutability))
