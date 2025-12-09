@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/dataprotection/2024-04-01/backupvaults"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
+	keyVaultParse "github.com/hashicorp/terraform-provider-azurerm/internal/services/keyvault/parse"
+	keyVaultValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/keyvault/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tags"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
@@ -106,10 +108,19 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				ValidateFunc: validation.StringInSlice(backupvaults.PossibleValuesForImmutabilityState(), false),
 			},
 
+			"key_vault_key_id": {
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: keyVaultValidate.NestedItemIdWithOptionalVersion,
+			},
+
 			"infrastructure_encryption_enabled": {
 				Type:     pluginsdk.TypeBool,
 				Optional: true,
 				ForceNew: true,
+				RequiredWith: []string{
+					"key_vault_key_id",
+				},
 			},
 
 			"identity": commonschema.SystemAssignedUserAssignedIdentityOptional(),
@@ -211,13 +222,29 @@ func resourceDataProtectionBackupVaultCreateUpdate(d *pluginsdk.ResourceData, me
 		parameters.Properties.SecuritySettings.SoftDeleteSettings.RetentionDurationInDays = pointer.To(v.(float64))
 	}
 
-	if v, ok := d.GetOk("infrastructure_encryption_enabled"); ok {
-		parameters.Properties.SecuritySettings.EncryptionSettings = &backupvaults.EncryptionSettings{}
+	if keyVaultKeyId, ok := d.GetOk("key_vault_key_id"); ok {
+		keyId, err := keyVaultParse.ParseOptionallyVersionedNestedItemID(keyVaultKeyId.(string))
 
-		if v.(bool) {
-			parameters.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
-		} else {
-			parameters.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
+		if err != nil {
+			return err
+		}
+
+		parameters.Properties.SecuritySettings.EncryptionSettings = &backupvaults.EncryptionSettings{
+			KekIdentity: &backupvaults.CmkKekIdentity{
+				IdentityType: pointer.To(backupvaults.IdentityTypeSystemAssigned),
+			},
+			KeyVaultProperties: &backupvaults.CmkKeyVaultProperties{
+				KeyUri: pointer.To(keyId.ID()),
+			},
+			State: pointer.To(backupvaults.EncryptionStateEnabled),
+		}
+
+		if infrastructureEncryptionEnabled, ok := d.GetOk("infrastructure_encryption_enabled"); ok {
+			if infrastructureEncryptionEnabled.(bool) {
+				parameters.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
+			} else {
+				parameters.Properties.SecuritySettings.EncryptionSettings.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
+			}
 		}
 	}
 
@@ -273,6 +300,12 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
 			}
 			if encryptionSettings := securitySetting.EncryptionSettings; encryptionSettings != nil {
+				if keyVaultProperties := encryptionSettings.KeyVaultProperties; keyVaultProperties != nil {
+					if keyUri := keyVaultProperties.KeyUri; keyUri != nil {
+						d.Set("key_vault_key_id", pointer.From(keyUri))
+					}
+				}
+
 				if infrastructureEncryption := encryptionSettings.InfrastructureEncryption; infrastructureEncryption != nil {
 					d.Set("infrastructure_encryption_enabled", pointer.From(infrastructureEncryption) == backupvaults.InfrastructureEncryptionStateEnabled)
 				}
