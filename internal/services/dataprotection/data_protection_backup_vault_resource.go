@@ -119,7 +119,7 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
 							RequiredWith: []string{
-								"identity_type",
+								"encryption_settings.0.identity_type",
 							},
 							ValidateFunc: commonids.ValidateUserAssignedIdentityID,
 						},
@@ -138,9 +138,9 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							Optional: true,
 							ForceNew: true,
 							RequiredWith: []string{
-								"identity_id",
-								"identity_type",
-								"key_vault_key_id",
+								"encryption_settings.0.identity_id",
+								"encryption_settings.0.identity_type",
+								"encryption_settings.0.key_vault_key_id",
 							},
 						},
 
@@ -148,7 +148,7 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
 							RequiredWith: []string{
-								"identity_type",
+								"encryption_settings.0.identity_type",
 							},
 							ValidateFunc: keyVaultValidate.NestedItemIdWithOptionalVersion,
 						},
@@ -443,13 +443,13 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 			if v["identity_id"].(string) != "" {
 				output.KekIdentity.IdentityId = pointer.To(v["identity_id"].(string))
 			} else {
-				return nil, fmt.Errorf("`encryption_settings.identity_id` has to be specified when `encryption_settings.identity_type` is `%s`", backupvaults.IdentityTypeUserAssigned)
+				return nil, fmt.Errorf("`encryption_settings.0.identity_id` has to be specified when `encryption_settings.0.identity_type` is `%s`", backupvaults.IdentityTypeUserAssigned)
 			}
 		}
 
 		if v["infrastructure_encryption_enabled"].(bool) {
 			if *output.KekIdentity.IdentityType == backupvaults.IdentityTypeSystemAssigned {
-				return nil, fmt.Errorf("`encryption_settings.infrastructure_encryption_enabled` cannot be `true` when `encryption_settings.identity_type` is `%s`", backupvaults.IdentityTypeSystemAssigned)
+				return nil, fmt.Errorf("`encryption_settings.0.infrastructure_encryption_enabled` cannot be `true` when `encryption_settings.0.identity_type` is `%s`", backupvaults.IdentityTypeSystemAssigned)
 			}
 
 			output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
