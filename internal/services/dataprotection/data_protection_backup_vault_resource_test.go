@@ -524,7 +524,8 @@ resource "azurerm_data_protection_backup_vault" "test" {
   }
 
   depends_on = [
-    azurerm_key_vault.test
+    azurerm_key_vault.test,
+	azurerm_key_vault_key.test
   ]
 }
 `, template, data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
