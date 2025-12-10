@@ -513,8 +513,13 @@ resource "azurerm_data_protection_backup_vault" "test" {
   location            = azurerm_resource_group.test.location
   datastore_type      = "VaultStore"
   redundancy          = "LocallyRedundant"
-  infrastructure_encryption_enabled = true
-  key_vault_key_id                = azurerm_key_vault_key.test.id
+
+  encryption_settings {
+    identity_id = azurerm_user_assigned_identity.test.id
+	identity_type = "UserAssigned"
+    infrastructure_encryption_enabled = true
+    key_vault_key_id                = azurerm_key_vault_key.test.id
+  }
 
   identity {
     type         = "UserAssigned"
