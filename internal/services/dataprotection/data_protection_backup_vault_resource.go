@@ -228,9 +228,6 @@ func resourceDataProtectionBackupVaultCreateUpdate(d *pluginsdk.ResourceData, me
 				},
 			},
 			SecuritySettings: &backupvaults.SecuritySettings{
-				EncryptionSettings: &backupvaults.EncryptionSettings{
-					KekIdentity: &backupvaults.CmkKekIdentity{},
-				},
 				SoftDeleteSettings: &backupvaults.SoftDeleteSettings{
 					State: pointer.To(backupvaults.SoftDeleteState(d.Get("soft_delete").(string))),
 				},
