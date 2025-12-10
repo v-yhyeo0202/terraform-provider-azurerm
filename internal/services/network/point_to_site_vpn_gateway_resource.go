@@ -393,8 +393,8 @@ func expandPointToSiteVPNGatewayConnectionConfiguration(input []interface{}) *[]
 				VpnClientAddressPool: &virtualwans.AddressSpace{
 					AddressPrefixes: &addressPrefixes,
 				},
-				RoutingConfiguration:   expandPointToSiteVPNGatewayConnectionRouteConfiguration(raw["route"].([]interface{})),
-				EnableInternetSecurity: pointer.To(raw["internet_security_enabled"].(bool)),
+				RoutingConfiguration: expandPointToSiteVPNGatewayConnectionRouteConfiguration(raw["route"].([]interface{})),
+				// EnableInternetSecurity: pointer.To(raw["internet_security_enabled"].(bool)),
 			},
 		})
 
