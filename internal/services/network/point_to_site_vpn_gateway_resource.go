@@ -397,6 +397,10 @@ func expandPointToSiteVPNGatewayConnectionConfiguration(input []interface{}) *[]
 				EnableInternetSecurity: pointer.To(raw["internet_security_enabled"].(bool)),
 			},
 		})
+
+		if raw["internet_security_enabled"] != nil {
+			configurations[len(configurations)-1].Properties.EnableInternetSecurity = pointer.To(raw["internet_security_enabled"].(bool))
+		}
 	}
 
 	return &configurations
