@@ -429,6 +429,12 @@ func (r DataProtectionBackupVaultResource) updateInfrastructureEncryption(data a
 
 data "azurerm_client_config" "current" {}
 
+resource "azurerm_user_assigned_identity" "test" {
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+  name                = "acctestBV-%d"
+}
+
 resource "azurerm_key_vault" "test" {
   name                        = "acctest-key-vault-%s"
   location                    = azurerm_resource_group.test.location
@@ -443,6 +449,28 @@ resource "azurerm_key_vault" "test" {
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "Create",
+      "Decrypt",
+      "Encrypt",
+      "Delete",
+      "Get",
+      "List",
+      "Purge",
+      "UnwrapKey",
+      "WrapKey",
+      "Verify",
+      "GetRotationPolicy"
+    ]
+    secret_permissions = [
+      "Set",
+    ]
+  }
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = azurerm_user_assigned_identity.test.id
 
     key_permissions = [
       "Create",
@@ -489,32 +517,15 @@ resource "azurerm_data_protection_backup_vault" "test" {
   key_vault_key_id                = azurerm_key_vault_key.test.id
 
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [
+	  azurerm_user_assigned_identity.test.id
+	]
   }
-}
 
-resource "azurerm_key_vault_access_policy" "test" {
-  key_vault_id = azurerm_key_vault.test.id
-  tenant_id = azurerm_data_protection_backup_vault.test.identity[0].tenant_id
-  object_id = azurerm_data_protection_backup_vault.test.identity[0].principal_id
-
-  key_permissions = [
-  	"Create",
-	"Decrypt",
-	"Encrypt",
-	"Delete",
-	"Get",
-	"List",
-	"Purge",
-	"UnwrapKey",
-	"WrapKey",
-	"Verify",
-	"GetRotationPolicy"
-  ]
-
-  secret_permissions = [
-  	"Set",
+  depends_on = [
+    azurerm_key_vault.test
   ]
 }
-`, template, data.RandomString, data.RandomString, data.RandomInteger)
+`, template, data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
 }
