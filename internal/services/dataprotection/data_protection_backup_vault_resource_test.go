@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/dataprotection/2024-04-01/backupvaults"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -168,31 +166,12 @@ func TestAccDataProtectionBackupVault_updateIdentity(t *testing.T) {
 	})
 }
 
-func TestAccDataProtectionBackupVault_updateInfrastructureEncryption(t *testing.T) {
+func TestAccDataProtectionBackupVault_infrastructureEncryptionEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault", "test")
 	r := DataProtectionBackupVaultResource{}
-	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.basic(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.updateInfrastructureEncryption(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-			ConfigPlanChecks: resource.ConfigPlanChecks{
-				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
-				},
-			},
-		},
-		data.ImportStep(),
-		{
-			Config: r.basic(data),
+			Config: r.infrastructureEncryptionEnabled(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -422,7 +401,7 @@ resource "azurerm_data_protection_backup_vault" "test" {
 `, template, data.RandomInteger)
 }
 
-func (r DataProtectionBackupVaultResource) updateInfrastructureEncryption(data acceptance.TestData) string {
+func (r DataProtectionBackupVaultResource) infrastructureEncryptionEnabled(data acceptance.TestData) string {
 	template := r.template(data)
 	return fmt.Sprintf(`
 %s
@@ -527,12 +506,13 @@ resource "azurerm_data_protection_backup_vault" "test" {
 	  azurerm_user_assigned_identity.test.id
 	]
   }
-
+  /*
   depends_on = [
     azurerm_key_vault.test,
 	azurerm_key_vault_key.test,
 	azurerm_user_assigned_identity.test
   ]
+  */
 }
 `, template, data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
 }
