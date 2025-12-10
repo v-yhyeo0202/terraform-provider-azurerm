@@ -156,21 +156,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				},
 			},
 
-			"key_vault_key_id": {
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				ValidateFunc: keyVaultValidate.NestedItemIdWithOptionalVersion,
-			},
-
-			"infrastructure_encryption_enabled": {
-				Type:     pluginsdk.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				RequiredWith: []string{
-					"key_vault_key_id",
-				},
-			},
-
 			"identity": commonschema.SystemAssignedUserAssignedIdentityOptional(),
 
 			"tags": commonschema.Tags(),
