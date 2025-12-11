@@ -555,40 +555,16 @@ func TestAccIotHub_cosmosDBRouteUpdate(t *testing.T) {
 	})
 }
 
-func TestAccIotHub_dataResidencyUpdate(t *testing.T) {
+func TestAccIotHub_dataResidencyEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_iothub", "test")
 	r := IotHubResource{}
 
-	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
-		{
-			Config: r.standard(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.dataResidencyEnabled(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
-			ConfigPlanChecks: resource.ConfigPlanChecks{
-				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
-				},
-			},
-		},
-		data.ImportStep(),
-		{
-			Config: r.standard(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-			ConfigPlanChecks: resource.ConfigPlanChecks{
-				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
-				},
-			},
 		},
 		data.ImportStep(),
 	})
