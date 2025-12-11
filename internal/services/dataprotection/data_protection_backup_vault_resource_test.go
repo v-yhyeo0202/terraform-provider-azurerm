@@ -364,7 +364,7 @@ resource "azurerm_data_protection_backup_vault" "test" {
 
   encryption_settings {
     identity_type = "SystemAssigned"
-	key_vault_key_id = azurerm_key_vault_key.id
+	key_vault_key_id = azurerm_key_vault_key.test.id
   }
 
   tags = {
