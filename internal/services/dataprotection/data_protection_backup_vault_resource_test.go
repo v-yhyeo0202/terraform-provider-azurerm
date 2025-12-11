@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/dataprotection/2024-04-01/backupvaults"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -99,7 +101,7 @@ func TestAccDataProtectionBackupVault_complete(t *testing.T) {
 func TestAccDataProtectionBackupVault_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault", "test")
 	r := DataProtectionBackupVaultResource{}
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -119,6 +121,11 @@ func TestAccDataProtectionBackupVault_update(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 		},
 		data.ImportStep(),
 	})
@@ -208,6 +215,87 @@ resource "azurerm_resource_group" "test" {
 `, data.RandomInteger, data.Locations.Primary)
 }
 
+func (r DataProtectionBackupVaultResource) completeTemplate(data acceptance.TestData) string {
+	template := r.template(data)
+	return fmt.Sprintf(`
+%s
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_key_vault" "test" {
+  name                        = "acctest-key-vault-%s"
+  location                    = azurerm_resource_group.test.location
+  resource_group_name         = azurerm_resource_group.test.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  soft_delete_retention_days  = 7
+  purge_protection_enabled    = true
+
+  sku_name = "standard"
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "Create",
+      "Decrypt",
+      "Encrypt",
+      "Delete",
+      "Get",
+      "List",
+      "Purge",
+      "UnwrapKey",
+      "WrapKey",
+      "Verify",
+      "GetRotationPolicy"
+    ]
+    secret_permissions = [
+      "Set",
+    ]
+  }
+
+  access_policy {
+    tenant_id = azurerm_data_protection_backup_vault.test.identity[0].tenant_id
+    object_id = azurerm_data_protection_backup_vault.test.identity[0].principal_id
+
+    key_permissions = [
+      "Create",
+      "Decrypt",
+      "Encrypt",
+      "Delete",
+      "Get",
+      "List",
+      "Purge",
+      "UnwrapKey",
+      "WrapKey",
+      "Verify",
+      "GetRotationPolicy"
+    ]
+    secret_permissions = [
+      "Set",
+    ]
+  }
+}
+
+resource "azurerm_key_vault_key" "test" {
+  name         = "acctestkey-%s"
+  key_vault_id = azurerm_key_vault.test.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+}
+`, template, data.RandomString, data.RandomString)
+}
+
 func (r DataProtectionBackupVaultResource) basic(data acceptance.TestData) string {
 	template := r.template(data)
 	return fmt.Sprintf(`
@@ -255,7 +343,7 @@ resource "azurerm_data_protection_backup_vault" "import" {
 }
 
 func (r DataProtectionBackupVaultResource) complete(data acceptance.TestData) string {
-	template := r.template(data)
+	template := r.completeTemplate(data)
 	return fmt.Sprintf(`
 %s
 
@@ -274,6 +362,11 @@ resource "azurerm_data_protection_backup_vault" "test" {
   soft_delete                = "Off"
   retention_duration_in_days = 14
 
+  encryption_settings {
+    identity_type = "SystemAssigned"
+	key_vault_key_id = azurerm_key_vault_key.id
+  }
+
   tags = {
     ENV = "Test"
   }
@@ -282,7 +375,7 @@ resource "azurerm_data_protection_backup_vault" "test" {
 }
 
 func (r DataProtectionBackupVaultResource) completeUpdate(data acceptance.TestData) string {
-	template := r.template(data)
+	template := r.completeTemplate(data)
 	return fmt.Sprintf(`
 %s
 
@@ -307,6 +400,13 @@ resource "azurerm_data_protection_backup_vault" "test" {
   immutability               = "Locked"
   soft_delete                = "On"
   retention_duration_in_days = 15
+
+  encryption_settings {
+    identity_id = azurerm_user_assigned_identity.test.id
+    identity_type = "UserAssigned"
+	infrastructure_encryption_enabled = true
+	key_vault_key_id = azurerm_key_vault_key.id
+  }
 
   tags = {
     ENV = "Test"
@@ -506,13 +606,6 @@ resource "azurerm_data_protection_backup_vault" "test" {
 	  azurerm_user_assigned_identity.test.id
 	]
   }
-  /*
-  depends_on = [
-    azurerm_key_vault.test,
-	azurerm_key_vault_key.test,
-	azurerm_user_assigned_identity.test
-  ]
-  */
 }
 `, template, data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
 }
