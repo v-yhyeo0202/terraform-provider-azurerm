@@ -116,21 +116,9 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"identity_id": {
-							Type:     pluginsdk.TypeString,
-							Optional: true,
-							RequiredWith: []string{
-								"encryption_settings.0.identity_type",
-							},
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
 							ValidateFunc: commonids.ValidateUserAssignedIdentityID,
-						},
-
-						"identity_type": {
-							Type:     pluginsdk.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(identity.TypeUserAssigned),
-								string(identity.TypeSystemAssigned),
-							}, false),
 						},
 
 						"infrastructure_encryption_enabled": {
@@ -139,7 +127,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							ForceNew: true,
 							RequiredWith: []string{
 								"encryption_settings.0.identity_id",
-								"encryption_settings.0.identity_type",
 								"encryption_settings.0.key_vault_key_id",
 							},
 						},
@@ -148,7 +135,7 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
 							RequiredWith: []string{
-								"encryption_settings.0.identity_type",
+								"encryption_settings.0.identity_id",
 							},
 							ValidateFunc: keyVaultValidate.NestedItemIdWithOptionalVersion,
 						},
@@ -416,24 +403,48 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 	output := &backupvaults.EncryptionSettings{
 		KekIdentity: &backupvaults.CmkKekIdentity{},
 	}
+	/*
+		if v["identity_type"].(string) != "" {
+			output.KekIdentity.IdentityType = pointer.To(backupvaults.IdentityType(v["identity_type"].(string)))
+			output.State = pointer.To(backupvaults.EncryptionStateEnabled)
 
-	if v["identity_type"].(string) != "" {
-		output.KekIdentity.IdentityType = pointer.To(backupvaults.IdentityType(v["identity_type"].(string)))
-		output.State = pointer.To(backupvaults.EncryptionStateEnabled)
+			if *output.KekIdentity.IdentityType == backupvaults.IdentityTypeUserAssigned {
+				if v["identity_id"].(string) != "" {
+					output.KekIdentity.IdentityId = pointer.To(v["identity_id"].(string))
+				} else {
+					return nil, fmt.Errorf("`encryption_settings.0.identity_id` has to be specified when `encryption_settings.0.identity_type` is `%s`", backupvaults.IdentityTypeUserAssigned)
+				}
+			}
 
-		if *output.KekIdentity.IdentityType == backupvaults.IdentityTypeUserAssigned {
-			if v["identity_id"].(string) != "" {
-				output.KekIdentity.IdentityId = pointer.To(v["identity_id"].(string))
+			if v["infrastructure_encryption_enabled"].(bool) {
+				if *output.KekIdentity.IdentityType == backupvaults.IdentityTypeSystemAssigned {
+					return nil, fmt.Errorf("`encryption_settings.0.infrastructure_encryption_enabled` cannot be `true` when `encryption_settings.0.identity_type` is `%s`", backupvaults.IdentityTypeSystemAssigned)
+				}
+
+				output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
 			} else {
-				return nil, fmt.Errorf("`encryption_settings.0.identity_id` has to be specified when `encryption_settings.0.identity_type` is `%s`", backupvaults.IdentityTypeUserAssigned)
+				output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
+			}
+
+			if v["key_vault_key_id"].(string) != "" {
+				keyId, err := keyVaultParse.ParseOptionallyVersionedNestedItemID(v["key_vault_key_id"].(string))
+
+				if err != nil {
+					return nil, err
+				}
+
+				output.KeyVaultProperties = &backupvaults.CmkKeyVaultProperties{
+					KeyUri: pointer.To(keyId.ID()),
+				}
 			}
 		}
+	*/
+	if v["identity_id"].(string) != "" {
+		output.KekIdentity.IdentityId = pointer.To(v["identity_id"].(string))
+		output.KekIdentity.IdentityType = pointer.To(backupvaults.IdentityTypeUserAssigned)
+		output.State = pointer.To(backupvaults.EncryptionStateEnabled)
 
 		if v["infrastructure_encryption_enabled"].(bool) {
-			if *output.KekIdentity.IdentityType == backupvaults.IdentityTypeSystemAssigned {
-				return nil, fmt.Errorf("`encryption_settings.0.infrastructure_encryption_enabled` cannot be `true` when `encryption_settings.0.identity_type` is `%s`", backupvaults.IdentityTypeSystemAssigned)
-			}
-
 			output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
 		} else {
 			output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
@@ -463,12 +474,12 @@ func flattenBackupVaultEncryptionSettings(input *backupvaults.EncryptionSettings
 	}
 
 	if input.KekIdentity != nil {
-		if input.KekIdentity.IdentityType != nil {
-			output["identity_type"] = pointer.From(input.KekIdentity.IdentityType)
-		}
-
 		if input.KekIdentity.IdentityId != nil {
 			output["identity_id"] = pointer.From(input.KekIdentity.IdentityId)
+		}
+
+		if input.KekIdentity.IdentityType != nil {
+			output["identity_type"] = pointer.From(input.KekIdentity.IdentityType)
 		}
 	}
 
