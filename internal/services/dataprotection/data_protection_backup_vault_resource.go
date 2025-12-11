@@ -473,14 +473,8 @@ func flattenBackupVaultEncryptionSettings(input *backupvaults.EncryptionSettings
 		output["infrastructure_encryption_enabled"] = pointer.From(input.InfrastructureEncryption) == backupvaults.InfrastructureEncryptionStateEnabled
 	}
 
-	if input.KekIdentity != nil {
-		if input.KekIdentity.IdentityId != nil {
-			output["identity_id"] = pointer.From(input.KekIdentity.IdentityId)
-		}
-
-		if input.KekIdentity.IdentityType != nil {
-			output["identity_type"] = pointer.From(input.KekIdentity.IdentityType)
-		}
+	if input.KekIdentity != nil && input.KekIdentity.IdentityId != nil {
+		output["identity_id"] = pointer.From(input.KekIdentity.IdentityId)
 	}
 
 	if input.KeyVaultProperties != nil && input.KeyVaultProperties.KeyUri != nil {
