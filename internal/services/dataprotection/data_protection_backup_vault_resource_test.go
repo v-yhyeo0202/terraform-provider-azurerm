@@ -281,10 +281,6 @@ resource "azurerm_data_protection_backup_vault" "test" {
   soft_delete                = "Off"
   retention_duration_in_days = 14
 
-  encryption_settings {
-    identity_type = "SystemAssigned"
-  }
-
   tags = {
     ENV = "Test"
   }

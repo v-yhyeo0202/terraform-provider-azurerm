@@ -77,9 +77,7 @@ An `identity` block supports the following:
 
 An `encryption_settings` block supports the following:
 
-* `identity_id` - (Optional) Specifies the User Assigned Managed Identity ID to be assigned to this Backup Vault. Provide a value here only when `identity_type` is `UserAssigned`.
-
-* `identity_type` - (Optional) Specifies the type of Managed Service Identity that should be configured on this Backup Vault. Possible values are `SystemAssigned` and `UserAssigned`.
+* `identity_id` - (Optional) Specifies the User Assigned Managed Identity ID which has access permissions to the Key Vault.
 
 * `infrastructure_encryption_enabled` - (Optional) Whether to enable (infrastructure encryption)[https://learn.microsoft.com/en-us/azure/storage/common/infrastructure-encryption-enable?tabs=portal].
 
