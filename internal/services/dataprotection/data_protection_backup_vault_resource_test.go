@@ -127,7 +127,7 @@ func TestAccDataProtectionBackupVault_update(t *testing.T) {
 				},
 			},
 		},
-		data.ImportStep(),
+		data.ImportStep("infrastructure_encryption_settings"),
 	})
 }
 
@@ -183,7 +183,7 @@ func TestAccDataProtectionBackupVault_updateInfrastructureEncryption(t *testing.
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("infrastructure_encryption_settings"),
 		{
 			Config: r.infrastructureEncryptionDisabled0(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -195,7 +195,7 @@ func TestAccDataProtectionBackupVault_updateInfrastructureEncryption(t *testing.
 				},
 			},
 		},
-		data.ImportStep(),
+		data.ImportStep("infrastructure_encryption_settings"),
 		{
 			Config: r.infrastructureEncryptionDisabled1(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -207,7 +207,7 @@ func TestAccDataProtectionBackupVault_updateInfrastructureEncryption(t *testing.
 				},
 			},
 		},
-		data.ImportStep(),
+		data.ImportStep("infrastructure_encryption_settings"),
 	})
 }
 
