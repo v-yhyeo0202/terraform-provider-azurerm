@@ -154,8 +154,8 @@ func resourcePointToSiteVPNGateway() *pluginsdk.Resource {
 						"internet_security_enabled": {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
-							ForceNew: true,
-							Default:  false,
+							// ForceNew: true,
+							Default: false,
 						},
 					},
 				},
