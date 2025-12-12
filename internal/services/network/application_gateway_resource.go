@@ -325,7 +325,6 @@ func resourceApplicationGateway() *pluginsdk.Resource {
 						"name": {
 							Type:     pluginsdk.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 
 						"subnet_id": {
@@ -342,6 +341,7 @@ func resourceApplicationGateway() *pluginsdk.Resource {
 						"public_ip_address_id": {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 
 						"private_ip_address_allocation": {
