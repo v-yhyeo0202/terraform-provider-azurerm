@@ -168,18 +168,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 					return fmt.Errorf("`cross_region_restore_enabled` can only be specified when `redundancy` is specified for `GeoRedundant`")
 				}
 
-				oldInfrastructureEncryptionSettings, newInfrastructureEncryptionSettings := d.GetChange("infrastructure_encryption_settings")
-
-				fmt.Println("debug1 ", oldInfrastructureEncryptionSettings)
-				fmt.Println()
-				fmt.Println("debug2 ", newInfrastructureEncryptionSettings)
-				fmt.Println()
-
-				if d.HasChange("infrastructure_encryption_settings") && len(newInfrastructureEncryptionSettings.([]interface{})) == 0 {
-					fmt.Println("debug0")
-					d.SetNew("infrastructure_encryption_settings", oldInfrastructureEncryptionSettings)
-				}
-
 				return nil
 			}),
 		),
@@ -312,7 +300,10 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 				d.Set("soft_delete", string(pointer.From(softDelete.State)))
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
 			}
-			if securitySetting.EncryptionSettings != nil {
+
+			_, infrastructureEncryptionSettings := d.GetChange("infrastructure_encryption_settings")
+
+			if securitySetting.EncryptionSettings != nil && len(infrastructureEncryptionSettings.([]interface{})) > 0 {
 				d.Set("infrastructure_encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
 			}
 		}
