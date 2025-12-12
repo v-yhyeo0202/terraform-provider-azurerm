@@ -312,7 +312,6 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 				d.Set("soft_delete", string(pointer.From(softDelete.State)))
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
 			}
-
 			if securitySetting.EncryptionSettings != nil {
 				d.Set("infrastructure_encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
 			}
