@@ -303,23 +303,20 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 				d.Set("soft_delete", string(pointer.From(softDelete.State)))
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
 			}
-			_, new := d.GetChange("encryption_settings")
-			/*
-				get := d.Get("encryption_settings")
-				fmt.Println("debug0 ", old)
-				fmt.Println("debug0 ", new)
-				fmt.Println("debug0 ", get)
-			*/
-			if securitySetting.EncryptionSettings != nil && new != nil {
+			old, new := d.GetChange("encryption_settings")
+			get := d.Get("encryption_settings")
+			fmt.Println("debug0 ", old)
+			fmt.Println("debug0 ", new)
+			fmt.Println("debug0 ", get)
+			if securitySetting.EncryptionSettings != nil && len(new.([]interface{})) > 0 {
+				fmt.Println("debug2")
 				d.Set("encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
 			}
-			/*
-				old, new = d.GetChange("encryption_settings")
-				get = d.Get("encryption_settings")
-				fmt.Println("debug1 ", old)
-				fmt.Println("debug1 ", new)
-				fmt.Println("debug1 ", get)
-			*/
+			old, new = d.GetChange("encryption_settings")
+			get = d.Get("encryption_settings")
+			fmt.Println("debug1 ", old)
+			fmt.Println("debug1 ", new)
+			fmt.Println("debug1 ", get)
 		}
 		d.Set("immutability", string(immutability))
 
