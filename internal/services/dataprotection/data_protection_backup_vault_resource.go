@@ -167,6 +167,13 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 					// Cross region restore is only allowed on `GeoRedundant` vault.
 					return fmt.Errorf("`cross_region_restore_enabled` can only be specified when `redundancy` is specified for `GeoRedundant`")
 				}
+
+				oldInfrastructureEncryptionSettings, newInfrastructureEncryptionSettings := d.GetChange("infrastructure_encryption_settings")
+
+				if newInfrastructureEncryptionSettings == nil {
+					newInfrastructureEncryptionSettings = oldInfrastructureEncryptionSettings
+				}
+
 				return nil
 			}),
 		),
@@ -300,9 +307,7 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
 			}
 
-			_, infrastructureEncryptionSettings := d.GetChange("infrastructure_encryption_settings")
-
-			if securitySetting.EncryptionSettings != nil && len(infrastructureEncryptionSettings.([]interface{})) > 0 {
+			if securitySetting.EncryptionSettings != nil {
 				d.Set("infrastructure_encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
 			}
 		}
