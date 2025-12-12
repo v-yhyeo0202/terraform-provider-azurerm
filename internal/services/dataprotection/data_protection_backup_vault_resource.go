@@ -126,7 +126,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							Optional: true,
 							RequiredWith: []string{
 								"infrastructure_encryption_settings.0.encryption_enabled",
-								"infrastructure_encryption_settings.0.key_vault_key_id",
 							},
 							ValidateFunc: commonids.ValidateUserAssignedIdentityID,
 						},
@@ -417,7 +416,9 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 			IdentityId:   pointer.To(v["identity_id"].(string)),
 			IdentityType: pointer.To(backupvaults.IdentityTypeUserAssigned),
 		}
+	}
 
+	if v["key_vault_key_id"] != "" {
 		keyId, err := keyVaultParse.ParseOptionallyVersionedNestedItemID(v["key_vault_key_id"].(string))
 
 		if err != nil {
