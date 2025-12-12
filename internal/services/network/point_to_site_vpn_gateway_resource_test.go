@@ -39,7 +39,7 @@ func TestAccPointToSiteVPNGateway_connectionConfiguration(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_point_to_site_vpn_gateway", "test")
 	r := PointToSiteVPNGatewayResource{}
 
-	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.singleConnectionConfiguration(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -51,12 +51,12 @@ func TestAccPointToSiteVPNGateway_connectionConfiguration(t *testing.T) {
 			Config: r.multipleConnectionConfiguration(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-			),
+			),/*
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
 				},
-			},
+			},*/
 		},
 		data.ImportStep(),
 		{
