@@ -58,6 +58,13 @@ func TestAccDataProtectionBackupPolicyDisk_complete(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+		{
+			Config: r.complete1(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 
@@ -126,6 +133,47 @@ resource "azurerm_data_protection_backup_policy_disk" "import" {
 }
 
 func (r DataProtectionBackupPolicyDiskResource) complete(data acceptance.TestData) string {
+	template := r.template(data)
+	return fmt.Sprintf(`
+%s
+resource "azurerm_data_protection_backup_policy_disk" "test" {
+  name                            = "acctest-dbp-%d"
+  vault_id                        = azurerm_data_protection_backup_vault.test.id
+  backup_repeating_time_intervals = ["R/2021-05-19T06:33:16+00:00/PT4H"]
+  default_retention_duration      = "P7D"
+  time_zone                       = "W. Europe Standard Time"
+
+  retention_rule {
+    name     = "Daily"
+    duration = "P7D"
+    priority = 25
+    criteria {
+      absolute_criteria = "FirstOfDay"
+    }
+  }
+
+  retention_rule {
+    name     = "Weekly"
+    duration = "P7D"
+    priority = 20
+    criteria {
+      absolute_criteria = "FirstOfWeek"
+    }
+  }
+
+  retention_rule {
+    name     = "Monthly"
+    duration = "P6M"
+    priority = 15
+    criteria {
+      absolute_criteria = "FirstOfMonth"
+    }
+  }
+}
+`, template, data.RandomInteger)
+}
+
+func (r DataProtectionBackupPolicyDiskResource) complete1(data acceptance.TestData) string {
 	template := r.template(data)
 	return fmt.Sprintf(`
 %s
