@@ -170,7 +170,13 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 
 				oldInfrastructureEncryptionSettings, newInfrastructureEncryptionSettings := d.GetChange("infrastructure_encryption_settings")
 
-				if newInfrastructureEncryptionSettings == nil {
+				fmt.Println("debug1 ", oldInfrastructureEncryptionSettings)
+				fmt.Println()
+				fmt.Println("debug2 ", newInfrastructureEncryptionSettings)
+				fmt.Println()
+
+				if len(newInfrastructureEncryptionSettings.([]interface{})) == 0 {
+					fmt.Println("debug0")
 					newInfrastructureEncryptionSettings = oldInfrastructureEncryptionSettings
 				}
 
