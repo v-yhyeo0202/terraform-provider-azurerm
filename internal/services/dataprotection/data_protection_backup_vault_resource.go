@@ -124,7 +124,8 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 						"infrastructure_encryption_enabled": {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
-							Default:  false,
+							// NOTE: O+C application of `azurerm_data_protection_backup_vault_customer_managed_key` generates a new value to this property if it is not specified
+							Computed: true,
 							ForceNew: true,
 							RequiredWith: []string{
 								"encryption_settings.0.identity_id",
@@ -135,6 +136,8 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 						"key_vault_key_id": {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
+							// NOTE: O+C application of `azurerm_data_protection_backup_vault_customer_managed_key` generates a new value to this property. The value specified in this resource is overwritten
+							Computed: true,
 							RequiredWith: []string{
 								"encryption_settings.0.identity_id",
 							},
