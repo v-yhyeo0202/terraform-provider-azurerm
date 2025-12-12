@@ -280,7 +280,7 @@ resource "azurerm_storage_account_local_user" "test" {
   ssh_key_enabled      = true
   ssh_password_enabled = true
   ssh_authorized_key {
-    description = "key1"
+    // description = "key1"
     key         = local.first_public_key
   }
 }
@@ -298,11 +298,11 @@ resource "azurerm_storage_account_local_user" "test" {
   ssh_key_enabled      = true
   ssh_password_enabled = true
   ssh_authorized_key {
-    description = "key1"
+    // description = "key1"
     key         = local.first_public_key
   }
   ssh_authorized_key {
-    description = "key2"
+    // description = "key2"
     key         = local.second_public_key
   }
 }

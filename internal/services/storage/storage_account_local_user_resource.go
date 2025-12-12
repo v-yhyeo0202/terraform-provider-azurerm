@@ -105,6 +105,7 @@ func (r LocalUserResource) Arguments() map[string]*pluginsdk.Schema {
 					"description": {
 						Type:     pluginsdk.TypeString,
 						Optional: true,
+						ForceNew: true,
 					},
 				},
 			},
