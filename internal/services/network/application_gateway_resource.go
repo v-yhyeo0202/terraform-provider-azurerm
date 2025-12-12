@@ -325,6 +325,7 @@ func resourceApplicationGateway() *pluginsdk.Resource {
 						"name": {
 							Type:     pluginsdk.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 
 						"subnet_id": {
