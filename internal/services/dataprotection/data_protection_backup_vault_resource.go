@@ -160,12 +160,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				return old.(string) == string(backupvaults.SoftDeleteStateAlwaysOn) && new.(string) != string(backupvaults.SoftDeleteStateAlwaysOn)
 			}),
 
-			pluginsdk.ForceNewIfChange("infrastructure_encryption_settings.0.encryption_enabled", func(ctx context.Context, old, new, meta interface{}) bool {
-				fmt.Println("debug0 ", old)
-				fmt.Println("debug1 ", new)
-				return old.(bool) != new.(bool)
-			}),
-
 			pluginsdk.CustomizeDiffShim(func(ctx context.Context, d *pluginsdk.ResourceDiff, v interface{}) error {
 				redundancy := d.Get("redundancy").(string)
 				crossRegionRestore := d.GetRawConfig().AsValueMap()["cross_region_restore_enabled"]
@@ -430,6 +424,7 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 		output.KeyVaultProperties = &backupvaults.CmkKeyVaultProperties{
 			KeyUri: pointer.To(keyId.ID()),
 		}
+		output.State = pointer.To(backupvaults.EncryptionStateEnabled)
 	}
 
 	return output, nil
