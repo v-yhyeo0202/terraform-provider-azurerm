@@ -155,7 +155,7 @@ func resourcePointToSiteVPNGateway() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
 							ForceNew: true,
-							Default:  false,
+							// Default:  false,
 						},
 					},
 				},
