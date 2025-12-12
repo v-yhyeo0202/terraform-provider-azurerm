@@ -308,7 +308,7 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 			fmt.Println("debug0 ", old)
 			fmt.Println("debug0 ", new)
 			fmt.Println("debug0 ", get)
-			if securitySetting.EncryptionSettings != nil {
+			if securitySetting.EncryptionSettings != nil && new != nil {
 				d.Set("encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
 			}
 			old, new = d.GetChange("encryption_settings")
