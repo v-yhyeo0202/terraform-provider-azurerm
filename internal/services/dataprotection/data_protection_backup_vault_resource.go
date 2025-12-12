@@ -124,8 +124,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 						"infrastructure_encryption_enabled": {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
-							// NOTE: O+C application of `azurerm_data_protection_backup_vault_customer_managed_key` generates a new value to this property if it is not specified
-							Computed: true,
 							ForceNew: true,
 							RequiredWith: []string{
 								"encryption_settings.0.identity_id",
@@ -136,8 +134,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 						"key_vault_key_id": {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
-							// NOTE: O+C application of `azurerm_data_protection_backup_vault_customer_managed_key` generates a new value to this property. The value specified in this resource is overwritten
-							Computed: true,
 							RequiredWith: []string{
 								"encryption_settings.0.identity_id",
 							},
@@ -307,9 +303,15 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 				d.Set("soft_delete", string(pointer.From(softDelete.State)))
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
 			}
+			old, new := d.GetChange("encryption_settings")
+			fmt.Println("debug0 ", old)
+			fmt.Println("debug0 ", new)
 			if securitySetting.EncryptionSettings != nil {
 				d.Set("encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
 			}
+			old, new := d.GetChange("encryption_settings")
+			fmt.Println("debug1 ", old)
+			fmt.Println("debug1 ", new)
 		}
 		d.Set("immutability", string(immutability))
 
