@@ -195,14 +195,6 @@ func TestAccDataProtectionBackupVault_updateInfrastructureEncryption(t *testing.
 				},
 			},
 		},
-		data.ImportStep("infrastructure_encryption_settings"),
-		{
-			Config: r.infrastructureEncryptionDisabled1(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("infrastructure_encryption_settings"),
 	})
 }
 
@@ -619,35 +611,4 @@ resource "azurerm_data_protection_backup_vault" "test" {
   }
 }
 `, template, data.RandomString, data.RandomString, data.RandomInteger, data.RandomInteger)
-}
-
-func (r DataProtectionBackupVaultResource) infrastructureEncryptionDisabled1(data acceptance.TestData) string {
-	template := r.template(data)
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_data_protection_backup_vault" "test" {
-  name                = "acctest-bv-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  datastore_type      = "VaultStore"
-  redundancy          = "LocallyRedundant"
-
-  identity {
-    type         = "SystemAssigned"
-  }
-
-  immutability               = "Locked"
-  soft_delete                = "On"
-  retention_duration_in_days = 15
-
-  infrastructure_encryption_settings {
-    encryption_enabled = false
-  }
-
-  tags = {
-    ENV = "Test"
-  }
-}
-`, template, data.RandomInteger)
 }

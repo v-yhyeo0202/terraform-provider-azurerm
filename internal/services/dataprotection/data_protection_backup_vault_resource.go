@@ -122,17 +122,14 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 						},
 
 						"identity_id": {
-							Type:     pluginsdk.TypeString,
-							Optional: true,
-							RequiredWith: []string{
-								"infrastructure_encryption_settings.0.key_vault_key_id",
-							},
+							Type:         pluginsdk.TypeString,
+							Required:     true,
 							ValidateFunc: commonids.ValidateUserAssignedIdentityID,
 						},
 
 						"key_vault_key_id": {
 							Type:         pluginsdk.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: keyVaultValidate.NestedItemIdWithOptionalVersion,
 						},
 					},
@@ -400,7 +397,13 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 	}
 
 	v := input[0].(map[string]interface{})
-	output := &backupvaults.EncryptionSettings{}
+	output := &backupvaults.EncryptionSettings{
+		KekIdentity: &backupvaults.CmkKekIdentity{
+			IdentityId:   pointer.To(v["identity_id"].(string)),
+			IdentityType: pointer.To(backupvaults.IdentityTypeUserAssigned),
+		},
+		State: pointer.To(backupvaults.EncryptionStateEnabled),
+	}
 
 	if v["encryption_enabled"].(bool) {
 		output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
@@ -408,24 +411,14 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 		output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
 	}
 
-	if v["identity_id"] != "" {
-		output.KekIdentity = &backupvaults.CmkKekIdentity{
-			IdentityId:   pointer.To(v["identity_id"].(string)),
-			IdentityType: pointer.To(backupvaults.IdentityTypeUserAssigned),
-		}
+	keyId, err := keyVaultParse.ParseOptionallyVersionedNestedItemID(v["key_vault_key_id"].(string))
+
+	if err != nil {
+		return nil, err
 	}
 
-	if v["key_vault_key_id"] != "" {
-		keyId, err := keyVaultParse.ParseOptionallyVersionedNestedItemID(v["key_vault_key_id"].(string))
-
-		if err != nil {
-			return nil, err
-		}
-
-		output.KeyVaultProperties = &backupvaults.CmkKeyVaultProperties{
-			KeyUri: pointer.To(keyId.ID()),
-		}
-		output.State = pointer.To(backupvaults.EncryptionStateEnabled)
+	output.KeyVaultProperties = &backupvaults.CmkKeyVaultProperties{
+		KeyUri: pointer.To(keyId.ID()),
 	}
 
 	return output, nil
