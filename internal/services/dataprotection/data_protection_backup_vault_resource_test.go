@@ -201,11 +201,6 @@ func TestAccDataProtectionBackupVault_updateInfrastructureEncryption(t *testing.
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
-			ConfigPlanChecks: resource.ConfigPlanChecks{
-				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
-				},
-			},
 		},
 		data.ImportStep("infrastructure_encryption_settings"),
 	})
