@@ -401,7 +401,8 @@ func expandPointToSiteVPNGatewayConnectionConfiguration(input []interface{}, d *
 		key := fmt.Sprintf("connection_configuration.%d.internet_security_enabled", i)
 		enableInternetSecurity, ok := d.GetOk(key)
 		get := d.Get(key)
-		fmt.Println("debug1 ", key, " ", enableInternetSecurity, " ", ok, " ", get)
+		old, new := d.GetChange(key)
+		fmt.Println("debug1 ", key, " ", enableInternetSecurity, " ", ok, " ", get, " ", old, " ", new)
 
 		if enableInternetSecurity, ok := d.GetOk(fmt.Sprintf("connection_configuration.%d.internet_security_enabled", i)); ok {
 			fmt.Println("debug0 ", enableInternetSecurity)
