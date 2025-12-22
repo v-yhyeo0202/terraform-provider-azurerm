@@ -179,7 +179,7 @@ func resourcePrivateLinkService() *pluginsdk.Resource {
 					key = fmt.Sprintf("nat_ip_configuration.%d.name", i)
 					oldRawNatIpConfigurationName, _ := d.GetChange(key)
 
-					if oldRawNatIpConfigurationName.(string) != "" && d.HasChange(fmt.Sprintf("nat_ip_configuration.%d.name", i)) {
+					if oldRawNatIpConfigurationName.(string) != "" && d.HasChange(key) {
 						d.ForceNew(key)
 					}
 

@@ -254,7 +254,7 @@ func TestAccPrivateLinkService_destinationIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccPrivateLinkService_forceNew(t *testing.T) {
+func TestAccPrivateLinkService_forceNewWithNatIpConfiguration(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_private_link_service", "test")
 	r := PrivateLinkServiceResource{}
 
@@ -269,7 +269,7 @@ func TestAccPrivateLinkService_forceNew(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.updateName(data),
+			Config: r.updateNatIpConfigurationName(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("nat_ip_configuration.#").HasValue("1"),
@@ -283,10 +283,10 @@ func TestAccPrivateLinkService_forceNew(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.updatePrimary(data),
+			Config: r.updateNatIpConfigurationPrimary(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("nat_ip_configuration.#").HasValue("1"),
+				check.That(data.ResourceName).Key("nat_ip_configuration.#").HasValue("2"),
 				check.That(data.ResourceName).Key("load_balancer_frontend_ip_configuration_ids.#").HasValue("1"),
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -985,7 +985,7 @@ resource "azurerm_lb" "test" {
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
-func (r PrivateLinkServiceResource) updateName(data acceptance.TestData) string {
+func (r PrivateLinkServiceResource) updateNatIpConfigurationName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1004,7 +1004,7 @@ resource "azurerm_private_link_service" "test" {
   resource_group_name = azurerm_resource_group.test.name
 
   nat_ip_configuration {
-    name                       = "primaryIpConfiguration0-%d"
+    name                       = "primaryIpConfigurationChanged-%d"
     subnet_id                  = azurerm_subnet.test.id
     private_ip_address         = "10.5.3.30"
     private_ip_address_version = "IPv4"
@@ -1018,7 +1018,7 @@ resource "azurerm_private_link_service" "test" {
 `, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
-func (r PrivateLinkServiceResource) updatePrimary(data acceptance.TestData) string {
+func (r PrivateLinkServiceResource) updateNatIpConfigurationPrimary(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1037,7 +1037,7 @@ resource "azurerm_private_link_service" "test" {
   resource_group_name = azurerm_resource_group.test.name
 
   nat_ip_configuration {
-    name                       = "primaryIpConfiguration0-%d"
+    name                       = "primaryIpConfigurationChanged-%d"
     subnet_id                  = azurerm_subnet.test.id
     private_ip_address         = "10.5.3.30"
     private_ip_address_version = "IPv4"
