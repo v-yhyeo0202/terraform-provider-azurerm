@@ -398,6 +398,10 @@ func expandPointToSiteVPNGatewayConnectionConfiguration(input []interface{}, d *
 			},
 		})
 
+		key := fmt.Sprintf("connection_configuration.%d.internet_security_enabled", i)
+		enableInternetSecurity, ok := d.GetOk(key)
+		fmt.Println("debug1 ", key, " ", enableInternetSecurity, " ", ok)
+
 		if enableInternetSecurity, ok := d.GetOk(fmt.Sprintf("connection_configuration.%d.internet_security_enabled", i)); ok {
 			fmt.Println("debug0 ", enableInternetSecurity)
 			configurations[len(configurations)-1].Properties.EnableInternetSecurity = pointer.To(enableInternetSecurity.(bool))
