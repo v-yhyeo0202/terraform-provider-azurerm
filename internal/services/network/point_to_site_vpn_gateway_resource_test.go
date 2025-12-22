@@ -102,13 +102,13 @@ func TestAccPointToSiteVPNGateway_update(t *testing.T) {
 	})
 }
 
-func TestAccPointToSiteVPNGateway_enableInternetSecurity(t *testing.T) {
+func TestAccPointToSiteVPNGateway_disableInternetSecurity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_point_to_site_vpn_gateway", "test")
 	r := PointToSiteVPNGatewayResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.enableInternetSecurity(data),
+			Config: r.disableInternetSecurity(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -235,7 +235,7 @@ resource "azurerm_point_to_site_vpn_gateway" "test" {
 `, r.template(data), data.RandomInteger)
 }
 
-func (r PointToSiteVPNGatewayResource) enableInternetSecurity(data acceptance.TestData) string {
+func (r PointToSiteVPNGatewayResource) disableInternetSecurity(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
 
@@ -253,7 +253,7 @@ resource "azurerm_point_to_site_vpn_gateway" "test" {
       address_prefixes = ["172.100.0.0/14"]
     }
 
-    internet_security_enabled = true
+    internet_security_enabled = false
   }
 }
 `, r.template(data), data.RandomInteger)

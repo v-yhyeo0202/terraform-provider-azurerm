@@ -399,6 +399,7 @@ func expandPointToSiteVPNGatewayConnectionConfiguration(input []interface{}, d *
 		})
 
 		if enableInternetSecurity, ok := d.GetOk(fmt.Sprintf("connection_configuration.%d.internet_security_enabled", i)); ok {
+			fmt.Println("debug0 ", enableInternetSecurity)
 			configurations[len(configurations)-1].Properties.EnableInternetSecurity = pointer.To(enableInternetSecurity.(bool))
 		}
 	}
@@ -468,7 +469,7 @@ func flattenPointToSiteVPNGatewayConnectionConfiguration(input *[]virtualwans.P2
 
 		route := make([]interface{}, 0)
 		addressPrefixes := make([]interface{}, 0)
-		enableInternetSecurity := false
+		enableInternetSecurity := true
 		if props := v.Properties; props != nil {
 			if props.VpnClientAddressPool == nil {
 				continue
