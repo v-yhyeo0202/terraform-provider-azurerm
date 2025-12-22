@@ -113,8 +113,8 @@ func resourcePrivateLinkService() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"name": {
-							Type:         pluginsdk.TypeString,
-							Required:     true,
+							Type:     pluginsdk.TypeString,
+							Required: true,
 							// ForceNew:     true,
 							ValidateFunc: networkValidate.PrivateLinkName,
 						},
@@ -173,9 +173,9 @@ func resourcePrivateLinkService() *pluginsdk.Resource {
 			}
 
 			if rawNatIpConfigurations, ok := d.GetOk("nat_ip_configuration"); ok {
-				for i, _ := range rawNatIpConfigurations.([]interface{}) {
+				for i := range rawNatIpConfigurations.([]interface{}) {
 					if d.HasChange(fmt.Sprintf("nat_ip_configuration.%d.name", i)) ||
-					d.HasChange(fmt.Sprintf("nat_ip_configuration.%d.name", i)) {
+						d.HasChange(fmt.Sprintf("nat_ip_configuration.%d.name", i)) {
 						d.ForceNew("nat_ip_configuration")
 					}
 				}
