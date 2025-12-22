@@ -173,10 +173,20 @@ func resourcePrivateLinkService() *pluginsdk.Resource {
 			}
 
 			if rawNatIpConfigurations, ok := d.GetOk("nat_ip_configuration"); ok {
+				var key string
+
 				for i := range rawNatIpConfigurations.([]interface{}) {
-					if d.HasChange(fmt.Sprintf("nat_ip_configuration.%d.name", i)) ||
-						d.HasChange(fmt.Sprintf("nat_ip_configuration.%d.primary", i)) {
-						d.ForceNew("nat_ip_configuration")
+					key = fmt.Sprintf("nat_ip_configuration.%d.name", i)
+					oldRawNatIpConfigurationName, _ := d.GetChange(key)
+
+					if oldRawNatIpConfigurationName.(string) != "" && d.HasChange(fmt.Sprintf("nat_ip_configuration.%d.name", i)) {
+						d.ForceNew(key)
+					}
+
+					key = fmt.Sprintf("nat_ip_configuration.%d.primary", i)
+
+					if d.HasChange(key) {
+						d.ForceNew(key)
 					}
 				}
 			}
