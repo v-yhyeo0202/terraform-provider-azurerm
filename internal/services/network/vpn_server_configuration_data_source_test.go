@@ -200,7 +200,7 @@ EOF
 
   lifecycle {
 	ignore_changes = [
-	  "radius[0].server[*].secret"
+	  "radius[0].server[0].secret"
 	]
   }
 }
