@@ -156,7 +156,7 @@ func resourcePointToSiteVPNGateway() *pluginsdk.Resource {
 						"internet_security_enabled": {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
-							Default: true,
+							Default:  true,
 						},
 					},
 				},
@@ -191,7 +191,7 @@ func resourcePointToSiteVPNGateway() *pluginsdk.Resource {
 	}
 
 	if !features.FivePointOh() {
-		resource.Schema["connection_configuration"].Elem.Schema["internet_security_enabled"].Default = false
+		resource.Schema["connection_configuration"].Elem.(*pluginsdk.Resource).Schema["internet_security_enabled"].Default = false
 	}
 
 	return resource
@@ -563,7 +563,7 @@ func pointToSiteVpnGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.Resour
 	if rawConnectionConfigurations, ok := d.GetOk("connection_configuration"); ok {
 		var key string
 
-		for i, _ := range rawConnectionConfigurations.([]interface{}) {
+		for i := range rawConnectionConfigurations.([]interface{}) {
 			key = fmt.Sprintf("connection_configuration.%d.internet_security_enabled", i)
 
 			if d.HasChange(key) {

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
-  "github.com/hashicorp/terraform-provider-azurerm/internal/features"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/features"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
@@ -104,9 +104,9 @@ func TestAccPointToSiteVPNGateway_update(t *testing.T) {
 }
 
 func TestAccPointToSiteVPNGateway_enableInternetSecurity(t *testing.T) {
-  if features.FivePointOh() {
-    t.Skip("Skipping since `internet_security_enabled` property default is `true` in 5.0")
-  }
+	if features.FivePointOh() {
+		t.Skip("Skipping since `internet_security_enabled` property default is `true` in 5.0")
+	}
 
 	data := acceptance.BuildTestData(t, "azurerm_point_to_site_vpn_gateway", "test")
 	r := PointToSiteVPNGatewayResource{}
@@ -123,9 +123,9 @@ func TestAccPointToSiteVPNGateway_enableInternetSecurity(t *testing.T) {
 }
 
 func TestAccPointToSiteVPNGateway_disableInternetSecurity(t *testing.T) {
-  if !features.FivePointOh() {
-    t.Skip("Skipping since `internet_security_enabled` property default is `false` before 5.0")
-  }
+	if !features.FivePointOh() {
+		t.Skip("Skipping since `internet_security_enabled` property default is `false` before 5.0")
+	}
 
 	data := acceptance.BuildTestData(t, "azurerm_point_to_site_vpn_gateway", "test")
 	r := PointToSiteVPNGatewayResource{}
