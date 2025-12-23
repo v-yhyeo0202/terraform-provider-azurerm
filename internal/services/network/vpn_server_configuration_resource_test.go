@@ -361,6 +361,12 @@ M/s/1JRtO3bDSzD9TazRVzn2oBqzSa8VgIo5C1nOnoAKJTlsClJKvIhnRlaLQqk=
 EOF
     }
   }
+
+  lifecycle {
+	ignore_changes = [
+	  "radius[0].server.*.secret"
+	]
+  }
 }
 `, r.template(data), data.RandomInteger)
 }
@@ -414,6 +420,12 @@ WsfMLH4JCLa/tRYL+Rw/N3ybCkDp00s0WUZ+AoDywSl0Q/ZEnNY0MsFiw6LyIdbq
 M/s/1JRtO3bDSzD9TazRVzn2oBqzSa8VgIo5C1nOnoAKJTlsClJKvIhnRlaLQqk=
 EOF
     }
+  }
+
+  lifecycle {
+	ignore_changes = [
+	  "radius[0].server.*.secret"
+	]
   }
 }
 `, r.template(data), data.RandomInteger)
@@ -565,6 +577,12 @@ resource "azurerm_vpn_server_configuration" "test" {
       secret  = "vindicators-the-return-of-worldender"
       score   = 15
     }
+  }
+
+  lifecycle {
+	ignore_changes = [
+	  "radius[0].server.*.secret"
+	]
   }
 }
 `, r.template(data), data.RandomInteger)
