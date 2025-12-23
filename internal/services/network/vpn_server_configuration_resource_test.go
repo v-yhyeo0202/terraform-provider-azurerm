@@ -364,7 +364,7 @@ EOF
 
   lifecycle {
 	ignore_changes = [
-	  "radius[0].server.*.secret"
+	  "radius[0].server[0].secret"
 	]
   }
 }
@@ -424,7 +424,8 @@ EOF
 
   lifecycle {
 	ignore_changes = [
-	  "radius[0].server.*.secret"
+	  "radius[0].server[0].secret",
+	  "radius[0].server[1].secret"
 	]
   }
 }
@@ -581,7 +582,7 @@ resource "azurerm_vpn_server_configuration" "test" {
 
   lifecycle {
 	ignore_changes = [
-	  "radius[0].server.*.secret"
+	  "radius[0].server[0].secret"
 	]
   }
 }

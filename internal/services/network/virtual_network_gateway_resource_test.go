@@ -1697,7 +1697,7 @@ resource "azurerm_virtual_network_gateway" "test" {
   
   lifecycle {
     ignore_changes = [
-      "vpn_client_configuration[0].radius_server.*.secret"
+      "vpn_client_configuration[0].radius_server[0].secret"
     ]
   }
 }
