@@ -10,9 +10,13 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/expressrouteconnections"
+	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/provider/framework"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
@@ -95,6 +99,59 @@ func testAccExpressRouteConnection_update(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+	})
+}
+
+func TestAccExpressRouteConnection_writeOnlyAuthorizationKey(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_express_route_circuit_connection", "test")
+	r := ExpressRouteConnectionResource{}
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
+		Steps: []resource.TestStep{
+			{
+				Config: r.writeOnlyAuthorizationKey(data, "a-secret-from-kv", 1),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("authorization_key_wo_version"),
+			{
+				Config: r.writeOnlyAuthorizationKey(data, "a-secret-from-kv-updated", 2),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("authorization_key_wo_version"),
+		},
+	})
+}
+
+func TestAccExpressRouteConnection_updateToWriteOnlyAuthorizationKey(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_express_route_circuit_connection", "test")
+	r := ExpressRouteConnectionResource{}
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
+		Steps: []resource.TestStep{
+			{
+				Config: r.complete(data),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("authorization_key"),
+			{
+				Config: r.writeOnlyAuthorizationKey(data, "a-secret-from-kv", 1),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("authorization_key_wo_version"),
+			{
+				Config: r.complete(data),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("authorization_key"),
+		},
 	})
 }
 
@@ -315,4 +372,32 @@ resource "azurerm_express_route_gateway" "test" {
   scale_units         = 1
 }
 `, data.RandomInteger, data.Locations.Primary)
+}
+
+func (r ExpressRouteConnectionResource) writeOnlyAuthorizationKey(data acceptance.TestData, secret string, version int) string {
+	return fmt.Sprintf(`
+%s
+
+%s
+
+resource "azurerm_express_route_connection" "test" {
+  name                                 = "acctest-ExpressRouteConnection-%d"
+  express_route_gateway_id             = azurerm_express_route_gateway.test.id
+  express_route_circuit_peering_id     = azurerm_express_route_circuit_peering.test.id
+  routing_weight                       = 2
+  authorization_key_wo                    = ephemeral.azurerm_key_vault_secret.test.value
+  authorization_key_wo_version = %d
+  enable_internet_security             = true
+  express_route_gateway_bypass_enabled = true
+
+  routing {
+    associated_route_table_id = azurerm_virtual_hub.test.default_route_table_id
+
+    propagated_route_table {
+      labels          = ["label1"]
+      route_table_ids = [azurerm_virtual_hub.test.default_route_table_id]
+    }
+  }
+}
+`, r.template(data), acceptance.WriteOnlyKeyVaultSecretTemplate(data, secret), data.RandomInteger, version)
 }
