@@ -567,6 +567,7 @@ func pointToSiteVpnGatewayCustomizeDiff(ctx context.Context, d *pluginsdk.Resour
 			key = fmt.Sprintf("connection_configuration.%d.internet_security_enabled", i)
 
 			if d.HasChange(key) {
+				fmt.Println("debug0")
 				d.ForceNew(key)
 			}
 		}
