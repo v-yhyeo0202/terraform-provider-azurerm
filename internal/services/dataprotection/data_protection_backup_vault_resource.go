@@ -112,6 +112,7 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 			"infrastructure_encryption_settings": {
 				Type:     pluginsdk.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
@@ -297,10 +298,7 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
 			}
 
-			_, infrastructureEncryptionSettings := d.GetChange("infrastructure_encryption_settings")
-
-			// Only read EncryptionSettings when infrastructure_encryption_settings is specified in Terraform configuration. This avoid conflict when azurerm_data_protection_backup_vault_customer_managed_key resource is used. The drawback is that `terraform import` does not work on infrastructure_encryption_settings
-			if securitySetting.EncryptionSettings != nil && len(infrastructureEncryptionSettings.([]interface{})) > 0 {
+			if securitySetting.EncryptionSettings != nil {
 				d.Set("infrastructure_encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
 			}
 		}
