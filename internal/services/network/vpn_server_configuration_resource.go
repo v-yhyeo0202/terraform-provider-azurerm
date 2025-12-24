@@ -355,6 +355,12 @@ func resourceVPNServerConfigurationCreate(d *pluginsdk.ResourceData, meta interf
 			props.RadiusServers = radius.servers
 		}
 
+		fmt.Println("debug1")
+
+		for _, v := range *props.RadiusServers {
+			fmt.Println(*v.RadiusServerSecret)
+		}
+
 		props.RadiusServerAddress = pointer.To(radius.address)
 		props.RadiusServerSecret = pointer.To(radius.secret)
 
@@ -368,6 +374,12 @@ func resourceVPNServerConfigurationCreate(d *pluginsdk.ResourceData, meta interf
 		Location:   pointer.To(location),
 		Properties: &props,
 		Tags:       tags.Expand(t),
+	}
+
+	fmt.Println("debug2")
+
+	for _, v := range *(parameters.Properties).RadiusServers {
+		fmt.Println(*v.RadiusServerSecret)
 	}
 
 	if err := client.VpnServerConfigurationsCreateOrUpdateThenPoll(ctx, id, parameters); err != nil {
@@ -808,6 +820,12 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 				RadiusServerScore:   pointer.To(int64(v["score"].(int))),
 			})
 		}
+	}
+
+	fmt.Println("debug0")
+
+	for _, v := range radiusServers {
+		fmt.Println(*v.RadiusServerSecret)
 	}
 
 	return &vpnServerConfigurationRadius{
