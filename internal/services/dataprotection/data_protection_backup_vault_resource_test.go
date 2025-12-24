@@ -173,6 +173,20 @@ func TestAccDataProtectionBackupVault_updateIdentity(t *testing.T) {
 	})
 }
 
+func TestAccDataProtectionBackupVault_cmkEncryptionEnabled(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault", "test")
+	r := DataProtectionBackupVaultResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.completeUpdate(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("infrastructure_encryption_settings"),
+	})
+}
+
 func (r DataProtectionBackupVaultResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := backupvaults.ParseBackupVaultID(state.ID)
 	if err != nil {
@@ -376,9 +390,9 @@ resource "azurerm_data_protection_backup_vault" "test" {
   retention_duration_in_days = 15
 
   infrastructure_encryption_settings {
-    encryption_enabled = true
+    encryption_enabled = false
     identity_id = azurerm_user_assigned_identity.test.id
-	  key_vault_key_id = azurerm_key_vault_key.test.id
+	key_vault_key_id = azurerm_key_vault_key.test.id
   }
 
   tags = {
