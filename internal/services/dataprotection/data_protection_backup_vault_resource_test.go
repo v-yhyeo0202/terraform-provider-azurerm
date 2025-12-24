@@ -554,8 +554,7 @@ resource "azurerm_data_protection_backup_vault" "test" {
   redundancy          = "LocallyRedundant"
 
   identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.test.id]
+    type         = "SystemAssigned"
   }
 
   immutability               = "Locked"
