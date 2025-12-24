@@ -825,6 +825,7 @@ func expandVpnServerConfigurationRadius(input []interface{}) *vpnServerConfigura
 	fmt.Println("debug0")
 
 	for _, v := range radiusServers {
+		fmt.Println(v.RadiusServerAddress)
 		fmt.Println(*v.RadiusServerSecret)
 	}
 
