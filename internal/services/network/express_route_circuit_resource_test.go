@@ -355,12 +355,12 @@ func TestAccExpressRouteCircuit_writeOnlyAuthorizationKey(t *testing.T) {
 		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
 		Steps: []resource.TestStep{
 			{
-				Config: r.writeOnlyAuthorizationKey(data, "a-secret-from-kv", 1),
+				Config: r.writeOnlyAuthorizationKey(data, "b0be57f5-1fba-463b-adec-ffe767354cdd", 1),
 				Check:  check.That(data.ResourceName).ExistsInAzure(r),
 			},
 			data.ImportStep("authorization_key_wo_version"),
 			{
-				Config: r.writeOnlyAuthorizationKey(data, "a-secret-from-kv-updated", 2),
+				Config: r.writeOnlyAuthorizationKey(data, "946a1918-b7a2-4917-b43c-8c4cdaee006a", 2),
 				Check:  check.That(data.ResourceName).ExistsInAzure(r),
 			},
 			data.ImportStep("authorization_key_wo_version"),
@@ -379,17 +379,17 @@ func TestAccExpressRouteCircuit_updateToWriteOnlyAuthorizationKey(t *testing.T) 
 		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
 		Steps: []resource.TestStep{
 			{
-				Config: r.basicMeteredConfig(data),
+				Config: r.authorizationKey(data),
 				Check:  check.That(data.ResourceName).ExistsInAzure(r),
 			},
 			data.ImportStep("authorization_key"),
 			{
-				Config: r.writeOnlyAuthorizationKey(data, "a-secret-from-kv", 1),
+				Config: r.writeOnlyAuthorizationKey(data, "b0be57f5-1fba-463b-adec-ffe767354cdd", 1),
 				Check:  check.That(data.ResourceName).ExistsInAzure(r),
 			},
 			data.ImportStep("authorization_key_wo_version"),
 			{
-				Config: r.basicMeteredConfig(data),
+				Config: r.authorizationKey(data),
 				Check:  check.That(data.ResourceName).ExistsInAzure(r),
 			},
 			data.ImportStep("authorization_key"),
