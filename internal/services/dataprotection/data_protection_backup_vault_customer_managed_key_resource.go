@@ -95,7 +95,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 			var respBody []byte
 			resp.HttpResponse.Body.Read(respBody)
 			fmt.Println("debug0")
-			fmt.Println(resp.HttpResponse.Request.GetBody)
+			fmt.Println(string(respBody))
 			if resp.Model.Properties.SecuritySettings != nil && resp.Model.Properties.SecuritySettings.EncryptionSettings != nil {
 				fmt.Println("debug1")
 				if kekIdentity := resp.Model.Properties.SecuritySettings.EncryptionSettings.KekIdentity; kekIdentity != nil {
