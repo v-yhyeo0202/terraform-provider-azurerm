@@ -704,7 +704,7 @@ resource "azurerm_user_assigned_identity" "test" {
   location            = azurerm_resource_group.test.location
   name                = "acctestBV-%d"
 }
-`, r.template(data), data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
+`, r.template(data), data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
 }
 
 func (r DataProtectionBackupVaultResource) encryptionWithUserAssignedIdentityBlocked(data acceptance.TestData) string {
