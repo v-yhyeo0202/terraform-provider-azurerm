@@ -376,9 +376,9 @@ resource "azurerm_data_protection_backup_vault" "test" {
   retention_duration_in_days = 15
 
   infrastructure_encryption_settings {
-    encryption_enabled = true
     identity_id = azurerm_user_assigned_identity.test.id
-	  key_vault_key_id = azurerm_key_vault_key.test.id
+	key_vault_key_id = azurerm_key_vault_key.test.id
+	encryption_enabled = true
   }
 
   tags = {

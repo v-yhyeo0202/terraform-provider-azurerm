@@ -116,12 +116,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				MaxItems: 1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
-						"encryption_enabled": {
-							Type:     pluginsdk.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-
 						"identity_id": {
 							Type:         pluginsdk.TypeString,
 							Required:     true,
@@ -132,6 +126,13 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: keyVaultValidate.NestedItemIdWithOptionalVersion,
+						},
+
+						"encryption_enabled": {
+							Type:     pluginsdk.TypeBool,
+							Optional: true,
+							Default:  false,
+							ForceNew: true,
 						},
 					},
 				},
@@ -403,12 +404,6 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 		State: pointer.To(backupvaults.EncryptionStateEnabled),
 	}
 
-	if v["encryption_enabled"].(bool) {
-		output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
-	} else {
-		output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
-	}
-
 	keyId, err := keyVaultParse.ParseOptionallyVersionedNestedItemID(v["key_vault_key_id"].(string))
 
 	if err != nil {
@@ -419,15 +414,17 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 		KeyUri: pointer.To(keyId.ID()),
 	}
 
+	if v["encryption_enabled"].(bool) {
+		output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
+	} else {
+		output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
+	}
+
 	return output, nil
 }
 
 func flattenBackupVaultEncryptionSettings(input *backupvaults.EncryptionSettings) *[]interface{} {
 	output := make(map[string]interface{})
-
-	if input.InfrastructureEncryption != nil {
-		output["encryption_enabled"] = pointer.From(input.InfrastructureEncryption) == backupvaults.InfrastructureEncryptionStateEnabled
-	}
 
 	if input.KekIdentity != nil && input.KekIdentity.IdentityId != nil {
 		output["identity_id"] = pointer.From(input.KekIdentity.IdentityId)
@@ -435,6 +432,10 @@ func flattenBackupVaultEncryptionSettings(input *backupvaults.EncryptionSettings
 
 	if input.KeyVaultProperties != nil && input.KeyVaultProperties.KeyUri != nil {
 		output["key_vault_key_id"] = pointer.From(input.KeyVaultProperties.KeyUri)
+	}
+
+	if input.InfrastructureEncryption != nil {
+		output["encryption_enabled"] = pointer.From(input.InfrastructureEncryption) == backupvaults.InfrastructureEncryptionStateEnabled
 	}
 
 	return &[]interface{}{output}
