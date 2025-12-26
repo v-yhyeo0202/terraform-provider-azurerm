@@ -361,6 +361,7 @@ resource "azurerm_data_protection_backup_vault" "test" {
   infrastructure_encryption_settings {
     identity_id = azurerm_user_assigned_identity.test.id
 	  key_vault_key_id = azurerm_key_vault_key.test2.id
+    encryption_enabled = true
   }
 }
 
