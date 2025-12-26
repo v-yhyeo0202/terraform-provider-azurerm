@@ -91,7 +91,11 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 			if resp.Model == nil {
 				return fmt.Errorf("retrieving %s: `model` is nil", *id)
 			}
+
+			var respBody []byte
+			resp.HttpResponse.Body.Read(respBody)
 			fmt.Println("debug0")
+			fmt.Println(resp.HttpResponse.Request.GetBody)
 			if resp.Model.Properties.SecuritySettings != nil && resp.Model.Properties.SecuritySettings.EncryptionSettings != nil {
 				fmt.Println("debug1")
 				if kekIdentity := resp.Model.Properties.SecuritySettings.EncryptionSettings.KekIdentity; kekIdentity != nil {
