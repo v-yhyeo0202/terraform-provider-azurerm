@@ -605,14 +605,7 @@ resource "azurerm_data_protection_backup_vault_customer_managed_key" "test" {
 
 func (r DataProtectionBackupVaultResource) encryptionWithUserAssignedIdentity(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-provider "azurerm" {
-  features {}
-}
-
-resource "azurerm_resource_group" "test" {
-  name     = "acctest-dataprotection-%d"
-  location = "%s"
-}
+%s
 
 resource "azurerm_data_protection_backup_vault" "test" {
   name                = "acctest-bv-%d"
@@ -711,11 +704,10 @@ resource "azurerm_user_assigned_identity" "test" {
   location            = azurerm_resource_group.test.location
   name                = "acctestBV-%d"
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
+`, r.template(data), data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
 }
 
 func (r DataProtectionBackupVaultResource) encryptionWithUserAssignedIdentityBlocked(data acceptance.TestData) string {
-	template := r.encryptionWithUserAssignedIdentity(data)
 	return fmt.Sprintf(`
 %s
 
@@ -723,5 +715,5 @@ resource "azurerm_data_protection_backup_vault_customer_managed_key" "test" {
   data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
   key_vault_key_id                = azurerm_key_vault_key.test.id
 }
-`, template)
+`, r.encryptionWithUserAssignedIdentity(data))
 }
