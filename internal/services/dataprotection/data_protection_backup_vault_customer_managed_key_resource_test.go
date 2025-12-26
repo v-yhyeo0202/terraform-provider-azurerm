@@ -207,3 +207,87 @@ resource "azurerm_data_protection_backup_vault_customer_managed_key" "import" {
 }
 `, template)
 }
+
+func (r DataProtectionBackupVaultCustomerManagedKeyResource) updated(data acceptance.TestData) string {
+	template := r.template(data)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_key_vault" "test2" {
+  name                        = "acctest-key-vault-2%s"
+  location                    = azurerm_resource_group.test.location
+  resource_group_name         = azurerm_resource_group.test.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  soft_delete_retention_days  = 7
+  purge_protection_enabled    = true
+
+  sku_name = "standard"
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "Create",
+      "Decrypt",
+      "Encrypt",
+      "Delete",
+      "Get",
+      "List",
+      "Purge",
+      "UnwrapKey",
+      "WrapKey",
+      "Verify",
+      "GetRotationPolicy"
+    ]
+    secret_permissions = [
+      "Set",
+    ]
+  }
+
+  access_policy {
+    tenant_id = azurerm_data_protection_backup_vault.test.identity[0].tenant_id
+    object_id = azurerm_data_protection_backup_vault.test.identity[0].principal_id
+
+    key_permissions = [
+      "Create",
+      "Decrypt",
+      "Encrypt",
+      "Delete",
+      "Get",
+      "List",
+      "Purge",
+      "UnwrapKey",
+      "WrapKey",
+      "Verify",
+      "GetRotationPolicy"
+    ]
+    secret_permissions = [
+      "Set",
+    ]
+  }
+}
+
+resource "azurerm_key_vault_key" "test2" {
+  name         = "acctestkey2-%s"
+  key_vault_id = azurerm_key_vault.test.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+}
+
+resource "azurerm_data_protection_backup_vault_customer_managed_key" "test" {
+  data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
+  key_vault_key_id                = azurerm_key_vault_key.test2.id
+}
+`, template, data.RandomString, data.RandomString)
+}
