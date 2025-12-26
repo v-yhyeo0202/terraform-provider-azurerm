@@ -387,7 +387,7 @@ func TestAccExpressRouteCircuit_updateToWriteOnlyAuthorizationKey(t *testing.T) 
 				Config: r.writeOnlyAuthorizationKey(data, "b0be57f5-1fba-463b-adec-ffe767354cdd", 1),
 				Check:  check.That(data.ResourceName).ExistsInAzure(r),
 			},
-			data.ImportStep("authorization_key_wo_version"),
+			data.ImportStep("authorization_key", "authorization_key_wo_version"),
 			{
 				Config: r.authorizationKey(data),
 				Check:  check.That(data.ResourceName).ExistsInAzure(r),
