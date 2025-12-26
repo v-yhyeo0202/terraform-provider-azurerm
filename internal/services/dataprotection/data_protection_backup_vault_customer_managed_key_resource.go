@@ -91,9 +91,11 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 			if resp.Model == nil {
 				return fmt.Errorf("retrieving %s: `model` is nil", *id)
 			}
-
+			fmt.Println("debug0")
 			if resp.Model.Properties.SecuritySettings != nil && resp.Model.Properties.SecuritySettings.EncryptionSettings != nil {
+				fmt.Println("debug1")
 				if kekIdentity := resp.Model.Properties.SecuritySettings.EncryptionSettings.KekIdentity; kekIdentity != nil {
+					fmt.Println("debug2 ", *kekIdentity.IdentityType, " ", *resp.Model.Properties.ProvisioningState)
 					if *kekIdentity.IdentityType == backupvaults.IdentityTypeUserAssigned {
 						return fmt.Errorf("`azurerm_data_protection_backup_vault_customer_managed_key` resource and `infrastructure_encryption_settings` block in `azurerm_data_protection_backup_vault` resource cannot be specified at the same time")
 					}
