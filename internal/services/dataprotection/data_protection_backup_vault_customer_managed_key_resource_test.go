@@ -439,7 +439,7 @@ resource "azurerm_key_vault_key" "test" {
 }
 
 resource "azurerm_key_vault" "test2" {
-  name                        = "acctest-key-vault-%s"
+  name                        = "acctest-key-vault2-%s"
   location                    = azurerm_resource_group.test.location
   resource_group_name         = azurerm_resource_group.test.name
   enabled_for_disk_encryption = true
@@ -495,7 +495,7 @@ resource "azurerm_key_vault" "test2" {
 }
 
 resource "azurerm_key_vault_key" "test2" {
-  name         = "acctestkey-%s"
+  name         = "acctestkey2-%s"
   key_vault_id = azurerm_key_vault.test2.id
   key_type     = "RSA"
   key_size     = 2048
