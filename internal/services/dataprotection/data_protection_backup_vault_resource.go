@@ -113,6 +113,7 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				Type:     pluginsdk.TypeList,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
@@ -248,7 +249,7 @@ func resourceDataProtectionBackupVaultCreateUpdate(d *pluginsdk.ResourceData, me
 
 	if v, ok := d.GetOk("infrastructure_encryption_settings"); ok {
 		if encryptionEnabledWithSystemAssignedIdentity {
-			log.Printf("[INFO] Customer Managed Keys settings in `infrastructure_encryption_settings` block will overwrite settings of `azurerm_data_protection_backup_vault_customer_managed_key` resource. Please remove `azurerm_data_protection_backup_vault_customer_managed_key` resource to avoid confusion.")
+			log.Printf("[INFO] Customer Managed Keys settings in `infrastructure_encryption_settings` block of `azurerm_data_protection_backup_vault` resource will overwrite settings of `azurerm_data_protection_backup_vault_customer_managed_key` resource. If `azurerm_data_protection_backup_vault_customer_managed_key` resource exists in Terraform configurations, please remove it to avoid confusion.")
 		}
 
 		encryptionSettings, err := expandBackupVaultEncryptionSettings(v.([]interface{}))

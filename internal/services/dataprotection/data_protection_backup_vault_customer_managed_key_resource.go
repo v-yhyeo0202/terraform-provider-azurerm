@@ -99,7 +99,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 				if kekIdentity := resp.Model.Properties.SecuritySettings.EncryptionSettings.KekIdentity; kekIdentity != nil {
 					fmt.Println("debug2 ", *kekIdentity.IdentityType, " ", *resp.Model.Properties.ProvisioningState)
 					if *kekIdentity.IdentityType == backupvaults.IdentityTypeUserAssigned {
-						return fmt.Errorf("`azurerm_data_protection_backup_vault_customer_managed_key` resource and `infrastructure_encryption_settings` block in `azurerm_data_protection_backup_vault` resource cannot be specified at the same time")
+						return fmt.Errorf("Customer Managed Keys settings has been specified in `infrastructure_encryption_settings` block of `azurerm_data_protection_backup_vault` resource. `azurerm_data_protection_backup_vault_customer_managed_key` resource is not required and should be removed.")
 					}
 				}
 
