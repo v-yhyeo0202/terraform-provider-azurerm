@@ -78,7 +78,7 @@ func TestAccDataProtectionBackupVaultCustomerManagedKey_conflictedEncryptionSett
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
-      ExpectError: regexp.MustCompile("Customer Managed Keys settings has been specified in `infrastructure_encryption_settings` block of `azurerm_data_protection_backup_vault` resource. `azurerm_data_protection_backup_vault_customer_managed_key` resource is not required and should be removed."),
+			ExpectError: regexp.MustCompile("Customer Managed Keys settings have been specified in `infrastructure_encryption_settings` block of `azurerm_data_protection_backup_vault` resource. `azurerm_data_protection_backup_vault_customer_managed_key` resource is not required and should be removed."),
 		},
 	})
 }

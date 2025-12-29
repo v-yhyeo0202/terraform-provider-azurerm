@@ -110,11 +110,12 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 			},
 
 			"infrastructure_encryption_settings": {
-				Type:     pluginsdk.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
+				Type:       pluginsdk.TypeList,
+				ConfigMode: pluginsdk.SchemaConfigModeAttr,
+				Optional:   true,
+				Computed:   true,
+				ForceNew:   true,
+				MaxItems:   1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"identity_id": {

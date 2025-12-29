@@ -127,7 +127,7 @@ func TestAccDataProtectionBackupVault_update(t *testing.T) {
 				},
 			},
 		},
-		data.ImportStep("infrastructure_encryption_settings"),
+		data.ImportStep(),
 	})
 }
 
