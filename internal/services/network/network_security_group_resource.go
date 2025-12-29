@@ -178,7 +178,7 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 						},
 					},
 				},
-				Set: networkSecurityGroupSecurityRule,
+				Set: networkSecurityGroupSecurityRuleHash,
 			},
 
 			"tags": commonschema.Tags(),
