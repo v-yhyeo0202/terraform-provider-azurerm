@@ -76,7 +76,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 			if err != nil {
 				return err
 			}
-			fmt.Println("debug2 ", cmk.DataProtectionBackupVaultID, " ", id)
+
 			locks.ByID(id.ID())
 			defer locks.UnlockByID(id.ID())
 
@@ -92,14 +92,10 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 				return fmt.Errorf("retrieving %s: `model` is nil", *id)
 			}
 
-			fmt.Println("debug0 ", resp.Model.Properties.SecuritySettings)
-
 			if resp.Model.Properties.SecuritySettings != nil && resp.Model.Properties.SecuritySettings.EncryptionSettings != nil {
-				fmt.Println("debug1")
 				if kekIdentity := resp.Model.Properties.SecuritySettings.EncryptionSettings.KekIdentity; kekIdentity != nil {
-					fmt.Println("debug2 ", *kekIdentity.IdentityType, " ", *resp.Model.Properties.ProvisioningState)
 					if *kekIdentity.IdentityType == backupvaults.IdentityTypeUserAssigned {
-						return fmt.Errorf("Customer Managed Keys settings has been specified in `infrastructure_encryption_settings` block of `azurerm_data_protection_backup_vault` resource. `azurerm_data_protection_backup_vault_customer_managed_key` resource is not required and should be removed.")
+						return fmt.Errorf("Customer Managed Keys settings has been specified in `encryption_settings` block of `azurerm_data_protection_backup_vault` resource. `azurerm_data_protection_backup_vault_customer_managed_key` resource is not required and should be removed.")
 					}
 				}
 

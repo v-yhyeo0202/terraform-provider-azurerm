@@ -109,7 +109,7 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				ValidateFunc: validation.StringInSlice(backupvaults.PossibleValuesForImmutabilityState(), false),
 			},
 
-			"infrastructure_encryption_settings": {
+			"encryption_settings": {
 				Type:       pluginsdk.TypeList,
 				ConfigMode: pluginsdk.SchemaConfigModeAttr,
 				Optional:   true,
@@ -130,7 +130,7 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							ValidateFunc: keyVaultValidate.NestedItemIdWithOptionalVersion,
 						},
 
-						"encryption_enabled": {
+						"infrastructure_encryption_enabled": {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -248,9 +248,9 @@ func resourceDataProtectionBackupVaultCreateUpdate(d *pluginsdk.ResourceData, me
 		parameters.Properties.SecuritySettings.SoftDeleteSettings.RetentionDurationInDays = pointer.To(v.(float64))
 	}
 
-	if v, ok := d.GetOk("infrastructure_encryption_settings"); ok {
+	if v, ok := d.GetOk("encryption_settings"); ok {
 		if encryptionEnabledWithSystemAssignedIdentity {
-			log.Printf("[INFO] Customer Managed Keys settings in `infrastructure_encryption_settings` block of `azurerm_data_protection_backup_vault` resource will overwrite settings of `azurerm_data_protection_backup_vault_customer_managed_key` resource. If `azurerm_data_protection_backup_vault_customer_managed_key` resource exists in Terraform configurations, please remove it to avoid confusion.")
+			log.Printf("[INFO] Customer Managed Keys settings in `encryption_settings` block of `azurerm_data_protection_backup_vault` resource will overwrite settings of `azurerm_data_protection_backup_vault_customer_managed_key` resource. If `azurerm_data_protection_backup_vault_customer_managed_key` resource exists in Terraform configurations, please remove it to avoid confusion.")
 		}
 
 		encryptionSettings, err := expandBackupVaultEncryptionSettings(v.([]interface{}))
@@ -315,7 +315,7 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 			}
 
 			if securitySetting.EncryptionSettings != nil {
-				d.Set("infrastructure_encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
+				d.Set("encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
 			}
 		}
 		d.Set("immutability", string(immutability))
@@ -429,7 +429,7 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 		KeyUri: pointer.To(keyId.ID()),
 	}
 
-	if v["encryption_enabled"].(bool) {
+	if v["infrastructure_encryption_enabled"].(bool) {
 		output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateEnabled)
 	} else {
 		output.InfrastructureEncryption = pointer.To(backupvaults.InfrastructureEncryptionStateDisabled)
@@ -450,7 +450,7 @@ func flattenBackupVaultEncryptionSettings(input *backupvaults.EncryptionSettings
 	}
 
 	if input.InfrastructureEncryption != nil {
-		output["encryption_enabled"] = pointer.From(input.InfrastructureEncryption) == backupvaults.InfrastructureEncryptionStateEnabled
+		output["infrastructure_encryption_enabled"] = pointer.From(input.InfrastructureEncryption) == backupvaults.InfrastructureEncryptionStateEnabled
 	}
 
 	return &[]interface{}{output}
