@@ -216,20 +216,6 @@ func TestAccDataProtectionBackupVault_updateUserAssignedIdentity(t *testing.T) {
 	})
 }
 
-func TestAccDataProtectionBackupVault_conflictedEncryptionSettings(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault", "test")
-	r := DataProtectionBackupVaultResource{}
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.conflictedEncryptionSettings(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-      ExpectError: regexp.MustCompile("Customer Managed Keys settings has been specified in `infrastructure_encryption_settings` block of `azurerm_data_protection_backup_vault` resource. `azurerm_data_protection_backup_vault_customer_managed_key` resource is not required and should be removed."),
-		},
-	})
-}
-
 func (r DataProtectionBackupVaultResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := backupvaults.ParseBackupVaultID(state.ID)
 	if err != nil {
@@ -736,11 +722,6 @@ resource "azurerm_data_protection_backup_vault" "test" {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.test2.id]
   }
-
-  infrastructure_encryption_settings {
-    identity_id        = azurerm_user_assigned_identity.test2.id
-    key_vault_key_id   = azurerm_key_vault_key.test.id
-  }
 }
 
 data "azurerm_client_config" "current" {}
@@ -851,15 +832,4 @@ resource "azurerm_user_assigned_identity" "test2" {
   name                = "acctestBV2-%d"
 }
 `, r.template(data), data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger, data.RandomInteger)
-}
-
-func (r DataProtectionBackupVaultResource) conflictedEncryptionSettings(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_data_protection_backup_vault_customer_managed_key" "test" {
-  data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
-  key_vault_key_id                = azurerm_key_vault_key.test.id
-}
-`, r.encryptionWithUserAssignedIdentity(data), data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
 }
