@@ -182,9 +182,10 @@ func resourceDataProtectionBackupVaultCreateUpdate(d *pluginsdk.ResourceData, me
 	resourceGroup := d.Get("resource_group_name").(string)
 
 	id := backupvaults.NewBackupVaultID(subscriptionId, resourceGroup, name)
+	existing, err := client.Get(ctx, id)
+	encryptionEnabledWithSystemAssignedIdentity := false
 
 	if d.IsNewResource() {
-		existing, err := client.Get(ctx, id)
 		if err != nil {
 			if !response.WasNotFound(existing.HttpResponse) {
 				return fmt.Errorf("checking for existing DataProtection BackupVault (%q): %+v", id, err)
@@ -192,6 +193,14 @@ func resourceDataProtectionBackupVaultCreateUpdate(d *pluginsdk.ResourceData, me
 		}
 		if !response.WasNotFound(existing.HttpResponse) {
 			return tf.ImportAsExistsError("azurerm_data_protection_backup_vault", id.ID())
+		}
+	} else {
+		if securitySettings := existing.Model.Properties.SecuritySettings; securitySettings != nil {
+			if encryptionSettings := securitySettings.EncryptionSettings; encryptionSettings != nil {
+				if kekIdentity := encryptionSettings.KekIdentity; kekIdentity != nil && *kekIdentity.IdentityType == backupvaults.IdentityTypeSystemAssigned {
+					encryptionEnabledWithSystemAssignedIdentity = true
+				}
+			}
 		}
 	}
 
@@ -238,6 +247,10 @@ func resourceDataProtectionBackupVaultCreateUpdate(d *pluginsdk.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("infrastructure_encryption_settings"); ok {
+		if encryptionEnabledWithSystemAssignedIdentity {
+			log.Printf("[INFO] Customer Managed Keys settings in `infrastructure_encryption_settings` block will overwrite settings of `azurerm_data_protection_backup_vault_customer_managed_key` resource. Please remove `azurerm_data_protection_backup_vault_customer_managed_key` resource to avoid confusion.")
+		}
+
 		encryptionSettings, err := expandBackupVaultEncryptionSettings(v.([]interface{}))
 
 		if err != nil {

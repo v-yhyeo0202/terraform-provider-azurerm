@@ -76,7 +76,7 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 			if err != nil {
 				return err
 			}
-
+			fmt.Println("debug2 ", cmk.DataProtectionBackupVaultID, " ", id)
 			locks.ByID(id.ID())
 			defer locks.UnlockByID(id.ID())
 
@@ -92,10 +92,8 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Create() sdk.Resour
 				return fmt.Errorf("retrieving %s: `model` is nil", *id)
 			}
 
-			var respBody []byte
-			resp.HttpResponse.Body.Read(respBody)
-			fmt.Println("debug0")
-			fmt.Println(string(respBody))
+			fmt.Println("debug0 ", resp.Model.Properties.SecuritySettings)
+
 			if resp.Model.Properties.SecuritySettings != nil && resp.Model.Properties.SecuritySettings.EncryptionSettings != nil {
 				fmt.Println("debug1")
 				if kekIdentity := resp.Model.Properties.SecuritySettings.EncryptionSettings.KekIdentity; kekIdentity != nil {
@@ -177,7 +175,41 @@ func (r DataProtectionBackupVaultCustomerManagedKeyResource) Delete() sdk.Resour
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			log.Printf(`[INFO] Customer Managed Keys cannot be removed from Data Protection Backup Vaults once added. To remove the Customer Managed Key, delete and recreate the parent Data Protection Backup Vault`)
+			client := metadata.Client.DataProtection.BackupVaultClient
+			var cmk DataProtectionBackupVaultCustomerManagedKeyModel
+
+			if err := metadata.Decode(&cmk); err != nil {
+				return err
+			}
+
+			id, err := backupvaults.ParseBackupVaultID(cmk.DataProtectionBackupVaultID)
+
+			if err != nil {
+				return err
+			}
+
+			resp, err := client.Get(ctx, *id)
+
+			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return fmt.Errorf("%s was not found", *id)
+				}
+
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
+			}
+
+			if resp.Model == nil {
+				return fmt.Errorf("retrieving %s: `model` is nil", *id)
+			}
+
+			if securitySettings := resp.Model.Properties.SecuritySettings; securitySettings != nil {
+				if encryptionSettings := securitySettings.EncryptionSettings; encryptionSettings != nil {
+					if kekIdentity := encryptionSettings.KekIdentity; kekIdentity != nil && *kekIdentity.IdentityType == backupvaults.IdentityTypeSystemAssigned {
+						log.Printf(`[INFO] Customer Managed Keys cannot be removed from Data Protection Backup Vaults once added. To remove the Customer Managed Key, delete and recreate the parent Data Protection Backup Vault`)
+					}
+				}
+			}
+
 			return nil
 		},
 	}

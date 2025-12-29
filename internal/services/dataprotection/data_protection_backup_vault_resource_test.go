@@ -6,7 +6,6 @@ package dataprotection_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -192,27 +191,6 @@ func TestAccDataProtectionBackupVault_updateToUserAssignedIdentity(t *testing.T)
 			),
 		},
 		data.ImportStep(),
-	})
-}
-
-func TestAccDataProtectionBackupVault_updateToUserAssignedIdentityBlocked(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault", "test")
-	r := DataProtectionBackupVaultResource{}
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.encryptionWithSystemAssignedIdentity(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.encryptionWithUserAssignedIdentityBlocked(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-			ExpectError: regexp.MustCompile("`azurerm_data_protection_backup_vault_customer_managed_key` resource and `infrastructure_encryption_settings` block in `azurerm_data_protection_backup_vault` resource cannot be specified at the same time"),
-		},
 	})
 }
 
@@ -705,15 +683,4 @@ resource "azurerm_user_assigned_identity" "test" {
   name                = "acctestBV-%d"
 }
 `, r.template(data), data.RandomInteger, data.RandomString, data.RandomString, data.RandomInteger)
-}
-
-func (r DataProtectionBackupVaultResource) encryptionWithUserAssignedIdentityBlocked(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_data_protection_backup_vault_customer_managed_key" "test" {
-  data_protection_backup_vault_id = azurerm_data_protection_backup_vault.test.id
-  key_vault_key_id                = azurerm_key_vault_key.test.id
-}
-`, r.encryptionWithUserAssignedIdentity(data))
 }
