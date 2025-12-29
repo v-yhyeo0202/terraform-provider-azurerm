@@ -215,6 +215,27 @@ func TestAccDataProtectionBackupVault_updateUserAssignedIdentity(t *testing.T) {
 	})
 }
 
+func TestAccDataProtectionBackupVault_removeCmk(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault", "test")
+	r := DataProtectionBackupVaultResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.encryptionWithSystemAssignedIdentity(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.removeCmk(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r DataProtectionBackupVaultResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := backupvaults.ParseBackupVaultID(state.ID)
 	if err != nil {
