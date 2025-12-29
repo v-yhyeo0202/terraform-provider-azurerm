@@ -68,6 +68,20 @@ func TestAccDataProtectionBackupVaultCustomerManagedKey_updated(t *testing.T) {
 	})
 }
 
+func TestAccDataProtectionBackupVaultCustomerManagedKey_conflictedEncryptionSettings(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_data_protection_backup_vault_customer_managed_key", "test")
+	r := DataProtectionBackupVaultCustomerManagedKeyResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.conflictedEncryptionSettings(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r DataProtectionBackupVaultCustomerManagedKeyResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := backupvaults.ParseBackupVaultID(state.ID)
 	if err != nil {
@@ -292,7 +306,7 @@ resource "azurerm_data_protection_backup_vault_customer_managed_key" "test" {
 `, template, data.RandomString, data.RandomString)
 }
 
-func (r DataProtectionBackupVaultResource) conflictedEncryptionSettings(data acceptance.TestData) string {
+func (r DataProtectionBackupVaultCustomerManagedKeyResource) conflictedEncryptionSettings(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
