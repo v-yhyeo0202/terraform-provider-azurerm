@@ -178,10 +178,13 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 						},
 					},
 				},
+				Set: networkSecurityGroupSecurityRule,
 			},
 
 			"tags": commonschema.Tags(),
 		},
+
+		// CustomizeDiff: pluginsdk.CustomizeDiffShim(networkSecurityGroupCustomizeDiff),
 	}
 
 	return resource
@@ -546,4 +549,18 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 	}
 
 	return err.ErrorOrNil()
+}
+
+/*
+func networkSecurityGroupCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
+	oldRawSecurityRule, newRawSecurityRule := d.GetChange("security_rule")
+	oldSecurityRule := oldRawSecurityRule.(*pluginsdk.Set)
+	newSecurityRule := newRawSecurityRule.(*pluginsdk.Set)
+
+	return nil
+}
+*/
+
+func networkSecurityGroupSecurityRuleHash(v interface{}) int {
+	return pluginsdk.HashString("dummy")
 }
