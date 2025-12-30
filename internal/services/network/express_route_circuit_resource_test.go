@@ -692,3 +692,25 @@ resource "azurerm_express_route_circuit" "test" {
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger)
 }
+
+func TestAccExpressRouteCircuit_bandwidthMbpsUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_express_route_circuit", "test")
+	r := ExpressRouteCircuitResource{}
+
+	data.ResourceSequentialTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.bandwidthReductionConfig(data, "1000"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("bandwidth_in_mbps").HasValue("1000"),
+			),
+		},
+		{
+			Config: r.bandwidthReductionConfig(data, "2000"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("bandwidth_in_mbps").HasValue("2000"),
+			),
+		},
+	})
+}
