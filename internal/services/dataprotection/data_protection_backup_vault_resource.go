@@ -174,11 +174,11 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				oldPopulated := false
 				newPopulated := false
 
-				if old := oldRaw.([]interface{}); len(old) > 0 {
+				if old := oldRaw.([]interface{}); len(old) > 0 && old[0] != nil {
 					oldPopulated = len(old[0].(map[string]interface{})) > 0
 				}
 
-				if new := newRaw.([]interface{}); len(new) > 0 {
+				if new := newRaw.([]interface{}); len(new) > 0 && new[0] != nil {
 					newPopulated = len(new[0].(map[string]interface{})) > 0
 				}
 
