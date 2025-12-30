@@ -133,7 +133,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
 							Default:  false,
-							ForceNew: true,
 						},
 					},
 				},
@@ -173,6 +172,10 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				}
 
 				return oldPopulated && !newPopulated
+			}),
+
+			pluginsdk.ForceNewIfChange("encryption_settings.0.infrastructure_encryption_enabled", func(ctx context.Context, old, new, meta interface{}) bool {
+				return old.(bool) != new.(bool)
 			}),
 
 			pluginsdk.CustomizeDiffShim(func(ctx context.Context, d *pluginsdk.ResourceDiff, v interface{}) error {
