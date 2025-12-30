@@ -175,7 +175,8 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 			}),
 
 			pluginsdk.ForceNewIfChange("encryption_settings.0.infrastructure_encryption_enabled", func(ctx context.Context, old, new, meta interface{}) bool {
-				return old.(bool) != new.(bool)
+				fmt.Println("debug0 ", old, new)
+				return old != nil && new != nil && old.(bool) != new.(bool)
 			}),
 
 			pluginsdk.CustomizeDiffShim(func(ctx context.Context, d *pluginsdk.ResourceDiff, v interface{}) error {
