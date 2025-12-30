@@ -159,11 +159,20 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 			pluginsdk.ForceNewIfChange("soft_delete", func(ctx context.Context, old, new, meta interface{}) bool {
 				return old.(string) == string(backupvaults.SoftDeleteStateAlwaysOn) && new.(string) != string(backupvaults.SoftDeleteStateAlwaysOn)
 			}),
-
-			pluginsdk.ForceNewIfChange("encryption_settings", func(ctx context.Context, old, new, meta interface{}) bool {
-				return old != nil && len(old.([]interface{})) > 0 && new != nil && len(new.([]interface{})) == 0
-			}),
-
+			/*
+				pluginsdk.ForceNewIfChange("encryption_settings", func(ctx context.Context, old, new, meta interface{}) bool {
+					fmt.Println("debug0 ", old != nil)
+					if old != nil {
+						fmt.Println("debug1 ", old.([]interface{}))
+					}
+					fmt.Println("debug2 ", new != nil)
+					if old != nil {
+						fmt.Println("debug3 ", new.([]interface{}))
+					}
+					fmt.Println("debug4 ", old != nil && len(old.([]interface{})) > 0 && new != nil && len(new.([]interface{})) == 0)
+					return old != nil && len(old.([]interface{})) > 0 && new != nil && len(new.([]interface{})) == 0
+				}),
+			*/
 			pluginsdk.CustomizeDiffShim(func(ctx context.Context, d *pluginsdk.ResourceDiff, v interface{}) error {
 				redundancy := d.Get("redundancy").(string)
 				crossRegionRestore := d.GetRawConfig().AsValueMap()["cross_region_restore_enabled"]
