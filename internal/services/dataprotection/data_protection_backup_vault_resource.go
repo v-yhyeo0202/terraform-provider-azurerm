@@ -161,16 +161,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 			}),
 
 			pluginsdk.ForceNewIfChange("encryption_settings", func(ctx context.Context, oldRaw, newRaw, meta interface{}) bool {
-				fmt.Println("debug0 ", oldRaw != nil)
-				if oldRaw != nil {
-					fmt.Println("debug1 ", oldRaw.([]interface{}))
-				}
-				fmt.Println("debug2 ", newRaw != nil)
-				if newRaw != nil {
-					fmt.Println("debug3 ", newRaw.([]interface{}))
-				}
-				fmt.Println()
-
 				oldPopulated := false
 				newPopulated := false
 
