@@ -4,6 +4,7 @@
 package network
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -178,6 +179,8 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 						},
 					},
 				},
+
+				Set: networkSecurityGroupSecurityRuleHash,
 			},
 
 			"tags": commonschema.Tags(),
@@ -546,4 +549,14 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 	}
 
 	return err.ErrorOrNil()
+}
+
+func networkSecurityGroupSecurityRuleHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	if m, ok := v.(map[string]interface{}); ok {
+		buf.WriteString(m["name"].(string))
+	}
+
+	return pluginsdk.HashString(buf.String())
 }
