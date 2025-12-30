@@ -324,9 +324,8 @@ func resourceDataProtectionBackupVaultRead(d *pluginsdk.ResourceData, meta inter
 				d.Set("soft_delete", string(pointer.From(softDelete.State)))
 				d.Set("retention_duration_in_days", pointer.From(softDelete.RetentionDurationInDays))
 			}
-			if securitySetting.EncryptionSettings != nil {
-				d.Set("encryption_settings", *flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings))
-			}
+
+			d.Set("encryption_settings", pointer.From(flattenBackupVaultEncryptionSettings(securitySetting.EncryptionSettings)))
 		}
 		d.Set("immutability", string(immutability))
 
@@ -449,6 +448,10 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 
 func flattenBackupVaultEncryptionSettings(input *backupvaults.EncryptionSettings) *[]interface{} {
 	output := make(map[string]interface{})
+
+	if input == nil {
+		return &[]interface{}{output}
+	}
 
 	if input.KekIdentity != nil && input.KekIdentity.IdentityId != nil {
 		output["identity_id"] = pointer.From(input.KekIdentity.IdentityId)
