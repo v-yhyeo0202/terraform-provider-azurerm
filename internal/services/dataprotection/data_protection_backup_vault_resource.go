@@ -132,7 +132,6 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 						"infrastructure_encryption_enabled": {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
-							ForceNew: true,
 							Default:  false,
 						},
 					},
@@ -174,11 +173,11 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 
 				return oldPopulated && !newPopulated
 			}),
-			/*
-				pluginsdk.ForceNewIfChange("encryption_settings.0.infrastructure_encryption_enabled", func(ctx context.Context, old, new, meta interface{}) bool {
-					return old.(bool) != new.(bool)
-				}),
-			*/
+
+			pluginsdk.ForceNewIfChange("encryption_settings.0.infrastructure_encryption_enabled", func(ctx context.Context, old, new, meta interface{}) bool {
+				return old.(bool) != new.(bool)
+			}),
+
 			pluginsdk.CustomizeDiffShim(func(ctx context.Context, d *pluginsdk.ResourceDiff, v interface{}) error {
 				redundancy := d.Get("redundancy").(string)
 				crossRegionRestore := d.GetRawConfig().AsValueMap()["cross_region_restore_enabled"]
@@ -454,7 +453,7 @@ func expandBackupVaultEncryptionSettings(input []interface{}) (*backupvaults.Enc
 
 func flattenBackupVaultEncryptionSettings(input *backupvaults.EncryptionSettings) *[]interface{} {
 	if input == nil {
-		return &[]interface{}{nil}
+		return &[]interface{}{}
 	}
 
 	output := make(map[string]interface{})
