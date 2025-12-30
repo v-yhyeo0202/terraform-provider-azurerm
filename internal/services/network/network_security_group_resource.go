@@ -4,6 +4,7 @@
 package network
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -178,6 +179,8 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 						},
 					},
 				},
+
+				Set: networkSecurityGroupSecurityRuleHash,
 			},
 
 			"tags": commonschema.Tags(),
@@ -350,6 +353,7 @@ func resourceNetworkSecurityGroupDelete(d *pluginsdk.ResourceData, meta interfac
 func expandSecurityRules(d *pluginsdk.ResourceData) ([]networksecuritygroups.SecurityRule, error) {
 	sgRules := d.Get("security_rule").(*pluginsdk.Set).List()
 	rules := make([]networksecuritygroups.SecurityRule, 0)
+	names := make(map[string]interface{})
 
 	for _, sgRaw := range sgRules {
 		sgRule := sgRaw.(map[string]interface{})
@@ -435,6 +439,12 @@ func expandSecurityRules(d *pluginsdk.ResourceData) ([]networksecuritygroups.Sec
 			Name:       pointer.To(sgRule["name"].(string)),
 			Properties: &properties,
 		})
+
+		if _, ok := names[sgRule["name"].(string)]; ok {
+			return nil, fmt.Errorf("values of `security_rule.name` property in `azurerm_network_security_group` resource should be unique")
+		} else {
+			names[sgRule["name"].(string)] = nil
+		}
 	}
 
 	return rules, nil
@@ -546,4 +556,14 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 	}
 
 	return err.ErrorOrNil()
+}
+
+func networkSecurityGroupSecurityRuleHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	if m, ok := v.(map[string]interface{}); ok {
+		buf.WriteString(m["name"].(string))
+	}
+
+	return pluginsdk.HashString(buf.String())
 }
