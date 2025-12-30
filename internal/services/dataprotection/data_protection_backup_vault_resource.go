@@ -160,17 +160,25 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				return old.(string) == string(backupvaults.SoftDeleteStateAlwaysOn) && new.(string) != string(backupvaults.SoftDeleteStateAlwaysOn)
 			}),
 
-			pluginsdk.ForceNewIfChange("encryption_settings", func(ctx context.Context, old, new, meta interface{}) bool {
-				fmt.Println("debug0 ", old != nil)
-				if old != nil {
-					fmt.Println("debug1 ", old.([]interface{}))
+			pluginsdk.ForceNewIfChange("encryption_settings", func(ctx context.Context, oldRaw, newRaw, meta interface{}) bool {
+				fmt.Println("debug0 ", oldRaw != nil)
+				if oldRaw != nil {
+					fmt.Println("debug1 ", oldRaw.([]interface{}))
 				}
-				fmt.Println("debug2 ", new != nil)
-				if new != nil {
-					fmt.Println("debug3 ", new.([]interface{}))
+				fmt.Println("debug2 ", newRaw != nil)
+				if newRaw != nil {
+					fmt.Println("debug3 ", newRaw.([]interface{}))
+				}
+				fmt.Println()
+
+				old := oldRaw.([]interface{})[0]
+				new := newRaw.([]interface{})[0]
+
+				if old != nil && new != nil {
+					return len(old.(map[string]interface{})) > 0 && len(new.(map[string]interface{})) == 0
 				}
 
-				return len(old.([]interface{})[0].(map[string]interface{})) > 0 && len(new.([]interface{})[0].(map[string]interface{})) == 0
+				return false
 			}),
 
 			pluginsdk.CustomizeDiffShim(func(ctx context.Context, d *pluginsdk.ResourceDiff, v interface{}) error {
