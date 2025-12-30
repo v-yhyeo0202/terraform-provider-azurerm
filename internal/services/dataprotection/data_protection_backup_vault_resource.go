@@ -171,14 +171,18 @@ func resourceDataProtectionBackupVault() *pluginsdk.Resource {
 				}
 				fmt.Println()
 
-				old := oldRaw.([]interface{})[0]
-				new := newRaw.([]interface{})[0]
+				oldPopulated := false
+				newPopulated := false
 
-				if old != nil && new != nil {
-					return len(old.(map[string]interface{})) > 0 && len(new.(map[string]interface{})) == 0
+				if old := oldRaw.([]interface{}); len(old) > 0 {
+					oldPopulated = len(old[0].(map[string]interface{})) > 0
 				}
 
-				return false
+				if new := newRaw.([]interface{}); len(new) > 0 {
+					newPopulated = len(new[0].(map[string]interface{})) > 0
+				}
+
+				return oldPopulated && !newPopulated
 			}),
 
 			pluginsdk.CustomizeDiffShim(func(ctx context.Context, d *pluginsdk.ResourceDiff, v interface{}) error {
