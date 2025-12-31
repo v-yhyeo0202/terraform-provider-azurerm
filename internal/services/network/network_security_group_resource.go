@@ -528,7 +528,7 @@ func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule, d 
 						destinationApplicationSecurityGroups = append(destinationApplicationSecurityGroups, *g.Id)
 					}
 				}
-				sgRule["destination_application_security_group_ids"] = normalizeApplicationSecurityGroupIds(set.FromStringSlice(destinationApplicationSecurityGroups), stateDestinationApplicationSecurityGroupIds)
+				sgRule["destination_application_security_group_ids"] = correctApplicationSecurityGroupIds(set.FromStringSlice(destinationApplicationSecurityGroups), stateDestinationApplicationSecurityGroupIds)
 
 				if props.SourceAddressPrefix != nil {
 					sgRule["source_address_prefix"] = *props.SourceAddressPrefix
@@ -543,7 +543,7 @@ func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule, d 
 						sourceApplicationSecurityGroups = append(sourceApplicationSecurityGroups, *g.Id)
 					}
 				}
-				sgRule["source_application_security_group_ids"] = normalizeApplicationSecurityGroupIds(set.FromStringSlice(sourceApplicationSecurityGroups), stateSourceApplicationSecurityGroupIds)
+				sgRule["source_application_security_group_ids"] = correctApplicationSecurityGroupIds(set.FromStringSlice(sourceApplicationSecurityGroups), stateSourceApplicationSecurityGroupIds)
 
 				if props.SourcePortRange != nil {
 					sgRule["source_port_range"] = *props.SourcePortRange
