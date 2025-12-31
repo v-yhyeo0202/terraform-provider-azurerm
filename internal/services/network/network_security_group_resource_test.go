@@ -201,7 +201,7 @@ func TestAccNetworkSecurityGroup_duplicatedRuleName(t *testing.T) {
 			Config: r.duplicatedRuleNames(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("security_rule.#").HasValue("1"),
+				check.That(data.ResourceName).Key("security_rule.#").HasValue("2"),
 			),
 			ExpectError: regexp.MustCompile("values of `security_rule.name` property in `azurerm_network_security_group` resource should be unique"),
 		},
