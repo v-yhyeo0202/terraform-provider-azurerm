@@ -489,7 +489,7 @@ func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule, d 
 	stateSourceApplicationSecurityGroupIds = nil
 
 	if stateSecurityRules, ok := d.GetOk("security_rule"); ok {
-		for _, stateSecurityRule := range stateSecurityRules.([]interface{}) {
+		for _, stateSecurityRule := range stateSecurityRules.(*pluginsdk.Set).List() {
 			if v, ok := stateSecurityRule.(map[string]interface{})["destination_application_security_group_ids"]; ok {
 				stateDestinationApplicationSecurityGroupIds = v.(*pluginsdk.Set)
 			}
