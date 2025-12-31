@@ -4,6 +4,7 @@
 package network
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/tags"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/applicationsecuritygroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/networksecuritygroups"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/locks"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/set"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/suppress"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/timeouts"
 )
@@ -141,18 +142,17 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 						},
 
 						"destination_application_security_group_ids": {
-							Type:             pluginsdk.TypeSet,
-							Optional:         true,
-							Elem:             &pluginsdk.Schema{Type: pluginsdk.TypeString},
-							Set:              pluginsdk.HashString,
-							DiffSuppressFunc: suppress.CaseDifference,
+							Type:     pluginsdk.TypeSet,
+							Optional: true,
+							Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
+							Set:      applicationSecurityGroupIdsHash,
 						},
 
 						"source_application_security_group_ids": {
 							Type:     pluginsdk.TypeSet,
 							Optional: true,
 							Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-							Set:      pluginsdk.HashString,
+							Set:      applicationSecurityGroupIdsHash,
 						},
 
 						"access": {
@@ -561,6 +561,10 @@ func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 		buf.WriteString(m["protocol"].(string))
 		buf.WriteString(m["direction"].(string))
 
+		if description, ok := m["description"]; ok {
+			buf.WriteString(description.(string))
+		}
+
 		if sourcePortRange, ok := m["source_port_range"]; ok {
 			buf.WriteString(sourcePortRange.(string))
 		}
@@ -592,8 +596,34 @@ func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 		if destinationAddressPrefixes, ok := m["destination_address_prefixes"]; ok {
 			buf.WriteString(fmt.Sprintf("%s-", destinationAddressPrefixes.(*pluginsdk.Set).List()))
 		}
+
+		if destinationApplicationSecurityGroupIds, ok := m["destination_application_security_group_ids"]; ok {
+			lowerCaseDestinationApplicationSecurityGroupIds := destinationApplicationSecurityGroupIds.(*pluginsdk.Set).List()
+
+			for destinationApplicationSecurityGroupId, i := range lowerCaseDestinationApplicationSecurityGroupIds {
+				lowerCaseDestinationApplicationSecurityGroupIds[i] = strings.ToLower(destinationApplicationSecurityGroupId)
+			}
+		}
 	}
 
 	return pluginsdk.HashString(buf.String())
 }
 */
+
+func applicationSecurityGroupIdsHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	if v, ok := v.(*pluginsdk.Set); ok {
+		applicationSecurityGroupIds := v.List()
+
+		for i, applicationSecurityGroupId := range applicationSecurityGroupIds {
+			expandedId, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(applicationSecurityGroupId.(string))
+			expandedId.ResourceGroupName = strings.ToUpper(expandedId.ResourceGroupName)
+			applicationSecurityGroupIds[i] = expandedId.ID()
+		}
+
+		buf.WriteString(fmt.Sprintf("%s-", applicationSecurityGroupIds))
+	}
+
+	return pluginsdk.HashString(buf.String())
+}
