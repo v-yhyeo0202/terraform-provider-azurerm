@@ -4,6 +4,7 @@
 package network
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -178,6 +179,8 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 						},
 					},
 				},
+
+				Set: networkSecurityGroupSecurityRuleHash,
 			},
 
 			"tags": commonschema.Tags(),
@@ -546,4 +549,48 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 	}
 
 	return err.ErrorOrNil()
+}
+
+func networkSecurityGroupSecurityRuleHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	if m, ok := v.(map[string]interface{}); ok {
+		buf.WriteString(m["name"].(string))
+		buf.WriteString(m["protocol"].(string))
+		buf.WriteString(m["direction"].(string))
+
+		if sourcePortRange, ok := m["source_port_range"]; ok {
+			buf.WriteString(sourcePortRange.(string))
+		}
+
+		if sourcePortRanges, ok := m["source_port_ranges"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", sourcePortRanges.(*pluginsdk.Set).List()))
+		}
+
+		if destinationPortRange, ok := m["destination_port_range"]; ok {
+			buf.WriteString(destinationPortRange.(string))
+		}
+
+		if destinationPortRanges, ok := m["destination_port_ranges"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", destinationPortRanges.(*pluginsdk.Set).List()))
+		}
+
+		if sourceAddressPrefix, ok := m["source_address_prefix"]; ok {
+			buf.WriteString(sourceAddressPrefix.(string))
+		}
+
+		if sourceAddressPrefixes, ok := m["source_address_prefixes"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", sourceAddressPrefixes.(*pluginsdk.Set).List()))
+		}
+
+		if destinationAddressPrefix, ok := m["destination_address_prefix"]; ok {
+			buf.WriteString(destinationAddressPrefix.(string))
+		}
+
+		if destinationAddressPrefixes, ok := m["destination_address_prefixes"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", destinationAddressPrefixes.(*pluginsdk.Set).List()))
+		}
+	}
+
+	return pluginsdk.HashString(buf.String())
 }
