@@ -4,7 +4,6 @@
 package network
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -142,10 +141,10 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 						},
 
 						"destination_application_security_group_ids": {
-							Type:     pluginsdk.TypeSet,
-							Optional: true,
-							Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-							Set:      pluginsdk.HashString,
+							Type:             pluginsdk.TypeSet,
+							Optional:         true,
+							Elem:             &pluginsdk.Schema{Type: pluginsdk.TypeString},
+							Set:              pluginsdk.HashString,
 							DiffSuppressFunc: suppress.CaseDifference,
 						},
 
@@ -552,6 +551,7 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 
 	return err.ErrorOrNil()
 }
+
 /*
 func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 	var buf bytes.Buffer
