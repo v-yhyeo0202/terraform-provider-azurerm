@@ -357,15 +357,30 @@ func expandSecurityRules(d *pluginsdk.ResourceData) ([]networksecuritygroups.Sec
 
 	oldRaw, newRaw := d.GetChange("security_rule")
 	if old, ok := oldRaw.(*pluginsdk.Set); ok {
-		fmt.Println("debug1 ", old.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set).List())
+		if len(old.List()) > 0 {
+			if destinationApplicationSecurityGroupIds, ok := old.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
+				fmt.Println("debug1 ", destinationApplicationSecurityGroupIds.List())
+				fmt.Println()
+			}
+		}
 	}
 
 	if new, ok := newRaw.(*pluginsdk.Set); ok {
-		fmt.Println("debug2 ", new.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set).List())
+		if len(new.List()) > 0 {
+			if destinationApplicationSecurityGroupIds, ok := new.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
+				fmt.Println("debug2 ", destinationApplicationSecurityGroupIds.List())
+				fmt.Println()
+			}
+		}
 	}
 
 	if get, ok := d.GetOk("security_rule"); ok {
-		fmt.Println("debug3 ", get.(*pluginsdk.Set).List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set).List())
+		if len(get.(*pluginsdk.Set).List()) > 0 {
+			if destinationApplicationSecurityGroupIds, ok := get.(*pluginsdk.Set).List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
+				fmt.Println("debug3 ", destinationApplicationSecurityGroupIds.List())
+				fmt.Println()
+			}
+		}
 	}
 
 	for _, sgRaw := range sgRules {
