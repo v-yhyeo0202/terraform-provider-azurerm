@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/tags"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/applicationsecuritygroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/networksecuritygroups"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -685,7 +684,7 @@ func correctApplicationSecurityGroupIds(ids *pluginsdk.Set, referenceIds *plugin
 		referenceIdAdded := false
 
 		for _, referenceId := range (*referenceIds).List() {
-			if strings.EqualFold(id, referenceId) {
+			if strings.EqualFold(id.(string), referenceId.(string)) {
 				correctedIds.Add(referenceId)
 				referenceIdAdded = true
 
