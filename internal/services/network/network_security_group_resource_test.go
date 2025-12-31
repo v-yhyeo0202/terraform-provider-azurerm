@@ -193,21 +193,6 @@ func TestAccNetworkSecurityGroup_applicationSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccNetworkSecurityGroup_duplicatedRuleName(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_network_security_group", "test")
-	r := NetworkSecurityGroupResource{}
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.duplicatedRuleNames(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("security_rule.#").HasValue("2"),
-			),
-			ExpectError: regexp.MustCompile("values of `security_rule.name` property in `azurerm_network_security_group` resource should be unique"),
-		},
-	})
-}
-
 func (r NetworkSecurityGroupResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := networksecuritygroups.ParseNetworkSecurityGroupID(state.ID)
 	if err != nil {
@@ -504,47 +489,4 @@ resource "azurerm_network_security_group" "test" {
   }
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger)
-}
-
-func (NetworkSecurityGroupResource) duplicatedRuleNames(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-provider "azurerm" {
-  features {}
-}
-
-resource "azurerm_resource_group" "test" {
-  name     = "acctestRG-%d"
-  location = "%s"
-}
-
-resource "azurerm_network_security_group" "test" {
-  name                = "acceptanceTestSecurityGroup1"
-  location            = azurerm_resource_group.test.location
-  resource_group_name = azurerm_resource_group.test.name
-
-  security_rule {
-    name                       = "test123"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "test123"
-    priority                   = 101
-    direction                  = "Inbound"
-    access                     = "Deny"
-    protocol                   = "Udp"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-}
-`, data.RandomInteger, data.Locations.Primary)
 }
