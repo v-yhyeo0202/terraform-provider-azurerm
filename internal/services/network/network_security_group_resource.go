@@ -357,27 +357,15 @@ func expandSecurityRules(d *pluginsdk.ResourceData) ([]networksecuritygroups.Sec
 
 	oldRaw, newRaw := d.GetChange("security_rule")
 	if old, ok := oldRaw.(*pluginsdk.Set); ok {
-		for _, v := range old.List() {
-			fmt.Println("debug1 ", v)
-		}
-
-		fmt.Println()
+		fmt.Println("debug1 ", old.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set).List())
 	}
 
 	if new, ok := newRaw.(*pluginsdk.Set); ok {
-		for _, v := range new.List() {
-			fmt.Println("debug2 ", v)
-		}
-
-		fmt.Println()
+		fmt.Println("debug2 ", new.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set).List())
 	}
 
 	if get, ok := d.GetOk("security_rule"); ok {
-		for _, v := range get.(*pluginsdk.Set).List() {
-			fmt.Println("debug3 ", v)
-		}
-
-		fmt.Println()
+		fmt.Println("debug3 ", get.(*pluginsdk.Set).List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set).List())
 	}
 
 	for _, sgRaw := range sgRules {
