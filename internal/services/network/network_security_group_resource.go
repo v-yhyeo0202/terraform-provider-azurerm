@@ -349,7 +349,7 @@ func resourceNetworkSecurityGroupFlatten(d *pluginsdk.ResourceData, id *networks
 	if nsg != nil {
 		d.Set("location", location.NormalizeNilable(nsg.Location))
 		if props := nsg.Properties; props != nil {
-			flattenedRules := flattenNetworkSecurityRules(props.SecurityRules)
+			flattenedRules := flattenNetworkSecurityRules(props.SecurityRules, d)
 			if err := d.Set("security_rule", flattenedRules); err != nil {
 				return fmt.Errorf("setting `security_rule`: %+v", err)
 			}
@@ -472,7 +472,7 @@ func expandSecurityRules(d *pluginsdk.ResourceData) ([]networksecuritygroups.Sec
 	return rules, nil
 }
 
-func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule) []map[string]interface{} {
+func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule, d *pluginsdk.ResourceData) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	// For fixing the case insensitive issue for the NSR protocol in Azure
