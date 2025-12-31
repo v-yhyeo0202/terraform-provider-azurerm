@@ -355,6 +355,31 @@ func expandSecurityRules(d *pluginsdk.ResourceData) ([]networksecuritygroups.Sec
 	sgRules := d.Get("security_rule").(*pluginsdk.Set).List()
 	rules := make([]networksecuritygroups.SecurityRule, 0)
 
+	oldRaw, newRaw := d.GetChange("security_rule")
+	if old, ok := oldRaw.(*pluginsdk.Set); ok {
+		for _, v := range old.List() {
+			fmt.Println("debug1 ", v)
+		}
+
+		fmt.Println()
+	}
+
+	if new, ok := newRaw.(*pluginsdk.Set); ok {
+		for _, v := range new.List() {
+			fmt.Println("debug2 ", v)
+		}
+
+		fmt.Println()
+	}
+
+	if get, ok := d.GetOk("security_rule"); ok {
+		for _, v := range get.(*pluginsdk.Set).List() {
+			fmt.Println("debug3 ", v)
+		}
+
+		fmt.Println()
+	}
+
 	for _, sgRaw := range sgRules {
 		sgRule := sgRaw.(map[string]interface{})
 
