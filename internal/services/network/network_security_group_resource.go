@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/locks"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/set"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/suppress"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/timeouts"
 )
@@ -145,6 +146,7 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 							Optional: true,
 							Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
 							Set:      pluginsdk.HashString,
+							DiffSuppressFunc: suppress.CaseDifference,
 						},
 
 						"source_application_security_group_ids": {
@@ -180,7 +182,7 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 					},
 				},
 
-				Set: networkSecurityGroupSecurityRuleHash,
+				// Set: networkSecurityGroupSecurityRuleHash,
 			},
 
 			"tags": commonschema.Tags(),
@@ -550,7 +552,7 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 
 	return err.ErrorOrNil()
 }
-
+/*
 func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 	var buf bytes.Buffer
 
@@ -594,3 +596,4 @@ func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 
 	return pluginsdk.HashString(buf.String())
 }
+*/
