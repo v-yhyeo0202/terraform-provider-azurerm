@@ -188,7 +188,7 @@ func TestAccNetworkSecurityGroup_applicationSecurityGroup(t *testing.T) {
 				check.That(data.ResourceName).Key("security_rule.#").HasValue("1"),
 			),
 		},
-		data.ImportStep("security_rule.#.source_application_security_group_ids", "security_rule.#.destination_application_security_group_ids"),
+		data.ImportStep("security_rule.0.source_application_security_group_ids", "security_rule.0.destination_application_security_group_ids"),
 	})
 }
 
