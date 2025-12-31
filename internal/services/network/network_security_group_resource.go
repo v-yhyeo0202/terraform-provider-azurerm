@@ -4,7 +4,6 @@
 package network
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/tags"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/applicationsecuritygroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/networksecuritygroups"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -181,7 +179,7 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 					},
 				},
 
-				Set: networkSecurityGroupSecurityRuleHash,
+				// Set: networkSecurityGroupSecurityRuleHash,
 			},
 
 			"tags": commonschema.Tags(),
@@ -291,6 +289,35 @@ func resourceNetworkSecurityGroupUpdate(d *pluginsdk.ResourceData, meta interfac
 func resourceNetworkSecurityGroupRead(d *pluginsdk.ResourceData, meta interface{}) error {
 	client := meta.(*clients.Client).Network.NetworkSecurityGroups
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
+
+	oldRaw, newRaw := d.GetChange("security_rule")
+	if old, ok := oldRaw.(*pluginsdk.Set); ok {
+		if len(old.List()) > 0 {
+			if destinationApplicationSecurityGroupIds, ok := old.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
+				fmt.Println("debug1 ", destinationApplicationSecurityGroupIds.List())
+				fmt.Println()
+			}
+		}
+	}
+
+	if new, ok := newRaw.(*pluginsdk.Set); ok {
+		if len(new.List()) > 0 {
+			if destinationApplicationSecurityGroupIds, ok := new.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
+				fmt.Println("debug2 ", destinationApplicationSecurityGroupIds.List())
+				fmt.Println()
+			}
+		}
+	}
+
+	if get, ok := d.GetOk("security_rule"); ok {
+		if len(get.(*pluginsdk.Set).List()) > 0 {
+			if destinationApplicationSecurityGroupIds, ok := get.(*pluginsdk.Set).List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
+				fmt.Println("debug3 ", destinationApplicationSecurityGroupIds.List())
+				fmt.Println()
+			}
+		}
+	}
+
 	defer cancel()
 
 	id, err := networksecuritygroups.ParseNetworkSecurityGroupID(d.Id())
@@ -354,34 +381,6 @@ func resourceNetworkSecurityGroupDelete(d *pluginsdk.ResourceData, meta interfac
 func expandSecurityRules(d *pluginsdk.ResourceData) ([]networksecuritygroups.SecurityRule, error) {
 	sgRules := d.Get("security_rule").(*pluginsdk.Set).List()
 	rules := make([]networksecuritygroups.SecurityRule, 0)
-
-	oldRaw, newRaw := d.GetChange("security_rule")
-	if old, ok := oldRaw.(*pluginsdk.Set); ok {
-		if len(old.List()) > 0 {
-			if destinationApplicationSecurityGroupIds, ok := old.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
-				fmt.Println("debug1 ", destinationApplicationSecurityGroupIds.List())
-				fmt.Println()
-			}
-		}
-	}
-
-	if new, ok := newRaw.(*pluginsdk.Set); ok {
-		if len(new.List()) > 0 {
-			if destinationApplicationSecurityGroupIds, ok := new.List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
-				fmt.Println("debug2 ", destinationApplicationSecurityGroupIds.List())
-				fmt.Println()
-			}
-		}
-	}
-
-	if get, ok := d.GetOk("security_rule"); ok {
-		if len(get.(*pluginsdk.Set).List()) > 0 {
-			if destinationApplicationSecurityGroupIds, ok := get.(*pluginsdk.Set).List()[0].(map[string]interface{})["destination_application_security_group_ids"].(*pluginsdk.Set); ok {
-				fmt.Println("debug3 ", destinationApplicationSecurityGroupIds.List())
-				fmt.Println()
-			}
-		}
-	}
 
 	for _, sgRaw := range sgRules {
 		sgRule := sgRaw.(map[string]interface{})
@@ -579,7 +578,7 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 
 	return err.ErrorOrNil()
 }
-
+/*
 func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 	var buf bytes.Buffer
 
@@ -634,6 +633,7 @@ func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 	return pluginsdk.HashString(buf.String())
 }
 
+
 func applicationSecurityGroupIdsHash(v interface{}) string {
 	output := ""
 
@@ -646,9 +646,9 @@ func applicationSecurityGroupIdsHash(v interface{}) string {
 			applicationSecurityGroupIds[i] = expandedId.ID()
 		}
 
-		fmt.Println("debug0 ", fmt.Sprintf("%s-", applicationSecurityGroupIds))
 		output = fmt.Sprintf("%s-", applicationSecurityGroupIds)
 	}
 
 	return output
 }
+*/
