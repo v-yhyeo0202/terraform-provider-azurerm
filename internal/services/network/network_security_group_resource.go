@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/tags"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/applicationsecuritygroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/networksecuritygroups"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -348,7 +349,7 @@ func resourceNetworkSecurityGroupFlatten(d *pluginsdk.ResourceData, id *networks
 	if nsg != nil {
 		d.Set("location", location.NormalizeNilable(nsg.Location))
 		if props := nsg.Properties; props != nil {
-			flattenedRules := flattenNetworkSecurityRules(props.SecurityRules)
+			flattenedRules := flattenNetworkSecurityRules(props.SecurityRules, d)
 			if err := d.Set("security_rule", flattenedRules); err != nil {
 				return fmt.Errorf("setting `security_rule`: %+v", err)
 			}
@@ -471,7 +472,7 @@ func expandSecurityRules(d *pluginsdk.ResourceData) ([]networksecuritygroups.Sec
 	return rules, nil
 }
 
-func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule) []map[string]interface{} {
+func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule, d *pluginsdk.ResourceData) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	// For fixing the case insensitive issue for the NSR protocol in Azure
@@ -479,6 +480,23 @@ func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule) []
 	protocolMap := map[string]string{}
 	for _, protocol := range networksecuritygroups.PossibleValuesForSecurityRuleProtocol() {
 		protocolMap[strings.ToLower(protocol)] = protocol
+	}
+
+	var stateDestinationApplicationSecurityGroupIds *pluginsdk.Set
+	var stateSourceApplicationSecurityGroupIds *pluginsdk.Set
+
+	stateDestinationApplicationSecurityGroupIds = nil
+	stateSourceApplicationSecurityGroupIds = nil
+
+	if stateSecurityRules, ok := d.GetOk("security_rule"); ok {
+		for _, stateSecurityRule := range stateSecurityRules.([]interface{}) {
+			if v, ok := stateSecurityRule.(map[string]interface{})["destination_application_security_group_ids"]; ok {
+				stateDestinationApplicationSecurityGroupIds = v.(*pluginsdk.Set)
+			}
+			if v, ok := stateSecurityRule.(map[string]interface{})["source_application_security_group_ids"]; ok {
+				stateSourceApplicationSecurityGroupIds = v.(*pluginsdk.Set)
+			}
+		}
 	}
 
 	if rules != nil {
@@ -510,7 +528,7 @@ func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule) []
 						destinationApplicationSecurityGroups = append(destinationApplicationSecurityGroups, *g.Id)
 					}
 				}
-				sgRule["destination_application_security_group_ids"] = set.FromStringSlice(destinationApplicationSecurityGroups)
+				sgRule["destination_application_security_group_ids"] = normalizeApplicationSecurityGroupIds(set.FromStringSlice(destinationApplicationSecurityGroups), stateDestinationApplicationSecurityGroupIds)
 
 				if props.SourceAddressPrefix != nil {
 					sgRule["source_address_prefix"] = *props.SourceAddressPrefix
@@ -525,7 +543,7 @@ func flattenNetworkSecurityRules(rules *[]networksecuritygroups.SecurityRule) []
 						sourceApplicationSecurityGroups = append(sourceApplicationSecurityGroups, *g.Id)
 					}
 				}
-				sgRule["source_application_security_group_ids"] = set.FromStringSlice(sourceApplicationSecurityGroups)
+				sgRule["source_application_security_group_ids"] = normalizeApplicationSecurityGroupIds(set.FromStringSlice(sourceApplicationSecurityGroups), stateSourceApplicationSecurityGroupIds)
 
 				if props.SourcePortRange != nil {
 					sgRule["source_port_range"] = *props.SourcePortRange
@@ -578,6 +596,7 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 
 	return err.ErrorOrNil()
 }
+
 /*
 func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 	var buf bytes.Buffer
@@ -652,3 +671,40 @@ func applicationSecurityGroupIdsHash(v interface{}) string {
 	return output
 }
 */
+
+func normalizeApplicationSecurityGroupIds(ids *pluginsdk.Set, referenceIds *pluginsdk.Set) *pluginsdk.Set {
+	if ids == nil || ids.Len() == 0 || referenceIds == nil || referenceIds.Len() == 0 {
+		return ids
+	}
+
+	referenceResourceGroups := make([]string, referenceIds.Len())
+
+	for i, referenceId := range (*referenceIds).List() {
+		expandedId, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(referenceId.(string))
+		referenceResourceGroups[i] = expandedId.ResourceGroupName
+	}
+
+	normalizedIds := pluginsdk.Set{
+		F: pluginsdk.HashString,
+	}
+
+	for _, id := range (*ids).List() {
+		resourceGroupName, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(id.(string)).ResourceGroupName
+		referenceIdAdded := false
+
+		for _, referenceId := range (*referenceIds).List() {
+			if referenceResourceGroupName := applicationsecuritygroups.ParseApplicationSecurityGroupID(referenceId.(string)).ResourceGroupName; strings.EqualFold(resourceGroupName, referenceResourceGroupName) {
+				normalizedIds.Add(referenceId)
+				referenceIdAdded = true
+
+				break
+			}
+		}
+
+		if !referenceIdAdded {
+			normalizedIds.Add(id)
+		}
+	}
+
+	return &normalizedIds
+}
