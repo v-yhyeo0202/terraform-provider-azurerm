@@ -145,14 +145,14 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeSet,
 							Optional: true,
 							Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-							Set:      applicationSecurityGroupIdsHash,
+							Set:      pluginsdk.HashString,
 						},
 
 						"source_application_security_group_ids": {
 							Type:     pluginsdk.TypeSet,
 							Optional: true,
 							Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-							Set:      applicationSecurityGroupIdsHash,
+							Set:      pluginsdk.HashString,
 						},
 
 						"access": {
@@ -181,7 +181,7 @@ func resourceNetworkSecurityGroup() *pluginsdk.Resource {
 					},
 				},
 
-				// Set: networkSecurityGroupSecurityRuleHash,
+				Set: networkSecurityGroupSecurityRuleHash,
 			},
 
 			"tags": commonschema.Tags(),
@@ -552,13 +552,15 @@ func validateSecurityRule(sgRule map[string]interface{}) error {
 	return err.ErrorOrNil()
 }
 
-/*
 func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	if m, ok := v.(map[string]interface{}); ok {
 		buf.WriteString(m["name"].(string))
 		buf.WriteString(m["protocol"].(string))
+		buf.WriteString(m["direction"].(string))
+		buf.WriteString(m["access"].(string))
+		buf.WriteString(fmt.Sprintf("%d", m["priority"]))
 		buf.WriteString(m["direction"].(string))
 
 		if description, ok := m["description"]; ok {
@@ -597,21 +599,15 @@ func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", destinationAddressPrefixes.(*pluginsdk.Set).List()))
 		}
 
-		if destinationApplicationSecurityGroupIds, ok := m["destination_application_security_group_ids"]; ok {
-			lowerCaseDestinationApplicationSecurityGroupIds := destinationApplicationSecurityGroupIds.(*pluginsdk.Set).List()
-
-			for destinationApplicationSecurityGroupId, i := range lowerCaseDestinationApplicationSecurityGroupIds {
-				lowerCaseDestinationApplicationSecurityGroupIds[i] = strings.ToLower(destinationApplicationSecurityGroupId)
-			}
-		}
+		buf.WriteString(applicationSecurityGroupIdsHash(m["destination_application_security_group_ids"]))
+		buf.WriteString(applicationSecurityGroupIdsHash(m["source_application_security_group_ids"]))
 	}
 
 	return pluginsdk.HashString(buf.String())
 }
-*/
 
-func applicationSecurityGroupIdsHash(v interface{}) int {
-	var buf bytes.Buffer
+func applicationSecurityGroupIdsHash(v interface{}) string {
+	output := ""
 
 	if v, ok := v.(*pluginsdk.Set); ok {
 		applicationSecurityGroupIds := v.List()
@@ -623,8 +619,8 @@ func applicationSecurityGroupIdsHash(v interface{}) int {
 		}
 
 		fmt.Println("debug0 ", fmt.Sprintf("%s-", applicationSecurityGroupIds))
-		buf.WriteString(fmt.Sprintf("%s-", applicationSecurityGroupIds))
+		output = fmt.Sprintf("%s-", applicationSecurityGroupIds)
 	}
 
-	return pluginsdk.HashString(buf.String())
+	return output
 }
