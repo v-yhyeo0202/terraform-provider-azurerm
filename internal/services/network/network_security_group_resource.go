@@ -622,6 +622,7 @@ func applicationSecurityGroupIdsHash(v interface{}) int {
 			applicationSecurityGroupIds[i] = expandedId.ID()
 		}
 
+		fmt.Println("debug0 ", fmt.Sprintf("%s-", applicationSecurityGroupIds))
 		buf.WriteString(fmt.Sprintf("%s-", applicationSecurityGroupIds))
 	}
 
