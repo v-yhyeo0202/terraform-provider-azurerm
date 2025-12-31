@@ -689,11 +689,11 @@ func normalizeApplicationSecurityGroupIds(ids *pluginsdk.Set, referenceIds *plug
 	}
 
 	for _, id := range (*ids).List() {
-		resourceGroupName, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(id.(string)).ResourceGroupName
+		expandedId, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(id.(string))
 		referenceIdAdded := false
 
 		for _, referenceId := range (*referenceIds).List() {
-			if referenceResourceGroupName := applicationsecuritygroups.ParseApplicationSecurityGroupID(referenceId.(string)).ResourceGroupName; strings.EqualFold(resourceGroupName, referenceResourceGroupName) {
+			if expandedReferenceId, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(referenceId.(string)); strings.EqualFold(expandedId.ResourceGroupName, expandedReferenceId.ResourceGroupName) {
 				normalizedIds.Add(referenceId)
 				referenceIdAdded = true
 
