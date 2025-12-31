@@ -672,33 +672,21 @@ func applicationSecurityGroupIdsHash(v interface{}) string {
 }
 */
 
-func normalizeApplicationSecurityGroupIds(ids *pluginsdk.Set, referenceIds *pluginsdk.Set) *pluginsdk.Set {
+func correctApplicationSecurityGroupIds(ids *pluginsdk.Set, referenceIds *pluginsdk.Set) *pluginsdk.Set {
 	if ids == nil || ids.Len() == 0 || referenceIds == nil || referenceIds.Len() == 0 {
 		return ids
 	}
 
-	referenceResourceGroups := make([]string, referenceIds.Len())
-
-	for i, referenceId := range (*referenceIds).List() {
-		expandedId, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(referenceId.(string))
-		referenceResourceGroups[i] = expandedId.ResourceGroupName
-	}
-
-	normalizedIds := pluginsdk.Set{
+	correctedIds := pluginsdk.Set{
 		F: pluginsdk.HashString,
 	}
 
 	for _, id := range (*ids).List() {
-		expandedId, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(id.(string))
-		idWithoutResourceGroupName := strings.ReplaceAll(id.(string), expandedId.ResourceGroupName, "")
 		referenceIdAdded := false
 
 		for _, referenceId := range (*referenceIds).List() {
-			expandedReferenceId, _ := applicationsecuritygroups.ParseApplicationSecurityGroupID(referenceId.(string))
-			referenceIdWithoutResourceGroupName := strings.ReplaceAll(referenceId.(string), expandedReferenceId.ResourceGroupName, "")
-
-			if idWithoutResourceGroupName == referenceIdWithoutResourceGroupName && strings.EqualFold(expandedId.ResourceGroupName, expandedReferenceId.ResourceGroupName) {
-				normalizedIds.Add(referenceId)
+			if strings.EqualFold(id, referenceId) {
+				correctedIds.Add(referenceId)
 				referenceIdAdded = true
 
 				break
@@ -706,9 +694,9 @@ func normalizeApplicationSecurityGroupIds(ids *pluginsdk.Set, referenceIds *plug
 		}
 
 		if !referenceIdAdded {
-			normalizedIds.Add(id)
+			correctedIds.Add(id)
 		}
 	}
 
-	return &normalizedIds
+	return &correctedIds
 }
