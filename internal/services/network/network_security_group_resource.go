@@ -586,7 +586,7 @@ func networkSecurityGroupSecurityRuleHash(v interface{}) int {
 		if destinationAddressPrefix, ok := m["destination_address_prefix"]; ok {
 			buf.WriteString(destinationAddressPrefix.(string))
 		}
-		
+
 		if destinationAddressPrefixes, ok := m["destination_address_prefixes"]; ok {
 			buf.WriteString(fmt.Sprintf("%s-", destinationAddressPrefixes.(*pluginsdk.Set).List()))
 		}
