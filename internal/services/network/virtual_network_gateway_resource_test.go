@@ -1743,6 +1743,10 @@ resource "azurerm_virtual_network_gateway" "test" {
   type     = "ExpressRoute"
   vpn_type = "RouteBased"
   sku      = "Standard"
+
+  ip_configuration {
+    subnet_id                     = azurerm_subnet.test.id
+  }
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
