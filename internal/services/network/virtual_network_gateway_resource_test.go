@@ -1742,13 +1742,7 @@ resource "azurerm_virtual_network_gateway" "test" {
 
   type     = "ExpressRoute"
   vpn_type = "RouteBased"
-  sku      = "ErGw1AZ"
-
-  ip_configuration {
-    public_ip_address_id          = azurerm_public_ip.test.id
-    private_ip_address_allocation = "Dynamic"
-    subnet_id                     = azurerm_subnet.test.id
-  }
+  sku      = "Standard"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
