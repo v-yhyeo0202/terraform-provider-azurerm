@@ -522,7 +522,7 @@ func flattenApplicationSecurityGroupIds(groups *[]securityrules.ApplicationSecur
 
 	if groups != nil {
 		for _, v := range *groups {
-			ids.Add(v.Id)
+			ids.Add(pointer.From(v.Id))
 		}
 	}
 
