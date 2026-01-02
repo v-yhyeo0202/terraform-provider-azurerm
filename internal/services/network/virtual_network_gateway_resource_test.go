@@ -1741,8 +1741,8 @@ resource "azurerm_virtual_network_gateway" "test" {
   edge_zone           = data.azurerm_extended_locations.test.extended_locations[0]
 
   type     = "ExpressRoute"
-  vpn_type = "PolicyBased"
-  sku      = "Standard"
+  vpn_type = "RouteBased"
+  sku      = "ErGw1AZ"
 
   ip_configuration {
     public_ip_address_id          = azurerm_public_ip.test.id
