@@ -1727,7 +1727,6 @@ resource "azurerm_public_ip" "test" {
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   allocation_method   = "Static"
-  zones = ["1"]
   sku                 = "Standard"
 }
 
@@ -1741,9 +1740,9 @@ resource "azurerm_virtual_network_gateway" "test" {
   resource_group_name = azurerm_resource_group.test.name
   edge_zone           = data.azurerm_extended_locations.test.extended_locations[0]
 
-  type     = "Vpn"
-  vpn_type = "RouteBased"
-  sku      = "VpnGw1AZ"
+  type     = "ExpressRoute"
+  vpn_type = "PolicyBased"
+  sku      = "Standard"
 
   ip_configuration {
     public_ip_address_id          = azurerm_public_ip.test.id
