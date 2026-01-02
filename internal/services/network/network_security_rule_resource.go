@@ -483,7 +483,7 @@ func resourceNetworkSecurityRuleRead(d *pluginsdk.ResourceData, meta interface{}
 
 			var stateDestinationApplicationSecurityGroupIds *pluginsdk.Set
 
-			if rawStateDestinationApplicationSecurityGroupIds, ok := d.GetOk("source_application_security_group_ids"); ok {
+			if rawStateDestinationApplicationSecurityGroupIds, ok := d.GetOk("destination_application_security_group_ids"); ok {
 				stateDestinationApplicationSecurityGroupIds = rawStateDestinationApplicationSecurityGroupIds.(*pluginsdk.Set)
 			} else {
 				stateDestinationApplicationSecurityGroupIds = nil
