@@ -107,7 +107,7 @@ func TestAccNetworkSecurityRule_applicationSecurityGroups(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("source_application_security_group_ids", "destination_application_security_group_ids"),
 	})
 }
 
