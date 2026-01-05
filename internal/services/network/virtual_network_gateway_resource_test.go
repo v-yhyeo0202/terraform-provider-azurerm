@@ -433,7 +433,7 @@ func TestAccVirtualNetworkGateway_expressRouteBasicSkuError(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
-			// ExpectError: regexp.MustCompile("creation or update of `azurerm_virtual_network_gateway` resource with `Basic` `sku` when `type` is `ExpressRoute` is no longer supported. Refer to https://learn.microsoft.com/en-us/azure/expressroute/gateway-migration"),
+			ExpectError: regexp.MustCompile("creation or update of `azurerm_virtual_network_gateway` resource with `Basic` `sku` when `type` is `ExpressRoute` is no longer supported. Refer to https://learn.microsoft.com/en-us/azure/expressroute/gateway-migration"),
 		},
 	})
 }
