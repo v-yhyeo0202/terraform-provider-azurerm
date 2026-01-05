@@ -549,7 +549,7 @@ func expandVpnGatewayConnectionVpnSiteLinkConnections(input []interface{}) *[]vi
 		if dpdTimeoutSeconds := item["dpd_timeout_seconds"].(int); dpdTimeoutSeconds != 0 {
 			v.Properties.DpdTimeoutSeconds = pointer.To(int64(dpdTimeoutSeconds))
 		}
-
+		fmt.Printf("debug0 %T\n", item["egress_nat_rule_ids"])
 		if egressNatRuleIds := item["egress_nat_rule_ids"].(*pluginsdk.Set).List(); len(egressNatRuleIds) != 0 {
 			v.Properties.EgressNatRules = expandVpnGatewayConnectionNatRuleIds(egressNatRuleIds)
 		}
