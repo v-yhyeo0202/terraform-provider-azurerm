@@ -1745,7 +1745,7 @@ resource "azurerm_virtual_network_gateway" "test" {
   sku      = "Standard"
 
   ip_configuration {
-    public_ip_address_id = azurerm_public_id.test.id
+    public_ip_address_id = azurerm_public_ip.test.id
     subnet_id                     = azurerm_subnet.test.id
   }
 }
