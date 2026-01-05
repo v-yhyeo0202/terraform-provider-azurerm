@@ -1315,7 +1315,6 @@ resource "azurerm_virtual_network_gateway" "test" {
   sku      = "Standard"
 
   ip_configuration {
-    public_ip_address_id          = azurerm_public_ip.test.id
     private_ip_address_allocation = "Dynamic"
     subnet_id                     = azurerm_subnet.test.id
   }
@@ -1728,6 +1727,7 @@ resource "azurerm_public_ip" "test" {
   resource_group_name = azurerm_resource_group.test.name
   allocation_method   = "Static"
   sku                 = "Standard"
+  edge_zone = data.azurerm_extended_locations.test.extended_locations[0]
 }
 
 data "azurerm_extended_locations" "test" {
@@ -1741,10 +1741,11 @@ resource "azurerm_virtual_network_gateway" "test" {
   edge_zone           = data.azurerm_extended_locations.test.extended_locations[0]
 
   type     = "ExpressRoute"
-  vpn_type = "RouteBased"
+  vpn_type = "PolicyBased"
   sku      = "Standard"
 
   ip_configuration {
+    public_ip_address_id = azurerm_public_id.test.id
     subnet_id                     = azurerm_subnet.test.id
   }
 }
