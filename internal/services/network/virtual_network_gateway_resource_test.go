@@ -6,6 +6,7 @@ package network_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -447,7 +448,7 @@ func TestAccVirtualNetworkGateway_expressRoutePublicIpError(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
-			// ExpectError: regexp.MustCompile("`ip_configuration.[0-9].public_ip_address_id` property should be omitted when creating `azurerm_virtual_network_gateway` resource without using `edge_zone` property as public IP will be created automatically. Refer to https://learn.microsoft.com/en-us/azure/expressroute/gateway-migration"),
+			ExpectError: regexp.MustCompile("`ip_configuration.[0-9].public_ip_address_id` property should be omitted when creating `azurerm_virtual_network_gateway` resource without using `edge_zone` property as public IP will be created automatically. Refer to https://learn.microsoft.com/en-us/azure/expressroute/gateway-migration"),
 		},
 	})
 }
