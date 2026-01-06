@@ -602,8 +602,8 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 		output = append(output, map[string]interface{}{
 			"name":                                  pointer.From(item.Name),
 			"dpd_timeout_seconds":                   int(pointer.From(props.DpdTimeoutSeconds)),
-			"egress_nat_rule_ids":                   flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules),
-			"ingress_nat_rule_ids":                  flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules),
+			"egress_nat_rule_ids":                   pointer.From(flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules)),
+			"ingress_nat_rule_ids":                  pointer.From(flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules)),
 			"vpn_site_link_id":                      vpnSiteLinkId,
 			"route_weight":                          int(pointer.From(props.RoutingWeight)),
 			"protocol":                              connectionProtocolType,
@@ -823,11 +823,15 @@ func expandVpnGatewayConnectionNatRuleIds(input []interface{}) *[]virtualwans.Su
 	return &results
 }
 
-func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) []interface{} {
-	results := make([]interface{}, 0)
+func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) *pluginsdk.Set {
+	// results := make([]interface{}, 0)
+	results := pluginsdk.Set{
+		F: pluginsdk.HashString,
+	}
+
 	if input == nil {
 		fmt.Println("debug1")
-		return results
+		return &results
 	}
 
 	for _, item := range *input {
@@ -836,10 +840,10 @@ func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) []i
 			id = *item.Id
 		}
 
-		results = append(results, id)
+		results.Add(id)
 	}
 
-	return results
+	return &results
 }
 
 func expandVpnGatewayConnectionCustomBgpAddresses(input []interface{}) *[]virtualwans.GatewayCustomBgpIPAddressIPConfiguration {
