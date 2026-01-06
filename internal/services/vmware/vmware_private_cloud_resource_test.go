@@ -141,7 +141,7 @@ resource "azurerm_vmware_private_cloud" "test" {
   sku_name            = "av36"
 
   management_cluster {
-    size = 3
+    size = 2
   }
   network_subnet_cidr = "192.168.48.0/22"
 }
