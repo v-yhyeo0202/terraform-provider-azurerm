@@ -83,7 +83,7 @@ func resourceIpGroup() *pluginsdk.Resource {
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
-				Set: pluginsdk.HashString,
+				// Set: pluginsdk.HashString,
 			},
 
 			"tags": commonschema.Tags(),
