@@ -406,7 +406,7 @@ data "azurerm_role_definition" "sentinel" {
 }
 
 data "azuread_service_principal" "sentinel" {
-  application_id = "98785600-1bb7-4fb9-b9fa-19afe2c8a360"
+  object_id = "98785600-1bb7-4fb9-b9fa-19afe2c8a360"
 }
 
 resource "azurerm_role_assignment" "test" {
