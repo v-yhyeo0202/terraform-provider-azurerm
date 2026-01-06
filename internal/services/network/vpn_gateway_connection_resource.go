@@ -602,8 +602,8 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 		output = append(output, map[string]interface{}{
 			"name":                                  pointer.From(item.Name),
 			"dpd_timeout_seconds":                   int(pointer.From(props.DpdTimeoutSeconds)),
-			"egress_nat_rule_ids":                   pointer.From(flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules)),
-			"ingress_nat_rule_ids":                  pointer.From(flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules)),
+			"egress_nat_rule_ids":                   flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules),
+			"ingress_nat_rule_ids":                  flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules),
 			"vpn_site_link_id":                      vpnSiteLinkId,
 			"route_weight":                          int(pointer.From(props.RoutingWeight)),
 			"protocol":                              connectionProtocolType,
