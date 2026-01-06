@@ -550,6 +550,9 @@ func expandVpnGatewayConnectionVpnSiteLinkConnections(input []interface{}) *[]vi
 			v.Properties.DpdTimeoutSeconds = pointer.To(int64(dpdTimeoutSeconds))
 		}
 		fmt.Printf("debug0 %T\n", item["egress_nat_rule_ids"])
+		fmt.Println("debug0 ", pointer.From(item["egress_nat_rule_ids"].(*pluginsdk.Set)))
+		fmt.Println("debug0 ", item["egress_nat_rule_ids"].(*pluginsdk.Set).List())
+		fmt.Println()
 		if egressNatRuleIds := item["egress_nat_rule_ids"].(*pluginsdk.Set).List(); len(egressNatRuleIds) != 0 {
 			v.Properties.EgressNatRules = expandVpnGatewayConnectionNatRuleIds(egressNatRuleIds)
 		}
@@ -823,6 +826,7 @@ func expandVpnGatewayConnectionNatRuleIds(input []interface{}) *[]virtualwans.Su
 func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) []interface{} {
 	results := make([]interface{}, 0)
 	if input == nil {
+		fmt.Println("debug1")
 		return results
 	}
 
