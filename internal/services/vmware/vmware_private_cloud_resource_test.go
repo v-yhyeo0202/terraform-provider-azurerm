@@ -138,7 +138,7 @@ resource "azurerm_vmware_private_cloud" "test" {
   name                = "acctest-PC-%d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  sku_name            = "av36"
+  sku_name            = "av36p"
 
   management_cluster {
     size = 3

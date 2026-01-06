@@ -107,7 +107,7 @@ resource "azurerm_vmware_cluster" "test" {
   name               = "acctest-Cluster-%d"
   vmware_cloud_id    = azurerm_vmware_private_cloud.test.id
   cluster_node_count = 3
-  sku_name           = "av36"
+  sku_name           = "av36p"
 }
 `, VmwarePrivateCloudResource{}.basic(data), data.RandomInteger)
 }
