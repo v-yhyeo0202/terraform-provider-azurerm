@@ -183,7 +183,9 @@ func resourceIpGroupRead(d *pluginsdk.ResourceData, meta interface{}) error {
 			if props.IPAddresses == nil {
 				return fmt.Errorf("list of ipAddresses returned is nil")
 			}
+			fmt.Println("debug0 ", props.IPAddresses)
 			if err := d.Set("cidrs", props.IPAddresses); err != nil {
+				d.Set("cidrs", make([]interface{}, 0))
 				return fmt.Errorf("setting `cidrs`: %+v", err)
 			}
 
