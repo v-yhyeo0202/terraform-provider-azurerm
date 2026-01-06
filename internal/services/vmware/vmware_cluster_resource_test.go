@@ -100,7 +100,7 @@ func (VmwareClusterResource) Exists(ctx context.Context, clients *clients.Client
 }
 
 func (r VmwareClusterResource) basic(data acceptance.TestData) string {
-	return fmt.Sprintf(`
+	tfConfig := fmt.Sprintf(`
 %s
 
 resource "azurerm_vmware_cluster" "test" {
@@ -110,6 +110,11 @@ resource "azurerm_vmware_cluster" "test" {
   sku_name           = "av36"
 }
 `, VmwarePrivateCloudResource{}.basic(data), data.RandomInteger)
+
+	fmt.Println("debug0")
+	fmt.Println(tfConfig)
+
+	return tfConfig
 }
 
 func (r VmwareClusterResource) requiresImport(data acceptance.TestData) string {
