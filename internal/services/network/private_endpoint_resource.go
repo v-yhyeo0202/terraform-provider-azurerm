@@ -355,6 +355,12 @@ func resourcePrivateEndpointCreate(d *pluginsdk.ResourceData, meta interface{}) 
 		defer locks.UnlockByName(cosmosDbResId, "azurerm_private_endpoint")
 	}
 
+	if manualPrivateLinkServiceConnections := pointer.From(parameters.Properties.ManualPrivateLinkServiceConnections); len(manualPrivateLinkServiceConnections) > 0 {
+		privateLinkServiceId := pointer.From(manualPrivateLinkServiceConnections[0].Properties.PrivateLinkServiceId)
+		locks.ByID(privateLinkServiceId)
+		defer locks.UnlockByID(privateLinkServiceId)
+	}
+
 	err = pluginsdk.Retry(d.Timeout(pluginsdk.TimeoutCreate), func() *pluginsdk.RetryError {
 		result, err := client.CreateOrUpdate(ctx, id, parameters)
 		if err != nil {
