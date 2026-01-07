@@ -380,11 +380,12 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 	return &outputList
 }
 
-func flattenExtensions(inputList *[]pricings_v2023_01_01.Extension) []interface{} {
+func flattenExtensions(inputList *[]pricings_v2023_01_01.Extension) *pluginsdk.Set {
 	outputList := make([]interface{}, 0)
 
 	if inputList == nil {
-		return outputList
+		outputSet := pluginsdk.NewSet(pluginsdk.HashResource(resourceSecurityCenterSubscriptionPricing().Schema["extension"].Elem.(*pluginsdk.Resource)), outputList)
+		return outputSet
 	}
 
 	for _, input := range *inputList {
@@ -403,5 +404,7 @@ func flattenExtensions(inputList *[]pricings_v2023_01_01.Extension) []interface{
 		outputList = append(outputList, output)
 	}
 
-	return outputList
+	outputSet := pluginsdk.NewSet(pluginsdk.HashResource(resourceSecurityCenterSubscriptionPricing().Schema["extension"].Elem.(*pluginsdk.Resource)), outputList)
+
+	return outputSet
 }
