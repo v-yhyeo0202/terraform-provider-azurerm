@@ -827,7 +827,8 @@ func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) *pl
 	results := make([]interface{}, 0)
 	if input == nil {
 		fmt.Println("debug1")
-		return results
+		resultSet := pluginsdk.NewSet(pluginsdk.HashString, results)
+		return resultSet
 	}
 
 	for _, item := range *input {
@@ -841,7 +842,7 @@ func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) *pl
 
 	resultSet := pluginsdk.NewSet(pluginsdk.HashString, results)
 
-	return &resultSet
+	return resultSet
 }
 
 func expandVpnGatewayConnectionCustomBgpAddresses(input []interface{}) *[]virtualwans.GatewayCustomBgpIPAddressIPConfiguration {
