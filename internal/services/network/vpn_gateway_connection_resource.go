@@ -619,11 +619,11 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 		})
 
 		if egressNatRules := flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules); len(egressNatRules) > 0 {
-			output[len(output) - 1]["egress_nat_rule_ids"] = egressNatRules
+			output[len(output) - 1].(map[string]interface{})["egress_nat_rule_ids"] = egressNatRules
 		}
 
 		if ingressNatRules := flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules); len(ingressNatRules) > 0 {
-			output[len(output) - 1]["ingress_nat_rule_ids"] = ingressNatRules
+			output[len(output) - 1].(map[string]interface{})["ingress_nat_rule_ids"] = ingressNatRules
 		}
 	}
 
