@@ -157,7 +157,7 @@ func resourceVPNGatewayConnection() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
-								ValidateFunc: virtualwans.ValidateNatRuleID,
+								// ValidateFunc: virtualwans.ValidateNatRuleID,
 							},
 						},
 
@@ -166,7 +166,7 @@ func resourceVPNGatewayConnection() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
-								ValidateFunc: virtualwans.ValidateNatRuleID,
+								// ValidateFunc: virtualwans.ValidateNatRuleID,
 							},
 						},
 
@@ -602,8 +602,8 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 		output = append(output, map[string]interface{}{
 			"name":                                  pointer.From(item.Name),
 			"dpd_timeout_seconds":                   int(pointer.From(props.DpdTimeoutSeconds)),
-			// "egress_nat_rule_ids":                   flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules),
-			// "ingress_nat_rule_ids":                  flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules),
+			"egress_nat_rule_ids":                   pointer.From(flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules)),
+			"ingress_nat_rule_ids":                  pointer.From(flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules)),
 			"vpn_site_link_id":                      vpnSiteLinkId,
 			"route_weight":                          int(pointer.From(props.RoutingWeight)),
 			"protocol":                              connectionProtocolType,
@@ -617,14 +617,6 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 			"policy_based_traffic_selector_enabled": pointer.From(props.UsePolicyBasedTrafficSelectors),
 			"custom_bgp_address":                    flattenVpnGatewayConnectionCustomBgpAddresses(props.VpnGatewayCustomBgpAddresses),
 		})
-
-		if egressNatRules := flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules); len(egressNatRules) > 0 {
-			output[len(output) - 1].(map[string]interface{})["egress_nat_rule_ids"] = egressNatRules
-		}
-
-		if ingressNatRules := flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules); len(ingressNatRules) > 0 {
-			output[len(output) - 1].(map[string]interface{})["ingress_nat_rule_ids"] = ingressNatRules
-		}
 	}
 
 	return output
@@ -831,11 +823,12 @@ func expandVpnGatewayConnectionNatRuleIds(input []interface{}) *[]virtualwans.Su
 	return &results
 }
 
-func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) []interface{} {
+func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) *pluginsdk.Set {
 	results := make([]interface{}, 0)
 	if input == nil {
 		fmt.Println("debug1")
-		return results
+		resultSet := pluginsdk.NewSet(pluginsdk.HashString, results)
+		return resultSet
 	}
 
 	for _, item := range *input {
@@ -847,7 +840,9 @@ func flattenVpnGatewayConnectionNatRuleIds(input *[]virtualwans.SubResource) []i
 		results = append(results, id)
 	}
 
-	return results
+	resultSet := pluginsdk.NewSet(pluginsdk.HashString, results)
+
+	return resultSet
 }
 
 func expandVpnGatewayConnectionCustomBgpAddresses(input []interface{}) *[]virtualwans.GatewayCustomBgpIPAddressIPConfiguration {
