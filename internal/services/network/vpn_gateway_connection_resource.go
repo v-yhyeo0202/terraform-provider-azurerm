@@ -157,7 +157,7 @@ func resourceVPNGatewayConnection() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
-								ValidateFunc: virtualwans.ValidateNatRuleID,
+								// ValidateFunc: virtualwans.ValidateNatRuleID,
 							},
 						},
 
@@ -166,7 +166,7 @@ func resourceVPNGatewayConnection() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
-								ValidateFunc: virtualwans.ValidateNatRuleID,
+								// ValidateFunc: virtualwans.ValidateNatRuleID,
 							},
 						},
 
