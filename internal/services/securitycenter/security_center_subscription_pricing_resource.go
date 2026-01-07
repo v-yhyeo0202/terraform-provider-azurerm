@@ -226,43 +226,42 @@ func resourceSecurityCenterSubscriptionPricingUpdate(d *pluginsdk.ResourceData, 
 	}
 
 	extensionsStatusFromBackend := make([]pricings_v2023_01_01.Extension, 0)
-	currentlyFreeTier := false
+	// currentlyFreeTier := false
 	if apiResponse.Model != nil && apiResponse.Model.Properties != nil {
 		if apiResponse.Model.Properties.Extensions != nil {
 			extensionsStatusFromBackend = *apiResponse.Model.Properties.Extensions
 		}
 
-		currentlyFreeTier = apiResponse.Model.Properties.PricingTier == pricings_v2023_01_01.PricingTierFree
+		// currentlyFreeTier = apiResponse.Model.Properties.PricingTier == pricings_v2023_01_01.PricingTierFree
 	}
-
-	// Update from `free` tier to `Standard`, we need to update it to `standard` tier first without extensions
-	// Then do an additional update for the `extensions`
-	requiredAdditionalUpdate := false
-	if d.HasChange("extension") && update.Properties.PricingTier == pricings_v2023_01_01.PricingTierStandard {
-		extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
-		update.Properties.Extensions = extensions
-		requiredAdditionalUpdate = currentlyFreeTier
-	}
-
-	updateResponse, err := client.Update(ctx, *id, update)
-	if err != nil {
-		return fmt.Errorf("setting %s: %+v", id, err)
-	}
-
-	// The extensions list from backend might vary after `tier` changed, thus we need to retrieve it again.
-	if updateResponse.Model != nil && updateResponse.Model.Properties != nil {
-		if updateResponse.Model.Properties.Extensions != nil {
-			extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
+	/*
+		// Update from `free` tier to `Standard`, we need to update it to `standard` tier first without extensions
+		// Then do an additional update for the `extensions`
+		requiredAdditionalUpdate := false
+		if d.HasChange("extension") && update.Properties.PricingTier == pricings_v2023_01_01.PricingTierStandard {
+			extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
+			update.Properties.Extensions = extensions
+			requiredAdditionalUpdate = currentlyFreeTier
 		}
-	}
 
-	if requiredAdditionalUpdate {
-		extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
-		update.Properties.Extensions = extensions
-		_, err := client.Update(ctx, *id, update)
+		updateResponse, err := client.Update(ctx, *id, update)
 		if err != nil {
-			return fmt.Errorf("updating %s: %+v", id, err)
+			return fmt.Errorf("setting %s: %+v", id, err)
 		}
+
+		// The extensions list from backend might vary after `tier` changed, thus we need to retrieve it again.
+		if updateResponse.Model != nil && updateResponse.Model.Properties != nil {
+			if updateResponse.Model.Properties.Extensions != nil {
+				extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
+			}
+		}
+	*/
+
+	extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
+	update.Properties.Extensions = extensions
+	_, err = client.Update(ctx, *id, update)
+	if err != nil {
+		return fmt.Errorf("updating %s: %+v", id, err)
 	}
 
 	d.SetId(id.ID())
