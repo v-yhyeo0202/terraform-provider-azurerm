@@ -300,13 +300,11 @@ func resourceApiManagementApi() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
-								/*
 								ValidateFunc: validation.StringInSlice([]string{
 									string(api.BearerTokenSendingMethodsAuthorizationHeader),
 									string(api.BearerTokenSendingMethodsQuery),
 								}, false),
-								*/
-								ValidateFunc: virtualwans.ValidateNatRuleID,
+								// ValidateFunc: virtualwans.ValidateNatRuleID,
 							},
 						},
 					},
@@ -971,7 +969,8 @@ func flattenApiManagementOpenIDAuthentication(input *api.OpenIdAuthenticationSet
 			bearerTokenSendingMethods = append(bearerTokenSendingMethods, string(v))
 		}
 	}
-	result["bearer_token_sending_methods"] = pluginsdk.NewSet(pluginsdk.HashString, bearerTokenSendingMethods)
+	// result["bearer_token_sending_methods"] = pluginsdk.NewSet(pluginsdk.HashString, bearerTokenSendingMethods)
+	result["bearer_token_sending_methods"] = bearerTokenSendingMethods
 
 	return []interface{}{result}
 }
