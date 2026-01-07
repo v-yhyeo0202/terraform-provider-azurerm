@@ -638,8 +638,8 @@ resource "azurerm_security_center_automation" "test" {
 
   scopes = [
     "/subscriptions/${data.azurerm_client_config.current.subscription_id}",
-    "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/test",
-    "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/test2"
+    "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/test"
+    # "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/test2"
   ]
 
   action {
