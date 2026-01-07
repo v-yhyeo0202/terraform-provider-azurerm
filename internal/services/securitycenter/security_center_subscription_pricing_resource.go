@@ -172,6 +172,8 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 		return fmt.Errorf("setting %s: %+v", id, updateErr)
 	}
 
+	time.Sleep(10 * time.Second)
+
 	// the extensions from backend might vary after pricing tier changed.
 	if updateResponse.Model != nil && updateResponse.Model.Properties != nil && updateResponse.Model.Properties.Extensions != nil {
 		extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
