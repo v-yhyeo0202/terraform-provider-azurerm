@@ -300,10 +300,13 @@ func resourceApiManagementApi() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
+								/*
 								ValidateFunc: validation.StringInSlice([]string{
 									string(api.BearerTokenSendingMethodsAuthorizationHeader),
 									string(api.BearerTokenSendingMethodsQuery),
 								}, false),
+								*/
+								ValidateFunc: virtualwans.ValidateNatRuleID,
 							},
 						},
 					},
