@@ -622,6 +622,11 @@ resource "azurerm_resource_group" "test" {
   location = "%s"
 }
 
+resource "azurerm_resource_group" "test2" {
+  name     = "acctestRG2-%d"
+  location = "%s"
+}
+
 resource "azurerm_logic_app_workflow" "test" {
   name                = "acctestlogicapp-%d"
   location            = "%s"
@@ -637,9 +642,9 @@ resource "azurerm_security_center_automation" "test" {
   resource_group_name = azurerm_resource_group.test.name
 
   scopes = [
-    "/subscriptions/${data.azurerm_client_config.current.subscription_id}",
-    "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/test"
-    # "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/test2"
+    # "/subscriptions/${data.azurerm_client_config.current.subscription_id}",
+    "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.test.name}",
+    "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.test2.name}"
   ]
 
   action {
