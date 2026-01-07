@@ -50,7 +50,7 @@ func TestAccSecurityCenterSubscriptionPricing_cloudPosture(t *testing.T) {
 	// These tests will change pricing tier of cloud posture
 	acceptance.RunTestsInSequence(t, map[string]map[string]func(t *testing.T){
 		"securityCenterSubscriptionPricing": {
-			"basic":          TestAccSecurityCenterSubscriptionPricing_cloudPostureExtension,
+			"basic":          testAccSecurityCenterSubscriptionPricing_cloudPostureExtension,
 			"standardToFree": testAccSecurityCenterSubscriptionPricing_cloudPostureExtensionStandardToFreeExtensions,
 			"freeToStandard": testAccSecurityCenterSubscriptionPricing_cloudPostureExtensionFreeToStandardDisabledExtensions,
 		},
@@ -141,7 +141,7 @@ func testAccSecurityCenterSubscriptionPricing_storageAccountDefender(t *testing.
 	})
 }
 
-func TestAccSecurityCenterSubscriptionPricing_cloudPostureExtension(t *testing.T) {
+func testAccSecurityCenterSubscriptionPricing_cloudPostureExtension(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_security_center_subscription_pricing", "test")
 	r := SecurityCenterSubscriptionPricingResource{}
 

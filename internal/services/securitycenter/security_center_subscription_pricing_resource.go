@@ -177,8 +177,11 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 			extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
 		}
 	*/
-	extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
-	pricing.Properties.Extensions = extensions
+
+	if pricing.Properties.PricingTier != pricings_v2023_01_01.PricingTierFree {
+		extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
+		pricing.Properties.Extensions = extensions
+	}
 
 	_, updateErr := client.Update(ctx, id, pricing)
 	if updateErr != nil {
@@ -224,17 +227,17 @@ func resourceSecurityCenterSubscriptionPricingUpdate(d *pluginsdk.ResourceData, 
 	if len(realCfgExtensions) > 0 && update.Properties.PricingTier == pricings_v2023_01_01.PricingTierFree {
 		return fmt.Errorf("extensions cannot be enabled when using free tier")
 	}
+	/*
+		extensionsStatusFromBackend := make([]pricings_v2023_01_01.Extension, 0)
+		currentlyFreeTier := false
+		if apiResponse.Model != nil && apiResponse.Model.Properties != nil {
+			if apiResponse.Model.Properties.Extensions != nil {
+				extensionsStatusFromBackend = *apiResponse.Model.Properties.Extensions
+			}
 
-	extensionsStatusFromBackend := make([]pricings_v2023_01_01.Extension, 0)
-	// currentlyFreeTier := false
-	if apiResponse.Model != nil && apiResponse.Model.Properties != nil {
-		if apiResponse.Model.Properties.Extensions != nil {
-			extensionsStatusFromBackend = *apiResponse.Model.Properties.Extensions
+			currentlyFreeTier = apiResponse.Model.Properties.PricingTier == pricings_v2023_01_01.PricingTierFree
 		}
 
-		// currentlyFreeTier = apiResponse.Model.Properties.PricingTier == pricings_v2023_01_01.PricingTierFree
-	}
-	/*
 		// Update from `free` tier to `Standard`, we need to update it to `standard` tier first without extensions
 		// Then do an additional update for the `extensions`
 		requiredAdditionalUpdate := false
@@ -257,8 +260,11 @@ func resourceSecurityCenterSubscriptionPricingUpdate(d *pluginsdk.ResourceData, 
 		}
 	*/
 
-	extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
-	update.Properties.Extensions = extensions
+	if update.Properties.PricingTier != pricings_v2023_01_01.PricingTierFree {
+		extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions)
+		update.Properties.Extensions = extensions
+	}
+
 	_, err = client.Update(ctx, *id, update)
 	if err != nil {
 		return fmt.Errorf("updating %s: %+v", id, err)
@@ -340,7 +346,7 @@ const (
 	SecurityCenterExtensionAgentlessServerlessPosture                  SecurityCenterExtensionName = "AgentlessServerlessPosture"
 )
 
-func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, extensionsStatusFromBackend *[]pricings_v2023_01_01.Extension) *[]pricings_v2023_01_01.Extension {
+func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}) *[]pricings_v2023_01_01.Extension {
 	extensionStatuses := map[string]bool{}
 	extensionProperties := make(map[string]interface{})
 	extensionNames := []string{
