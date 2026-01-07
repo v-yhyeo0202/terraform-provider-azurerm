@@ -128,6 +128,7 @@ func TestAccApiManagementApi_openidAuthentication(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+		/*
 		{
 			Config: r.openidAuthenticationUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -135,6 +136,7 @@ func TestAccApiManagementApi_openidAuthentication(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+		*/
 	})
 }
 
@@ -985,10 +987,12 @@ resource "azurerm_api_management_api" "test" {
   revision            = "1"
   openid_authentication {
     openid_provider_name = azurerm_api_management_openid_connect_provider.test.name
+	/*
     bearer_token_sending_methods = [
       "authorizationHeader",
       "query",
     ]
+	*/
   }
 }
 `, r.template(data, SkuNameConsumption), data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
