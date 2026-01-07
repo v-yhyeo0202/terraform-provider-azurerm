@@ -602,8 +602,8 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 		output = append(output, map[string]interface{}{
 			"name":                                  pointer.From(item.Name),
 			"dpd_timeout_seconds":                   int(pointer.From(props.DpdTimeoutSeconds)),
-			"egress_nat_rule_ids":                   pointer.To(flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules)),
-			"ingress_nat_rule_ids":                  pointer.To(flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules)),
+			// "egress_nat_rule_ids":                   flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules),
+			// "ingress_nat_rule_ids":                  flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules),
 			"vpn_site_link_id":                      vpnSiteLinkId,
 			"route_weight":                          int(pointer.From(props.RoutingWeight)),
 			"protocol":                              connectionProtocolType,
@@ -617,6 +617,14 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 			"policy_based_traffic_selector_enabled": pointer.From(props.UsePolicyBasedTrafficSelectors),
 			"custom_bgp_address":                    flattenVpnGatewayConnectionCustomBgpAddresses(props.VpnGatewayCustomBgpAddresses),
 		})
+
+		if egressNatRules := flattenVpnGatewayConnectionNatRuleIds(props.EgressNatRules); len(egressNatRules) > 0 {
+			output[len(output) - 1].(map[string]interface{})["egress_nat_rule_ids"] = egressNatRules
+		}
+
+		if ingressNatRules := flattenVpnGatewayConnectionNatRuleIds(props.IngressNatRules); len(ingressNatRules) > 0 {
+			output[len(output) - 1].(map[string]interface{})["ingress_nat_rule_ids"] = ingressNatRules
+		}
 	}
 
 	return output
