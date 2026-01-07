@@ -129,13 +129,13 @@ func TestAccApiManagementApi_openidAuthentication(t *testing.T) {
 		},
 		data.ImportStep(),
 		/*
-		{
-			Config: r.openidAuthenticationUpdate(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
+			{
+				Config: r.openidAuthenticationUpdate(data),
+				Check: acceptance.ComposeTestCheckFunc(
+					check.That(data.ResourceName).ExistsInAzure(r),
+				),
+			},
+			data.ImportStep(),
 		*/
 	})
 }

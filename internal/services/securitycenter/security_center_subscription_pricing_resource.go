@@ -156,31 +156,31 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 			realCfgExtensions = append(realCfgExtensions, e)
 		}
 	}
+	/*
+		// can not set any extension for free tier in the same request.
+		if pricing.Properties.PricingTier == pricings_v2023_01_01.PricingTierStandard {
+			extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
+			pricing.Properties.Extensions = extensions
+		}
 
-	// can not set any extension for free tier in the same request.
-	if pricing.Properties.PricingTier == pricings_v2023_01_01.PricingTierStandard {
-		extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
-		pricing.Properties.Extensions = extensions
-	}
+		if len(realCfgExtensions) > 0 && pricing.Properties.PricingTier == pricings_v2023_01_01.PricingTierFree {
+			return fmt.Errorf("extensions cannot be enabled when using free tier")
+		}
 
-	if len(realCfgExtensions) > 0 && pricing.Properties.PricingTier == pricings_v2023_01_01.PricingTierFree {
-		return fmt.Errorf("extensions cannot be enabled when using free tier")
-	}
+		updateResponse, updateErr := client.Update(ctx, id, pricing)
+		if updateErr != nil {
+			return fmt.Errorf("setting %s: %+v", id, updateErr)
+		}
 
-	updateResponse, updateErr := client.Update(ctx, id, pricing)
-	if updateErr != nil {
-		return fmt.Errorf("setting %s: %+v", id, updateErr)
-	}
-
-	// the extensions from backend might vary after pricing tier changed.
-	if updateResponse.Model != nil && updateResponse.Model.Properties != nil && updateResponse.Model.Properties.Extensions != nil {
-		extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
-	}
-
+		// the extensions from backend might vary after pricing tier changed.
+		if updateResponse.Model != nil && updateResponse.Model.Properties != nil && updateResponse.Model.Properties.Extensions != nil {
+			extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
+		}
+	*/
 	extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
 	pricing.Properties.Extensions = extensions
 
-	_, updateErr = client.Update(ctx, id, pricing)
+	_, updateErr := client.Update(ctx, id, pricing)
 	if updateErr != nil {
 		return fmt.Errorf("updating %s: %+v", id, updateErr)
 	}
@@ -329,21 +329,61 @@ func resourceSecurityCenterSubscriptionPricingDelete(d *pluginsdk.ResourceData, 
 	return nil
 }
 
+type SecurityCenterExtensionName string
+
+const (
+	SecurityCenterExtensionSensitiveDataDiscovery                      SecurityCenterExtensionName = "SensitiveDataDiscovery"
+	SecurityCenterExtensionContainerRegistriesVulnerabilityAssessments SecurityCenterExtensionName = "ContainerRegistriesVulnerabilityAssessments"
+	SecurityCenterExtensionAgentlessDiscoveryForKubernetes             SecurityCenterExtensionName = "AgentlessDiscoveryForKubernetes"
+	SecurityCenterExtensionAgentlessVmScanning                         SecurityCenterExtensionName = "AgentlessVmScanning"
+	SecurityCenterExtensionEntraPermissionsManagement                  SecurityCenterExtensionName = "EntraPermissionsManagement"
+	SecurityCenterExtensionApiPosture                                  SecurityCenterExtensionName = "ApiPosture"
+	SecurityCenterExtensionAgentlessServerlessPosture                  SecurityCenterExtensionName = "AgentlessServerlessPosture"
+)
+
 func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, extensionsStatusFromBackend *[]pricings_v2023_01_01.Extension) *[]pricings_v2023_01_01.Extension {
 	extensionStatuses := map[string]bool{}
 	extensionProperties := make(map[string]interface{})
+	extensionNames := []string{
+		string(SecurityCenterExtensionSensitiveDataDiscovery),
+		string(SecurityCenterExtensionContainerRegistriesVulnerabilityAssessments),
+		string(SecurityCenterExtensionAgentlessDiscoveryForKubernetes),
+		string(SecurityCenterExtensionAgentlessVmScanning),
+		string(SecurityCenterExtensionEntraPermissionsManagement),
+		string(SecurityCenterExtensionApiPosture),
+		string(SecurityCenterExtensionAgentlessServerlessPosture),
+	}
 
-	outputList := make([]pricings_v2023_01_01.Extension, 0, len(inputList))
-	if extensionsStatusFromBackend != nil {
-		for _, backendExtension := range *extensionsStatusFromBackend {
-			// set the default value to false, then turn on the extension that appear in the template
-			extensionStatuses[backendExtension.Name] = false
-			if backendExtension.AdditionalExtensionProperties != nil {
-				extensionProperties[backendExtension.Name] = *(backendExtension.AdditionalExtensionProperties)
+	for _, extensionName := range extensionNames {
+		extensionStatuses[extensionName] = false
+		extensionProperties[extensionName] = nil
+
+		if extensionName == string(SecurityCenterExtensionSensitiveDataDiscovery) {
+			extensionProperties[extensionName] = map[string]interface{}{
+				"additionalExtensionProperties": nil,
+			}
+		} else if extensionName == string(SecurityCenterExtensionAgentlessVmScanning) {
+			extensionProperties[extensionName] = map[string]interface{}{
+				"additionalExtensionProperties": map[string]string{
+					"ExclusionTags": "[]",
+				},
 			}
 		}
 	}
 
+	outputList := make([]pricings_v2023_01_01.Extension, 0, len(extensionNames))
+	/*
+		outputList := make([]pricings_v2023_01_01.Extension, 0, len(inputList))
+		if extensionsStatusFromBackend != nil {
+			for _, backendExtension := range *extensionsStatusFromBackend {
+				// set the default value to false, then turn on the extension that appear in the template
+				extensionStatuses[backendExtension.Name] = false
+				if backendExtension.AdditionalExtensionProperties != nil {
+					extensionProperties[backendExtension.Name] = *(backendExtension.AdditionalExtensionProperties)
+				}
+			}
+		}
+	*/
 	// set any extension in the template to be true
 	for _, v := range inputList {
 		input := v.(map[string]interface{})
