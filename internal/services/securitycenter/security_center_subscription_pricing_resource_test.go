@@ -141,7 +141,7 @@ func testAccSecurityCenterSubscriptionPricing_storageAccountDefender(t *testing.
 	})
 }
 
-func testAccSecurityCenterSubscriptionPricing_cloudPostureExtension(t *testing.T) {
+func TestAccSecurityCenterSubscriptionPricing_cloudPostureExtension(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_security_center_subscription_pricing", "test")
 	r := SecurityCenterSubscriptionPricingResource{}
 
