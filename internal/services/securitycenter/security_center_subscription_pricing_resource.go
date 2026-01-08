@@ -352,10 +352,12 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		}
 		extensionStatuses[input["name"].(string)] = true
 		if vAdditional, ok := input["additional_extension_properties"]; ok {
-			// extensionProperties[input["name"].(string)] = &vAdditional
-
-			for propertyName, property := range vAdditional.(map[string]interface{}) {
-				extensionProperties[input["name"].(string)].(map[string]interface{})[propertyName] = property
+			if len(extensionProperties) == 0 {
+				extensionProperties[input["name"].(string)] = &vAdditional
+			} else {
+				for propertyName, property := range vAdditional.(map[string]interface{}) {
+					extensionProperties[input["name"].(string)].(map[string]interface{})[propertyName] = property
+				}
 			}
 		}
 	}
