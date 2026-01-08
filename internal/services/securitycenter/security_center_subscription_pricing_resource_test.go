@@ -50,9 +50,9 @@ func TestAccSecurityCenterSubscriptionPricing_cloudPosture(t *testing.T) {
 	// These tests will change pricing tier of cloud posture
 	acceptance.RunTestsInSequence(t, map[string]map[string]func(t *testing.T){
 		"securityCenterSubscriptionPricing": {
-			"basic":          TestAccSecurityCenterSubscriptionPricing_cloudPostureExtension,
-			"standardToFree": TestAccSecurityCenterSubscriptionPricing_cloudPostureExtensionStandardToFreeExtensions,
-			"freeToStandard": TestAccSecurityCenterSubscriptionPricing_cloudPostureExtensionFreeToStandardDisabledExtensions,
+			"basic":          testAccSecurityCenterSubscriptionPricing_cloudPostureExtension,
+			"standardToFree": testAccSecurityCenterSubscriptionPricing_cloudPostureExtensionStandardToFreeExtensions,
+			"freeToStandard": testAccSecurityCenterSubscriptionPricing_cloudPostureExtensionFreeToStandardDisabledExtensions,
 		},
 	})
 }
@@ -141,7 +141,7 @@ func testAccSecurityCenterSubscriptionPricing_storageAccountDefender(t *testing.
 	})
 }
 
-func TestAccSecurityCenterSubscriptionPricing_cloudPostureExtension(t *testing.T) {
+func testAccSecurityCenterSubscriptionPricing_cloudPostureExtension(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_security_center_subscription_pricing", "test")
 	r := SecurityCenterSubscriptionPricingResource{}
 
@@ -178,7 +178,7 @@ func TestAccSecurityCenterSubscriptionPricing_cloudPostureExtension(t *testing.T
 	})
 }
 
-func TestAccSecurityCenterSubscriptionPricing_cloudPostureExtensionFreeToStandardDisabledExtensions(t *testing.T) {
+func testAccSecurityCenterSubscriptionPricing_cloudPostureExtensionFreeToStandardDisabledExtensions(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_security_center_subscription_pricing", "test")
 	r := SecurityCenterSubscriptionPricingResource{}
 
@@ -205,7 +205,7 @@ func TestAccSecurityCenterSubscriptionPricing_cloudPostureExtensionFreeToStandar
 	})
 }
 
-func TestAccSecurityCenterSubscriptionPricing_cloudPostureExtensionStandardToFreeExtensions(t *testing.T) {
+func testAccSecurityCenterSubscriptionPricing_cloudPostureExtensionStandardToFreeExtensions(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_security_center_subscription_pricing", "test")
 	r := SecurityCenterSubscriptionPricingResource{}
 
