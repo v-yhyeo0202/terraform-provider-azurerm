@@ -180,8 +180,10 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 		for _, extensionStatusFromBackend := range extensionsStatusFromBackend {
 			fmt.Println(extensionStatusFromBackend.Name)
 
-			for propertyName, property := range *extensionStatusFromBackend.AdditionalExtensionProperties {
-				fmt.Println(propertyName, " ", property)
+			if extensionStatusFromBackend.AdditionalExtensionProperties != nil {
+				for propertyName, property := range *extensionStatusFromBackend.AdditionalExtensionProperties {
+					fmt.Println(propertyName, " ", property)
+				}
 			}
 
 			fmt.Println()
