@@ -175,6 +175,7 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 	// the extensions from backend might vary after pricing tier changed.
 	if updateResponse.Model != nil && updateResponse.Model.Properties != nil && updateResponse.Model.Properties.Extensions != nil {
 		extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
+		fmt.Println("debug2 ", extensionsStatusFromBackend)
 	}
 
 	extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
@@ -376,7 +377,7 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		// The service will return HTTP 500 if the payload contains extensionProperties and `IsEnabled==false`
 		// `AdditionalProperties of Extension 'xxx' can't be updated while the extension is disabled (IsEnabled = False)`
 		if vAdditional, ok := extensionProperties[extensionName]; ok && toBeEnabled {
-			fmt.Println("debug0 ", extensionName, " ", output.AdditionalExtensionProperties)
+			fmt.Println("debug0 ", extensionName, " ", vAdditional)
 			props, _ := vAdditional.(*interface{})
 			p := (*props).(map[string]interface{})
 			output.AdditionalExtensionProperties = pointer.To(p)
