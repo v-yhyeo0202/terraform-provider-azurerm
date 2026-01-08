@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"unicode"
 
 	"github.com/Azure/azure-sdk-for-go/services/preview/security/mgmt/v3.0/security" // nolint: staticcheck
 	"github.com/google/uuid"
@@ -245,6 +246,9 @@ func resourceArmSecurityCenterAssessmentPolicyRead(d *pluginsdk.ResourceData, me
 			threats := make([]string, 0)
 			if props.Threats != nil {
 				for _, item := range *props.Threats {
+					capitalizedItem := []rune(string(item))
+					capitalizedItem[0] = unicode.ToLower(capitalizedItem[0])
+					item = string(capitalizedItem)
 					threats = append(threats, string(item))
 				}
 			}
