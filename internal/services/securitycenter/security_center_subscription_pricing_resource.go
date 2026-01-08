@@ -99,6 +99,7 @@ func resourceSecurityCenterSubscriptionPricing() *pluginsdk.Resource {
 						"additional_extension_properties": {
 							Type:     pluginsdk.TypeMap,
 							Optional: true,
+							Computed: true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.StringIsNotWhiteSpace,
