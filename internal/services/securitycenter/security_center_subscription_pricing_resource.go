@@ -238,7 +238,7 @@ func resourceSecurityCenterSubscriptionPricingUpdate(d *pluginsdk.ResourceData, 
 	// Update from `free` tier to `Standard`, we need to update it to `standard` tier first without extensions
 	// Then do an additional update for the `extensions`
 	requiredAdditionalUpdate := false
-	if (d.HasChange("tier") && update.Properties.PricingTier == pricings_v2023_01_01.PricingTierStandard) || d.HasChange("extension") {
+	if (d.HasChange("tier") || d.HasChange("extension")) && update.Properties.PricingTier == pricings_v2023_01_01.PricingTierStandard {
 		extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
 		update.Properties.Extensions = extensions
 		requiredAdditionalUpdate = currentlyFreeTier
@@ -372,6 +372,7 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 			props, _ := vAdditional.(*interface{})
 			p := (*props).(map[string]interface{})
 			output.AdditionalExtensionProperties = pointer.To(p)
+			fmt.Println("debug0 ", extensionName, " ", output.AdditionalExtensionProperties)
 		}
 
 		outputList = append(outputList, output)
