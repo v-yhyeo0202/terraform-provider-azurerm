@@ -370,7 +370,7 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 			} else {
 				for propertyName, property := range vAdditional.(map[string]interface{}) {
 					fmt.Println("debug1 ", propertyName, " ", property)
-					extensionProperties[input["name"].(string)].(map[string]interface{})[propertyName] = property
+					(*extensionProperties[input["name"].(string)].(*interface{})).(map[string]interface{})[propertyName] = property
 				}
 			}
 		}
