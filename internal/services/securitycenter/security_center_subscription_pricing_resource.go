@@ -172,21 +172,6 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 		return fmt.Errorf("setting %s: %+v", id, updateErr)
 	}
 
-	// time.Sleep(10 * time.Second)
-	for i := 0; i < 10; i++ {
-		apiResponse, err = client.Get(ctx, id)
-		fmt.Println("debug0 ", err, " ", apiResponse.Model.Properties.Extensions)
-
-		if err == nil && apiResponse.Model.Properties.Extensions != nil {
-			for _, extension := range *apiResponse.Model.Properties.Extensions {
-				fmt.Println(extension.Name, " ", extension.IsEnabled)
-			}
-		}
-
-		fmt.Println()
-		time.Sleep(1 * time.Second)
-	}
-
 	// the extensions from backend might vary after pricing tier changed.
 	if updateResponse.Model != nil && updateResponse.Model.Properties != nil && updateResponse.Model.Properties.Extensions != nil {
 		extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
@@ -198,20 +183,6 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 	_, updateErr = client.Update(ctx, id, pricing)
 	if updateErr != nil {
 		return fmt.Errorf("updating %s: %+v", id, updateErr)
-	}
-
-	for i := 0; i < 10; i++ {
-		apiResponse, err = client.Get(ctx, id)
-		fmt.Println("debug1 ", err, " ", apiResponse.Model.Properties.Extensions)
-
-		if err == nil && apiResponse.Model.Properties.Extensions != nil {
-			for _, extension := range *apiResponse.Model.Properties.Extensions {
-				fmt.Println(extension.Name, " ", extension.IsEnabled)
-			}
-		}
-
-		fmt.Println()
-		time.Sleep(1 * time.Second)
 	}
 
 	d.SetId(id.ID())
@@ -278,20 +249,6 @@ func resourceSecurityCenterSubscriptionPricingUpdate(d *pluginsdk.ResourceData, 
 		return fmt.Errorf("setting %s: %+v", id, err)
 	}
 
-	for i := 0; i < 10; i++ {
-		apiResponse, err = client.Get(ctx, *id)
-		fmt.Println("debug2 ", err, " ", apiResponse.Model.Properties.Extensions)
-
-		if err == nil && apiResponse.Model.Properties.Extensions != nil {
-			for _, extension := range *apiResponse.Model.Properties.Extensions {
-				fmt.Println(extension.Name, " ", extension.IsEnabled)
-			}
-		}
-
-		fmt.Println()
-		time.Sleep(1 * time.Second)
-	}
-
 	// The extensions list from backend might vary after `tier` changed, thus we need to retrieve it again.
 	if updateResponse.Model != nil && updateResponse.Model.Properties != nil {
 		if updateResponse.Model.Properties.Extensions != nil {
@@ -306,20 +263,6 @@ func resourceSecurityCenterSubscriptionPricingUpdate(d *pluginsdk.ResourceData, 
 		if err != nil {
 			return fmt.Errorf("updating %s: %+v", id, err)
 		}
-	}
-
-	for i := 0; i < 10; i++ {
-		apiResponse, err = client.Get(ctx, *id)
-		fmt.Println("debug3 ", err, " ", apiResponse.Model.Properties.Extensions)
-
-		if err == nil && apiResponse.Model.Properties.Extensions != nil {
-			for _, extension := range *apiResponse.Model.Properties.Extensions {
-				fmt.Println(extension.Name, " ", extension.IsEnabled)
-			}
-		}
-
-		fmt.Println()
-		time.Sleep(1 * time.Second)
 	}
 
 	d.SetId(id.ID())
