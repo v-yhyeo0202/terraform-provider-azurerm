@@ -176,7 +176,7 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 	for i := 0; i < 10; i++ {
 		apiResponse, err = client.Get(ctx, id)
 
-		if err == nil {
+		if err == nil && apiResponse.Model.Properties.Extensions != nil {
 			fmt.Println("debug0")
 
 			for _, extension := range *apiResponse.Model.Properties.Extensions {
@@ -184,6 +184,7 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 			}
 		}
 
+		fmt.Println()
 		time.Sleep(1 * time.Second)
 	}
 
@@ -198,6 +199,21 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 	_, updateErr = client.Update(ctx, id, pricing)
 	if updateErr != nil {
 		return fmt.Errorf("updating %s: %+v", id, updateErr)
+	}
+
+	for i := 0; i < 10; i++ {
+		apiResponse, err = client.Get(ctx, id)
+
+		if err == nil && apiResponse.Model.Properties.Extensions != nil {
+			fmt.Println("debug1")
+
+			for _, extension := range *apiResponse.Model.Properties.Extensions {
+				fmt.Println(extension.Name, " ", extension.IsEnabled)
+			}
+		}
+
+		fmt.Println()
+		time.Sleep(1 * time.Second)
 	}
 
 	d.SetId(id.ID())
