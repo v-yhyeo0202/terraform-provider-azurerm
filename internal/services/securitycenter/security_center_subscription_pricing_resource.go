@@ -101,6 +101,8 @@ func resourceSecurityCenterSubscriptionPricing() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.StringIsNotWhiteSpace,
 							},
 						},
