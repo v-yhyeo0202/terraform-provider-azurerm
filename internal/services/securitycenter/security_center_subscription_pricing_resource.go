@@ -366,11 +366,11 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		extensionStatuses[input["name"].(string)] = true
 		if vAdditional, ok := input["additional_extension_properties"]; ok {
 			if len(extensionProperties) == 0 {
-				extensionProperties[input["name"].(string)] = &vAdditional
+				extensionProperties[input["name"].(string)] = vAdditional
 			} else {
 				for propertyName, property := range vAdditional.(map[string]interface{}) {
 					fmt.Println("debug1 ", propertyName, " ", property)
-					(*extensionProperties[input["name"].(string)].(*interface{})).(map[string]interface{})[propertyName] = property
+					extensionProperties[input["name"].(string)].(map[string]interface{})[propertyName] = property
 				}
 			}
 		}
@@ -389,9 +389,10 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		// The service will return HTTP 500 if the payload contains extensionProperties and `IsEnabled==false`
 		// `AdditionalProperties of Extension 'xxx' can't be updated while the extension is disabled (IsEnabled = False)`
 		if vAdditional, ok := extensionProperties[extensionName]; ok && toBeEnabled {
-			fmt.Println("debug0 ", extensionName, " ", *vAdditional.(*interface{}))
-			props, _ := vAdditional.(*interface{})
-			p := (*props).(map[string]interface{})
+			fmt.Println("debug0 ", extensionName, " ", vAdditional)
+			// props, _ := vAdditional.(*interface{})
+			// p := (*props).(map[string]interface{})
+			p := vAdditional.(map[string]interface{})
 			output.AdditionalExtensionProperties = pointer.To(p)
 		}
 
