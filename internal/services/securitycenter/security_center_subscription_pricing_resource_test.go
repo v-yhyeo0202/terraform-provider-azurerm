@@ -50,7 +50,7 @@ func TestAccSecurityCenterSubscriptionPricing_cloudPosture(t *testing.T) {
 	// These tests will change pricing tier of cloud posture
 	acceptance.RunTestsInSequence(t, map[string]map[string]func(t *testing.T){
 		"securityCenterSubscriptionPricing": {
-			"basic":          testAccSecurityCenterSubscriptionPricing_cloudPostureExtension,
+			"basic":          TestAccSecurityCenterSubscriptionPricing_cloudPostureExtension,
 			"standardToFree": testAccSecurityCenterSubscriptionPricing_cloudPostureExtensionStandardToFreeExtensions,
 			"freeToStandard": testAccSecurityCenterSubscriptionPricing_cloudPostureExtensionFreeToStandardDisabledExtensions,
 		},
