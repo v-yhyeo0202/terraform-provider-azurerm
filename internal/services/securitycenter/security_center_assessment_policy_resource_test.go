@@ -34,7 +34,7 @@ func testAccSecurityCenterAssessmentPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccSecurityCenterAssessmentPolicy_complete(t *testing.T) {
+func TestAccSecurityCenterAssessmentPolicy_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_security_center_assessment_policy", "test")
 	r := SecurityCenterAssessmentPolicyResource{}
 

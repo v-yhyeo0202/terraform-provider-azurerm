@@ -31,7 +31,7 @@ func TestAccServerVulnerabilityAssessment(t *testing.T) {
 		},
 		"securityCenterAssessmentPolicy": {
 			"basic":    testAccSecurityCenterAssessmentPolicy_basic,
-			"complete": testAccSecurityCenterAssessmentPolicy_complete,
+			"complete": TestAccSecurityCenterAssessmentPolicy_complete,
 			"update":   testAccSecurityCenterAssessmentPolicy_update,
 		},
 		"serverVulnerabilityAssessmentVirtualMachine": {
