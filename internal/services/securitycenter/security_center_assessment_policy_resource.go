@@ -247,8 +247,7 @@ func resourceArmSecurityCenterAssessmentPolicyRead(d *pluginsdk.ResourceData, me
 			if props.Threats != nil {
 				for _, item := range *props.Threats {
 					camelCasedItem := []rune(string(item))
-					camelCasedItem[0] = unicode.ToLower(camelCasedItem[0])
-					fmt.Println("debug0 ", string(camelCasedItem))
+					camelCasedItem[0] = unicode.ToUpper(camelCasedItem[0])
 					threats = append(threats, string(camelCasedItem))
 				}
 			}
