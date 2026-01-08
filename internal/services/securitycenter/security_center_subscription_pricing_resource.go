@@ -97,9 +97,10 @@ func resourceSecurityCenterSubscriptionPricing() *pluginsdk.Resource {
 							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
 						"additional_extension_properties": {
-							Type:     pluginsdk.TypeMap,
-							Optional: true,
-							Computed: true,
+							Type:       pluginsdk.TypeMap,
+							ConfigMode: pluginsdk.SchemaConfigModeBlock,
+							Optional:   true,
+							Computed:   true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.StringIsNotWhiteSpace,
