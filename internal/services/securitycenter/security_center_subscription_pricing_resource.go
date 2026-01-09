@@ -4,7 +4,6 @@
 package securitycenter
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -111,8 +110,6 @@ func resourceSecurityCenterSubscriptionPricing() *pluginsdk.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: pluginsdk.CustomizeDiffShim(securityCenterSubscriptionPricingCustomizeDiff),
 	}
 }
 
@@ -180,18 +177,6 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 	// the extensions from backend might vary after pricing tier changed.
 	if updateResponse.Model != nil && updateResponse.Model.Properties != nil && updateResponse.Model.Properties.Extensions != nil {
 		extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
-
-		for _, extensionStatusFromBackend := range extensionsStatusFromBackend {
-			fmt.Println(extensionStatusFromBackend.Name)
-
-			if extensionStatusFromBackend.AdditionalExtensionProperties != nil {
-				for propertyName, property := range *extensionStatusFromBackend.AdditionalExtensionProperties {
-					fmt.Println(propertyName, " ", property)
-				}
-			}
-
-			fmt.Println()
-		}
 	}
 
 	extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
@@ -375,6 +360,7 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		backendAdditional, backendAdditionalOk := extensionProperties[extensionName].(map[string]interface{})
 
 		if vAdditional, ok := input["additional_extension_properties"]; ok {
+			// check if `additional_extension_properties` of `extension` configured in Terraform configuration is incomplete as compared to that returned from GET request
 			if backendAdditionalOk && len(vAdditional.(map[string]interface{})) < len(backendAdditional) {
 				incompleteExtensions[extensionName] = backendAdditional
 			}
@@ -390,11 +376,26 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 				}
 			*/
 		} else if backendAdditionalOk {
+			// check if `additional_extension_properties` of `extension` is not configured in Terraform configuration when it should be as compared to that returned from GET request
 			incompleteExtensions[extensionName] = backendAdditional
 		}
 	}
 
-	logIncompleteExtensions(incompleteExtensions)
+	if len(incompleteExtensions) > 0 {
+		errorMessage := "[INFO] The following `azurerm_security_center_subscription_pricing_resource` resource `extension` elements do not contain complete `additional_extension_properties`, causing perpetual differences between Terraform configurations and states. Please complete the Terraform configurations with the default listed below or customize the values according to your needs:\n\n"
+
+		for extensionName, additionalExtensionProperties := range incompleteExtensions {
+			errorMessage = fmt.Sprintf("%sname = %s\nadditional_extension_properties = {\n", errorMessage, extensionName)
+
+			for additionalExtensionPropertyKey, additionalExtensionPropertyValue := range additionalExtensionProperties {
+				errorMessage = fmt.Sprintf("%s\t%s = %s\n", errorMessage, additionalExtensionPropertyKey, additionalExtensionPropertyValue)
+			}
+
+			errorMessage = fmt.Sprintf("%s}\n\n", errorMessage)
+		}
+
+		log.Printf("%s", errorMessage)
+	}
 
 	for extensionName, toBeEnabled := range extensionStatuses {
 		isEnabled := pricings_v2023_01_01.IsEnabledFalse
@@ -445,66 +446,4 @@ func flattenExtensions(inputList *[]pricings_v2023_01_01.Extension) []interface{
 	}
 
 	return outputList
-}
-
-func logIncompleteExtensions(incompleteExtensions map[string]map[string]interface{}) {
-	if len(incompleteExtensions) > 0 {
-		errorMessage := "[INFO] The following `azurerm_security_center_subscription_pricing_resource` resource `extension` elements do not contain complete `additional_extension_properties`, causing perpetual differences between Terraform configurations and states. Please complete the Terraform configurations with the default listed below or customize the values according to your needs:\n\n"
-
-		for extensionName, additionalExtensionProperties := range incompleteExtensions {
-			errorMessage = fmt.Sprintf("%sname = %s\nadditional_extension_properties = {\n", errorMessage, extensionName)
-
-			for additionalExtensionPropertyKey, additionalExtensionPropertyValue := range additionalExtensionProperties {
-				errorMessage = fmt.Sprintf("%s\t%s = %s\n", errorMessage, additionalExtensionPropertyKey, additionalExtensionPropertyValue)
-			}
-
-			errorMessage = fmt.Sprintf("%s}\n\n", errorMessage)
-		}
-
-		log.Printf("%s", errorMessage)
-	}
-}
-
-func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
-	if d.HasChange("extension") {
-		rawOldExtensions, rawNewExtensions := d.GetChange("extension")
-		oldExtensions, oldOk := rawOldExtensions.(*pluginsdk.Set)
-		newExtensions, newOk := rawNewExtensions.(*pluginsdk.Set)
-
-		if oldOk && newOk {
-			oldExtensionList := oldExtensions.List()
-			newExtensionsWithoutEmptyName := make([]interface{}, 0)
-
-			for _, rawNewExtension := range newExtensions.List() {
-				if newExtension := rawNewExtension.(map[string]interface{}); newExtension["name"] != "" {
-					newExtensionsWithoutEmptyName = append(newExtensionsWithoutEmptyName, newExtension)
-				}
-			}
-
-			if len(oldExtensionList) == len(newExtensionsWithoutEmptyName) {
-				incompleteExtensions := make(map[string]map[string]interface{}, 0)
-
-				for _, rawOldExtension := range oldExtensionList {
-					oldExtension := rawOldExtension.(map[string]interface{})
-					oldAdditionalExtensionProperties, oldOk := oldExtension["additional_extension_properties"]
-
-					for _, rawNewExtension := range newExtensionsWithoutEmptyName {
-						if newExtension := rawNewExtension.(map[string]interface{}); oldExtension["name"] == newExtension["name"] {
-							newAdditionalExtensionProperties, newOk := newExtension["additional_extension_properties"]
-
-							if oldOk && (!newOk || len(oldAdditionalExtensionProperties.(map[string]interface{})) > len(newAdditionalExtensionProperties.(map[string]interface{}))) {
-								incompleteExtensions[newExtension["name"].(string)] = oldAdditionalExtensionProperties.(map[string]interface{})
-							}
-
-							break
-						}
-					}
-				}
-
-				logIncompleteExtensions(incompleteExtensions)
-			}
-		}
-	}
-
-	return nil
 }
