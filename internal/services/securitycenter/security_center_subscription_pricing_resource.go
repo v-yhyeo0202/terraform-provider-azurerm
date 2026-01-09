@@ -372,10 +372,10 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 
 		extensionName := input["name"].(string)
 		extensionStatuses[extensionName] = true
-		backendAdditional := extensionProperties[extensionName].(map[string]interface{})
+		backendAdditional, backendAdditionalOk := extensionProperties[extensionName].(map[string]interface{})
 
 		if vAdditional, ok := input["additional_extension_properties"]; ok {
-			if len(vAdditional.(map[string]interface{})) < len(backendAdditional) {
+			if backendAdditionalOk && len(vAdditional.(map[string]interface{})) < len(backendAdditional) {
 				incompleteExtensions[extensionName] = backendAdditional
 			}
 
@@ -389,7 +389,7 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 					}
 				}
 			*/
-		} else if extensionProperties[extensionName] != nil {
+		} else if backendAdditionalOk {
 			incompleteExtensions[extensionName] = backendAdditional
 		}
 	}
