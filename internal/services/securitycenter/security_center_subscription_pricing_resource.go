@@ -95,7 +95,7 @@ func resourceSecurityCenterSubscriptionPricing() *pluginsdk.Resource {
 						"name": {
 							Type:         pluginsdk.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
+							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
 						"additional_extension_properties": {
 							Type:     pluginsdk.TypeMap,
@@ -455,18 +455,33 @@ func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *plug
 			}
 		}
 
-		if oldOk && newOk && oldExtensions.Len() == newExtensions.Len() {
+		oldExtensionsWithoutEmptyName := make([]map[string]interface{}, 0)
+
+		for _, rawOldExtension := range oldExtensions.List() {
+			if oldExtension := rawOldExtension.(map[string]interface{}); oldExtension["name"] != "" {
+				oldExtensionsWithoutEmptyName = append(oldExtensionsWithoutEmptyName, oldExtension)
+			}
+		}
+
+		newExtensionsWithoutEmptyName := make([]map[string]interface{}, 0)
+
+		for _, rawNewExtension := range newExtensions.List() {
+			if newExtension := rawNewExtension.(map[string]interface{}); newExtension["name"] != "" {
+				newExtensionsWithoutEmptyName = append(newExtensionsWithoutEmptyName, newExtension)
+			}
+		}
+
+		if oldOk && newOk && len(oldExtensionsWithoutEmptyName) == len(newExtensionsWithoutEmptyName) {
 			fmt.Println("debug1")
 			perpetualDiffExtensions := make(map[string]map[string]interface{}, 0)
 
-			for _, rawOldExtension := range oldExtensions.List() {
-				oldExtension := rawOldExtension.(map[string]interface{})
+			for _, oldExtension := range oldExtensionsWithoutEmptyName {
 				oldAdditionalExtensionProperties, oldOk := oldExtension["additional_extension_properties"]
 				fmt.Println("debug2 ", oldExtension["name"])
 
-				for _, rawNewExtension := range newExtensions.List() {
+				for _, newExtension := range newExtensionsWithoutEmptyName {
 					fmt.Println("debug3")
-					if newExtension := rawNewExtension.(map[string]interface{}); oldExtension["name"] == newExtension["name"] {
+					if oldExtension["name"] == newExtension["name"] {
 						fmt.Println("debug4")
 						newAdditionalExtensionProperties, newOk := newExtension["additional_extension_properties"]
 
