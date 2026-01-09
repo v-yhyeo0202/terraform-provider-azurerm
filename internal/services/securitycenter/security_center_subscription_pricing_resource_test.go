@@ -301,8 +301,6 @@ resource "azurerm_security_center_subscription_pricing" "test" {
 
   extension {
     additional_extension_properties = {
-	  "AutomatedResponse" = "None"
-	  "BlobScanResultsOptions" = "BlobIndexTags"
       "CapGBPerMonthPerStorageAccount" = "5000"
     }
     name = "OnUploadMalwareScanning"
