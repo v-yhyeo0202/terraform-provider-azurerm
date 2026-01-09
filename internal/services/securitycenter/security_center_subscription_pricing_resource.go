@@ -449,7 +449,7 @@ func flattenExtensions(inputList *[]pricings_v2023_01_01.Extension) []interface{
 
 func logIncompleteExtensions(incompleteExtensions map[string]map[string]interface{}) {
 	if len(incompleteExtensions) > 0 {
-		errorMessage := "[INFO] The following `azurerm_security_center_subscription_pricing_resource` resource `extension` elements do not contain complete `additional_extension_properties`, causing perpetual difference in Terraform configurations and states. Please complete the Terraform configurations with the default listed below or customize the values according to your needs:\n\n"
+		errorMessage := "[INFO] The following `azurerm_security_center_subscription_pricing_resource` resource `extension` elements do not contain complete `additional_extension_properties`, causing perpetual differences between Terraform configurations and states. Please complete the Terraform configurations with the default listed below or customize the values according to your needs:\n\n"
 
 		for extensionName, additionalExtensionProperties := range incompleteExtensions {
 			errorMessage = fmt.Sprintf("%sname = %s\nadditional_extension_properties = {\n", errorMessage, extensionName)
@@ -467,25 +467,11 @@ func logIncompleteExtensions(incompleteExtensions map[string]map[string]interfac
 
 func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
 	if d.HasChange("extension") {
-		fmt.Println("debug0")
 		rawOldExtensions, rawNewExtensions := d.GetChange("extension")
 		oldExtensions, oldOk := rawOldExtensions.(*pluginsdk.Set)
 		newExtensions, newOk := rawNewExtensions.(*pluginsdk.Set)
-		fmt.Println("debug6 oldOk ", oldOk, " newOk ", newOk)
 
 		if oldOk && newOk {
-			fmt.Println("debug7 ", oldExtensions.Len(), " ", newExtensions.Len())
-
-			for _, oldExtension := range oldExtensions.List() {
-				fmt.Println("debug8", oldExtension)
-			}
-
-			fmt.Println()
-
-			for _, newExtension := range newExtensions.List() {
-				fmt.Println("debug9", newExtension)
-			}
-
 			oldExtensionList := oldExtensions.List()
 			newExtensionsWithoutEmptyName := make([]interface{}, 0)
 
