@@ -4,6 +4,7 @@
 package securitycenter
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -110,6 +111,8 @@ func resourceSecurityCenterSubscriptionPricing() *pluginsdk.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: pluginsdk.CustomizeDiffShim(securityCenterSubscriptionPricingCustomizeDiff),
 	}
 }
 
@@ -431,4 +434,51 @@ func flattenExtensions(inputList *[]pricings_v2023_01_01.Extension) []interface{
 	}
 
 	return outputList
+}
+
+func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
+	if d.HasChange("extension") {
+		rawOldExtensions, rawNewExtensions := d.GetChange("extension")
+		oldExtensions, oldOk := rawOldExtensions.(*pluginsdk.Set)
+		newExtensions, newOk := rawNewExtensions.(*pluginsdk.Set)
+
+		if oldOk && newOk && oldExtensions.Len() == newExtensions.Len() {
+			perpetualDiffExtensions := make(map[string]map[string]interface{}, 0)
+
+			for _, rawOldExtension := range oldExtensions.List() {
+				oldExtension := rawOldExtension.(map[string]interface{})
+				oldAdditionalExtensionProperties, oldOk := oldExtension["additional_extension_properties"]
+
+				for _, rawNewExtension := range newExtensions.List() {
+					if newExtension := rawNewExtension.(map[string]interface{}); oldExtension["name"] == newExtension["name"] {
+						newAdditionalExtensionProperties, newOk := newExtension["additional_extension_properties"]
+
+						if oldOk && (!newOk || len(oldAdditionalExtensionProperties.(map[string]interface{})) > len(newAdditionalExtensionProperties.(map[string]interface{}))) {
+							perpetualDiffExtensions[newExtension["name"].(string)] = oldAdditionalExtensionProperties.(map[string]interface{})
+						}
+
+						break
+					}
+				}
+			}
+
+			if len(perpetualDiffExtensions) > 0 {
+				errorMessage := "the following `extension` do/does not contain complete `additional_extension_properties`, causing perpetual difference in Terraform configurations and states. Please complete the Terraform configurations with the default listed below or customize the values according to your needs:\n\n"
+
+				for extensionName, additionalExtensionProperties := range perpetualDiffExtensions {
+					errorMessage = fmt.Sprintf("%sname = %s\nadditional_extension_properties = {\n", errorMessage, extensionName)
+
+					for additionalExtensionPropertyKey, additionalExtensionPropertyValue := range additionalExtensionProperties {
+						errorMessage = fmt.Sprintf("%s\t%s = %s\n", errorMessage, additionalExtensionPropertyKey, additionalExtensionPropertyValue)
+					}
+
+					errorMessage = fmt.Sprintf("%s}\n\n", errorMessage)
+				}
+
+				return fmt.Errorf(errorMessage)
+			}
+		}
+	}
+
+	return nil
 }
