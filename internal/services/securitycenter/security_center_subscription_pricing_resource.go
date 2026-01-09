@@ -238,7 +238,7 @@ func resourceSecurityCenterSubscriptionPricingUpdate(d *pluginsdk.ResourceData, 
 	// Update from `free` tier to `Standard`, we need to update it to `standard` tier first without extensions
 	// Then do an additional update for the `extensions`
 	requiredAdditionalUpdate := false
-	if d.HasChange("extension") && update.Properties.PricingTier == pricings_v2023_01_01.PricingTierStandard {
+	if (d.HasChange("tier") || d.HasChange("extension")) && update.Properties.PricingTier == pricings_v2023_01_01.PricingTierStandard {
 		extensions := expandSecurityCenterSubscriptionPricingExtensions(realCfgExtensions, &extensionsStatusFromBackend)
 		update.Properties.Extensions = extensions
 		requiredAdditionalUpdate = currentlyFreeTier
@@ -344,16 +344,44 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		}
 	}
 
+	incompleteExtensions := make(map[string]map[string]interface{}, 0)
+
 	// set any extension in the template to be true
 	for _, v := range inputList {
 		input := v.(map[string]interface{})
 		if input["name"] == "" {
 			continue
 		}
-		extensionStatuses[input["name"].(string)] = true
+		extensionName := input["name"].(string)
+		extensionStatuses[extensionName] = true
+		backendAdditional, backendAdditionalOk := extensionProperties[extensionName].(map[string]interface{})
 		if vAdditional, ok := input["additional_extension_properties"]; ok {
-			extensionProperties[input["name"].(string)] = &vAdditional
+			// check if `additional_extension_properties` of `extension` configured in Terraform configuration is incomplete as compared to that returned from GET request
+			if backendAdditionalOk && len(vAdditional.(map[string]interface{})) < len(backendAdditional) {
+				incompleteExtensions[extensionName] = backendAdditional
+			}
+
+			extensionProperties[input["name"].(string)] = vAdditional
+		} else if backendAdditionalOk {
+			// check if `additional_extension_properties` of `extension` is not configured in Terraform configuration when it should be as compared to that returned from GET request
+			incompleteExtensions[extensionName] = backendAdditional
 		}
+	}
+
+	if len(incompleteExtensions) > 0 {
+		errorMessage := "[INFO] The following `azurerm_security_center_subscription_pricing_resource` resource `extension` elements do not contain complete `additional_extension_properties`, causing perpetual differences between Terraform configurations and states. Please complete the Terraform configurations with the default listed below or customize the values according to your needs:\n\n"
+
+		for extensionName, additionalExtensionProperties := range incompleteExtensions {
+			errorMessage = fmt.Sprintf("%sname = %s\nadditional_extension_properties = {\n", errorMessage, extensionName)
+
+			for additionalExtensionPropertyKey, additionalExtensionPropertyValue := range additionalExtensionProperties {
+				errorMessage = fmt.Sprintf("%s\t%s = %s\n", errorMessage, additionalExtensionPropertyKey, additionalExtensionPropertyValue)
+			}
+
+			errorMessage = fmt.Sprintf("%s}\n\n", errorMessage)
+		}
+
+		log.Printf("%s", errorMessage)
 	}
 
 	for extensionName, toBeEnabled := range extensionStatuses {
@@ -369,8 +397,7 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		// The service will return HTTP 500 if the payload contains extensionProperties and `IsEnabled==false`
 		// `AdditionalProperties of Extension 'xxx' can't be updated while the extension is disabled (IsEnabled = False)`
 		if vAdditional, ok := extensionProperties[extensionName]; ok && toBeEnabled {
-			props, _ := vAdditional.(*interface{})
-			p := (*props).(map[string]interface{})
+			p := vAdditional.(map[string]interface{})
 			output.AdditionalExtensionProperties = pointer.To(p)
 		}
 
