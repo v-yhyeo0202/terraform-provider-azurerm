@@ -443,6 +443,16 @@ func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *plug
 
 		if oldOk && newOk {
 			fmt.Println("debug7 ", oldExtensions.Len(), " ", newExtensions.Len())
+
+			for _, oldExtension := range oldExtensions.List() {
+				fmt.Println("debug8", oldExtension)
+			}
+
+			fmt.Println()
+
+			for _, newExtension := range newExtensions.List() {
+				fmt.Println("debug9", newExtension)
+			}
 		}
 
 		if oldOk && newOk && oldExtensions.Len() == newExtensions.Len() {
