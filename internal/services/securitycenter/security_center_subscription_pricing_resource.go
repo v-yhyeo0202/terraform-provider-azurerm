@@ -180,7 +180,6 @@ func resourceSecurityCenterSubscriptionPricingCreate(d *pluginsdk.ResourceData, 
 	// the extensions from backend might vary after pricing tier changed.
 	if updateResponse.Model != nil && updateResponse.Model.Properties != nil && updateResponse.Model.Properties.Extensions != nil {
 		extensionsStatusFromBackend = *updateResponse.Model.Properties.Extensions
-		fmt.Println("debug2")
 
 		for _, extensionStatusFromBackend := range extensionsStatusFromBackend {
 			fmt.Println(extensionStatusFromBackend.Name)
@@ -376,7 +375,6 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 					extensionProperties[input["name"].(string)] = vAdditional
 				} else {
 					for propertyName, property := range vAdditional.(map[string]interface{}) {
-						fmt.Println("debug1 ", propertyName, " ", property)
 						extensionProperties[input["name"].(string)].(map[string]interface{})[propertyName] = property
 					}
 				}
@@ -397,7 +395,6 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		// The service will return HTTP 500 if the payload contains extensionProperties and `IsEnabled==false`
 		// `AdditionalProperties of Extension 'xxx' can't be updated while the extension is disabled (IsEnabled = False)`
 		if vAdditional, ok := extensionProperties[extensionName]; ok && toBeEnabled {
-			fmt.Println("debug0 ", extensionName, " ", vAdditional)
 			// props, _ := vAdditional.(*interface{})
 			// p := (*props).(map[string]interface{})
 			p := vAdditional.(map[string]interface{})
@@ -442,6 +439,11 @@ func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *plug
 		rawOldExtensions, rawNewExtensions := d.GetChange("extension")
 		oldExtensions, oldOk := rawOldExtensions.(*pluginsdk.Set)
 		newExtensions, newOk := rawNewExtensions.(*pluginsdk.Set)
+		fmt.Println("debug6 oldOk ", oldOk, " newOk ", newOk)
+
+		if oldOk && newOk {
+			fmt.Println("debug7 ", oldExtensions.Len(), " ", newExtensions.Len())
+		}
 
 		if oldOk && newOk && oldExtensions.Len() == newExtensions.Len() {
 			fmt.Println("debug1")
