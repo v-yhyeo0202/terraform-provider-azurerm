@@ -438,22 +438,28 @@ func flattenExtensions(inputList *[]pricings_v2023_01_01.Extension) []interface{
 
 func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
 	if d.HasChange("extension") {
+		fmt.Println("debug0")
 		rawOldExtensions, rawNewExtensions := d.GetChange("extension")
 		oldExtensions, oldOk := rawOldExtensions.(*pluginsdk.Set)
 		newExtensions, newOk := rawNewExtensions.(*pluginsdk.Set)
 
 		if oldOk && newOk && oldExtensions.Len() == newExtensions.Len() {
+			fmt.Println("debug1")
 			perpetualDiffExtensions := make(map[string]map[string]interface{}, 0)
 
 			for _, rawOldExtension := range oldExtensions.List() {
 				oldExtension := rawOldExtension.(map[string]interface{})
 				oldAdditionalExtensionProperties, oldOk := oldExtension["additional_extension_properties"]
+				fmt.Println("debug2 ", oldExtension["name"])
 
 				for _, rawNewExtension := range newExtensions.List() {
+					fmt.Println("debug3")
 					if newExtension := rawNewExtension.(map[string]interface{}); oldExtension["name"] == newExtension["name"] {
+						fmt.Println("debug4")
 						newAdditionalExtensionProperties, newOk := newExtension["additional_extension_properties"]
 
 						if oldOk && (!newOk || len(oldAdditionalExtensionProperties.(map[string]interface{})) > len(newAdditionalExtensionProperties.(map[string]interface{}))) {
+							fmt.Println("debug5")
 							perpetualDiffExtensions[newExtension["name"].(string)] = oldAdditionalExtensionProperties.(map[string]interface{})
 						}
 
