@@ -95,7 +95,7 @@ func resourceSecurityCenterSubscriptionPricing() *pluginsdk.Resource {
 						"name": {
 							Type:         pluginsdk.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringIsNotWhiteSpace,
+							ValidateFunc: validation.StringIsNotEmpty,
 						},
 						"additional_extension_properties": {
 							Type:     pluginsdk.TypeMap,
