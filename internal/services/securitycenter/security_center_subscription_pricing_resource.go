@@ -361,14 +361,24 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 		}
 	}
 
+	incompleteExtensions := make(map[string]map[string]interface{}, 0)
+
 	// set any extension in the template to be true
 	for _, v := range inputList {
 		input := v.(map[string]interface{})
 		if input["name"] == "" {
 			continue
 		}
-		extensionStatuses[input["name"].(string)] = true
+
+		extensionName := input["name"].(string)
+		extensionStatuses[extensionName] = true
+		backendAdditional := extensionProperties[extensionName].(map[string]interface{})
+
 		if vAdditional, ok := input["additional_extension_properties"]; ok {
+			if len(vAdditional.(map[string]interface{})) < len(backendAdditional) {
+				incompleteExtensions[extensionName] = backendAdditional
+			}
+
 			extensionProperties[input["name"].(string)] = vAdditional
 			/*
 				if len(extensionProperties) == 0 {
@@ -379,8 +389,12 @@ func expandSecurityCenterSubscriptionPricingExtensions(inputList []interface{}, 
 					}
 				}
 			*/
+		} else if extensionProperties[extensionName] != nil {
+			incompleteExtensions[extensionName] = backendAdditional
 		}
 	}
+
+	logIncompleteExtensions(incompleteExtensions)
 
 	for extensionName, toBeEnabled := range extensionStatuses {
 		isEnabled := pricings_v2023_01_01.IsEnabledFalse
@@ -433,6 +447,24 @@ func flattenExtensions(inputList *[]pricings_v2023_01_01.Extension) []interface{
 	return outputList
 }
 
+func logIncompleteExtensions(incompleteExtensions map[string]map[string]interface{}) {
+	if len(incompleteExtensions) > 0 {
+		errorMessage := "[INFO] The following `azurerm_security_center_subscription_pricing_resource` resource `extension` elements do not contain complete `additional_extension_properties`, causing perpetual difference in Terraform configurations and states. Please complete the Terraform configurations with the default listed below or customize the values according to your needs:\n\n"
+
+		for extensionName, additionalExtensionProperties := range incompleteExtensions {
+			errorMessage = fmt.Sprintf("%sname = %s\nadditional_extension_properties = {\n", errorMessage, extensionName)
+
+			for additionalExtensionPropertyKey, additionalExtensionPropertyValue := range additionalExtensionProperties {
+				errorMessage = fmt.Sprintf("%s\t%s = %s\n", errorMessage, additionalExtensionPropertyKey, additionalExtensionPropertyValue)
+			}
+
+			errorMessage = fmt.Sprintf("%s}\n\n", errorMessage)
+		}
+
+		log.Printf("%s", errorMessage)
+	}
+}
+
 func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
 	if d.HasChange("extension") {
 		fmt.Println("debug0")
@@ -453,62 +485,37 @@ func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *plug
 			for _, newExtension := range newExtensions.List() {
 				fmt.Println("debug9", newExtension)
 			}
-		}
 
-		oldExtensionsWithoutEmptyName := make([]map[string]interface{}, 0)
+			oldExtensionList := oldExtensions.List()
+			newExtensionsWithoutEmptyName := make([]interface{}, 0)
 
-		for _, rawOldExtension := range oldExtensions.List() {
-			if oldExtension := rawOldExtension.(map[string]interface{}); oldExtension["name"] != "" {
-				oldExtensionsWithoutEmptyName = append(oldExtensionsWithoutEmptyName, oldExtension)
+			for _, rawNewExtension := range newExtensions.List() {
+				if newExtension := rawNewExtension.(map[string]interface{}); newExtension["name"] != "" {
+					newExtensionsWithoutEmptyName = append(newExtensionsWithoutEmptyName, newExtension)
+				}
 			}
-		}
 
-		newExtensionsWithoutEmptyName := make([]map[string]interface{}, 0)
+			if len(oldExtensionList) == len(newExtensionsWithoutEmptyName) {
+				incompleteExtensions := make(map[string]map[string]interface{}, 0)
 
-		for _, rawNewExtension := range newExtensions.List() {
-			if newExtension := rawNewExtension.(map[string]interface{}); newExtension["name"] != "" {
-				newExtensionsWithoutEmptyName = append(newExtensionsWithoutEmptyName, newExtension)
-			}
-		}
+				for _, rawOldExtension := range oldExtensionList {
+					oldExtension := rawOldExtension.(map[string]interface{})
+					oldAdditionalExtensionProperties, oldOk := oldExtension["additional_extension_properties"]
 
-		if oldOk && newOk && len(oldExtensionsWithoutEmptyName) == len(newExtensionsWithoutEmptyName) {
-			fmt.Println("debug1")
-			perpetualDiffExtensions := make(map[string]map[string]interface{}, 0)
+					for _, rawNewExtension := range newExtensionsWithoutEmptyName {
+						if newExtension := rawNewExtension.(map[string]interface{}); oldExtension["name"] == newExtension["name"] {
+							newAdditionalExtensionProperties, newOk := newExtension["additional_extension_properties"]
 
-			for _, oldExtension := range oldExtensionsWithoutEmptyName {
-				oldAdditionalExtensionProperties, oldOk := oldExtension["additional_extension_properties"]
-				fmt.Println("debug2 ", oldExtension["name"])
+							if oldOk && (!newOk || len(oldAdditionalExtensionProperties.(map[string]interface{})) > len(newAdditionalExtensionProperties.(map[string]interface{}))) {
+								incompleteExtensions[newExtension["name"].(string)] = oldAdditionalExtensionProperties.(map[string]interface{})
+							}
 
-				for _, newExtension := range newExtensionsWithoutEmptyName {
-					fmt.Println("debug3")
-					if oldExtension["name"] == newExtension["name"] {
-						fmt.Println("debug4")
-						newAdditionalExtensionProperties, newOk := newExtension["additional_extension_properties"]
-
-						if oldOk && (!newOk || len(oldAdditionalExtensionProperties.(map[string]interface{})) > len(newAdditionalExtensionProperties.(map[string]interface{}))) {
-							fmt.Println("debug5")
-							perpetualDiffExtensions[newExtension["name"].(string)] = oldAdditionalExtensionProperties.(map[string]interface{})
+							break
 						}
-
-						break
 					}
 				}
-			}
 
-			if len(perpetualDiffExtensions) > 0 {
-				errorMessage := "the following `extension` do/does not contain complete `additional_extension_properties`, causing perpetual difference in Terraform configurations and states. Please complete the Terraform configurations with the default listed below or customize the values according to your needs:\n\n"
-
-				for extensionName, additionalExtensionProperties := range perpetualDiffExtensions {
-					errorMessage = fmt.Sprintf("%sname = %s\nadditional_extension_properties = {\n", errorMessage, extensionName)
-
-					for additionalExtensionPropertyKey, additionalExtensionPropertyValue := range additionalExtensionProperties {
-						errorMessage = fmt.Sprintf("%s\t%s = %s\n", errorMessage, additionalExtensionPropertyKey, additionalExtensionPropertyValue)
-					}
-
-					errorMessage = fmt.Sprintf("%s}\n\n", errorMessage)
-				}
-
-				return fmt.Errorf("%s", errorMessage)
+				logIncompleteExtensions(incompleteExtensions)
 			}
 		}
 	}
