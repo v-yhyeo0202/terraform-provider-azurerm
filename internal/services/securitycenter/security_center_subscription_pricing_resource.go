@@ -475,7 +475,7 @@ func securityCenterSubscriptionPricingCustomizeDiff(ctx context.Context, d *plug
 					errorMessage = fmt.Sprintf("%s}\n\n", errorMessage)
 				}
 
-				return fmt.Errorf(errorMessage)
+				return fmt.Errorf("%s", errorMessage)
 			}
 		}
 	}
