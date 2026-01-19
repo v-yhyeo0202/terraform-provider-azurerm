@@ -128,7 +128,8 @@ func (r CosmosDbFleetsResource) Read() sdk.ResourceFunc {
 			}
 
 			state := CosmosDbFleetsModel{
-				Name: id.ResourceGroupName,
+				Name:              id.FleetName,
+				ResourceGroupName: id.ResourceGroupName,
 			}
 
 			if model := resp.Model; model != nil {
