@@ -83,12 +83,12 @@ func TestAccCosmosDbFleets_update(t *testing.T) {
 }
 
 func (CosmosDbFleetsResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
-	id, err := fleets.ParseResourceGroupID(state.ID)
+	id, err := fleets.ParseFleetID(state.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := client.Cosmos.FleetsClient.Get(ctx, *id)
+	resp, err := client.Cosmos.FleetsClient.FleetGet(ctx, *id)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving %s: %+v", *id, err)
 	}

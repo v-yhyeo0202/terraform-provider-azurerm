@@ -69,9 +69,9 @@ func (r CosmosDbFleetsResource) Create() sdk.ResourceFunc {
 			if err := metadata.Decode(&config); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
-			id := fleets.NewFleetsID(subscriptionId, config.ResourceGroupName, config.Name)
+			id := fleets.NewFleetID(subscriptionId, config.ResourceGroupName, config.Name)
 
-			existing, err := client.Get(ctx, id)
+			existing, err := client.FleetGet(ctx, id)
 			if err != nil && !response.WasNotFound(existing.HttpResponse) {
 				return fmt.Errorf("checking for presence of existing %s: %+v", id, err)
 			}
@@ -79,16 +79,16 @@ func (r CosmosDbFleetsResource) Create() sdk.ResourceFunc {
 				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
-			param := fleets.FleetsResource{
-				Location: pointer.To(location.Normalize(config.Location)),
+			param := fleets.FleetResource{
+				Location: location.Normalize(config.Location),
 				Tags:     pointer.To(config.Tags),
 			}
-			if _, err := client.CreateOrUpdate(ctx, id, param); err != nil {
+			if _, err := client.FleetCreate(ctx, id, param); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
 			metadata.SetID(id)
-			if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, id); err != nil {
+			if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, &id); err != nil {
 				return err
 			}
 
@@ -102,12 +102,12 @@ func (r CosmosDbFleetsResource) Read() sdk.ResourceFunc {
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.Cosmos.FleetsClient
-			id, err := fleets.ParseResourceGroupID(metadata.ResourceData.Id())
+			id, err := fleets.ParseFleetID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			resp, err := client.Get(ctx, *id)
+			resp, err := client.FleetGet(ctx, *id)
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
@@ -121,7 +121,7 @@ func (r CosmosDbFleetsResource) Read() sdk.ResourceFunc {
 			}
 
 			if model := resp.Model; model != nil {
-				state.Location = location.NormalizeNilable(model.Location)
+				state.Location = location.NormalizeNilable(&model.Location)
 				state.Tags = pointer.From(model.Tags)
 			}
 
@@ -140,12 +140,12 @@ func (CosmosDbFleetsResource) Delete() sdk.ResourceFunc {
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.Cosmos.FleetsClient
 
-			id, err := fleets.ParseResourceGroupID(metadata.ResourceData.Id())
+			id, err := fleets.ParseFleetID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			if err := client.DeleteThenPoll(ctx, *id, resources.DefaultDeleteOperationOptions()); err != nil {
+			if err := client.FleetDeleteThenPoll(ctx, *id); err != nil {
 				return fmt.Errorf("deleting %s: %+v", *id, err)
 			}
 			return nil
