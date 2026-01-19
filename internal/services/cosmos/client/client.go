@@ -26,7 +26,7 @@ type Client struct {
 	CosmosDBClient                   *cosmosdb.CosmosDBClient
 	DatabaseClient                   *documentdb.DatabaseAccountsClient
 	FirewallRulesClient              *firewallrules.FirewallRulesClient
-	FleetsClient *fleets.FleetsClient
+	FleetsClient                     *fleets.FleetsClient
 	GremlinClient                    *documentdb.GremlinResourcesClient
 	ManagedCassandraClient           *managedcassandras.ManagedCassandrasClient
 	MongoDbClient                    *documentdb.MongoDBResourcesClient
@@ -78,10 +78,10 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	o.Configure(firewallRulesClient.Client, o.Authorizers.ResourceManager)
 
 	fleetsClient, err := fleets.NewFleetsClientWithBaseURI(o.Environment.ResourceManager)
-    if err != nil {
-        return nil, fmt.Errorf("building Fleets Client: %+v", err)
-    }
-    o.Configure(fleetsClient.Client, o.Authorizers.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building Fleets Client: %+v", err)
+	}
+	o.Configure(fleetsClient.Client, o.Authorizers.ResourceManager)
 
 	gremlinClient := documentdb.NewGremlinResourcesClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
 	o.ConfigureClient(&gremlinClient.Client, o.ResourceManagerAuthorizer)
@@ -130,7 +130,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 		CosmosDBClient:                   cosmosdbClient,
 		DatabaseClient:                   &databaseClient,
 		FirewallRulesClient:              firewallRulesClient,
-		FleetsClient: fleetsClient,
+		FleetsClient:                     fleetsClient,
 		GremlinClient:                    &gremlinClient,
 		MongoDbClient:                    &mongoDbClient,
 		MongoRBACClient:                  mongorbacsClient,

@@ -46,8 +46,8 @@ func (CosmosDbFleetsResource) Arguments() map[string]*pluginsdk.Schema {
 		"location": commonschema.Location(),
 
 		"tags": {
-			Type:         schema.TypeMap,
-			Optional:     true,
+			Type:     schema.TypeMap,
+			Optional: true,
 			// `ForceNew` behavior is added as `tags` property is absent in update model
 			ForceNew:     true,
 			ValidateFunc: tags.Validate,
