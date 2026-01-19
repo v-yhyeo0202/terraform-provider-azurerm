@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/cosmosdb/2025-10-15/fleets"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -64,7 +66,7 @@ func TestAccCosmosDbFleets_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_cosmosdb_fleets", "test")
 	r := CosmosDbFleetsResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -74,6 +76,11 @@ func TestAccCosmosDbFleets_update(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.complete(data),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -140,11 +147,11 @@ func (r CosmosDbFleetsResource) complete(data acceptance.TestData) string {
 resource "azurerm_cosmosdb_fleets" "test" {
   name     = "acctest-cosfleets-%d"
   resource_group_name = azurerm_resource_group.test.name
-  location = "%s"
+  location = azurerm_resource_group.test.location
 
   tags = {
     env = "test"
   }
 }
-`, r.template(data), data.RandomInteger, data.Locations.Primary)
+`, r.template(data), data.RandomInteger)
 }
