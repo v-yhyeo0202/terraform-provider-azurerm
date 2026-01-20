@@ -812,8 +812,8 @@ resource "azurerm_postgresql_flexible_server" "test" {
   administrator_login    = "adminTerraform"
   administrator_password = "QAZwsx123"
   version                = "12"
-  sku_name               = "GP_Standard_D2s_v3"
-  zone                   = "2"
+  sku_name               = "GP_Standard_D2ds_v6"
+  // zone                   = "2"
 }
 `, r.template(data), data.RandomInteger)
 }
