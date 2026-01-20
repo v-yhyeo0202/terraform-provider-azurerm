@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 )
 
-// check known-values and compare-values
 //go:generate go run ../../tools/generator-tests resourceidentity -resource-name cosmosdb_fleets -service-package-name cosmos -properties "name,resource_group_name" -known-values "subscription_id:data.Subscriptions.Primary"
 
 type CosmosDbFleetsResource struct{}
