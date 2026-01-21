@@ -221,7 +221,7 @@ func resourceDataFactoryManagedPrivateEndpointDelete(d *pluginsdk.ResourceData, 
 
 	bytes := make([]byte, 1000)
 
-	for i := 0; i < 180; i++ {
+	for i := 0; i < 150; i++ {
 		resp, err := client.Get(ctx, *id, managedprivateendpoints.DefaultGetOperationOptions())
 		if err == nil {
 			resp.HttpResponse.Body.Read(bytes)
