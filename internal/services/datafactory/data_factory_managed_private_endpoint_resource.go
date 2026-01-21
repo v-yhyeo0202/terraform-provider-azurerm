@@ -219,7 +219,7 @@ func resourceDataFactoryManagedPrivateEndpointDelete(d *pluginsdk.ResourceData, 
 		return fmt.Errorf("deleting %s: %+v", id, err)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 300; i++ {
 		resp, err := client.Get(ctx, *id, managedprivateendpoints.DefaultGetOperationOptions())
 		if err == nil {
 			if response.WasNotFound(resp.HttpResponse) {
