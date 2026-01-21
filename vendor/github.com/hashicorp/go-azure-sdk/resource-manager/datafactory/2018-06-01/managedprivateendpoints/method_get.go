@@ -65,9 +65,7 @@ func (c ManagedPrivateEndpointsClient) Get(ctx context.Context, id ManagedPrivat
 
 	var resp *client.Response
 	resp, err = req.Execute(ctx)
-	fmt.Println("debug3", resp, err)
 	if resp != nil {
-		fmt.Println("debug4", resp.Response.Status, resp.Response.StatusCode)
 		result.OData = resp.OData
 		result.HttpResponse = resp.Response
 	}
