@@ -223,7 +223,7 @@ func resourceDataFactoryManagedPrivateEndpointDelete(d *pluginsdk.ResourceData, 
 		Pending:    []string{"Exists"},
 		Target:     []string{"NotFound"},
 		Refresh:    getManagedPrivateEndpointDeletionStatus(ctx, client, *id),
-		MinTimeout: 1 * time.Minute,
+		MinTimeout: 30 * time.Second,
 		Timeout:    d.Timeout(pluginsdk.TimeoutDelete),
 	}
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
