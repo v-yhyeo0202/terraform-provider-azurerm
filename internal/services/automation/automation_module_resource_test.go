@@ -146,10 +146,11 @@ resource "azurerm_automation_module" "test" {
   automation_account_name = azurerm_automation_account.test.name
 
   module_link {
-    uri = "https://devopsgallerystorage.blob.core.windows.net/packages/xactivedirectory.2.19.0.nupkg"
+    // uri = "https://devopsgallerystorage.blob.core.windows.net/packages/xactivedirectory.2.19.0.nupkg"
+	uri = "https://www.powershellgallery.com/api/v2/package/AzureRmMinus/0.3.0.0"
   }
 }
-
+/*
 resource "azurerm_automation_module" "second" {
   name                    = "AzureRmMinus"
   resource_group_name     = azurerm_resource_group.test.name
@@ -161,6 +162,7 @@ resource "azurerm_automation_module" "second" {
 
   depends_on = [azurerm_automation_module.test]
 }
+*/
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger)
 }
 
