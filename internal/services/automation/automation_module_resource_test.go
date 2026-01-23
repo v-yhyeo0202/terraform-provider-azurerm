@@ -147,7 +147,7 @@ resource "azurerm_automation_module" "test" {
 
   module_link {
     // uri = "https://devopsgallerystorage.blob.core.windows.net/packages/xactivedirectory.2.19.0.nupkg"
-	uri = "https://www.powershellgallery.com/api/v2/package/AzureRmMinus/0.3.0.0"
+	uri = "https://cdn.powershellgallery.com/packages/azurerm.6.13.2.nupkg"
   }
 }
 /*
