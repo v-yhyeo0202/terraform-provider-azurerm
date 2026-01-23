@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/automation/2024-10-23/module"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/locks"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/automation/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
@@ -122,9 +121,6 @@ func resourceAutomationModuleCreateUpdate(d *pluginsdk.ResourceData, meta interf
 			ContentLink: expandModuleLink(d),
 		},
 	}
-
-	locks.ByName(d.Get("automation_account_name").(string), "azurerm_automation_account")
-	defer locks.UnlockByName(d.Get("automation_account_name").(string), "azurerm_automation_account")
 
 	if _, err := client.CreateOrUpdate(ctx, id, parameters); err != nil {
 		return err
