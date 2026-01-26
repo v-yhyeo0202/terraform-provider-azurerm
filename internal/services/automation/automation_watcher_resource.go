@@ -77,7 +77,7 @@ func (m WatcherResource) Arguments() map[string]*pluginsdk.Schema {
 		"script_parameters": {
 			Type:     pluginsdk.TypeMap,
 			Optional: true,
-			ForceNew: true,
+			// ForceNew: true,
 			Elem: &pluginsdk.Schema{
 				Type: pluginsdk.TypeString,
 			},
