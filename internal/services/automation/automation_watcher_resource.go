@@ -160,6 +160,7 @@ func (m WatcherResource) Create() sdk.ResourceFunc {
 			}
 
 			meta.SetID(id)
+			panic("debug0")
 			return nil
 		},
 	}
