@@ -416,7 +416,7 @@ func (r RedHatOpenShiftCluster) Create() sdk.ResourceFunc {
 				},
 				Tags: pointer.To(config.Tags),
 			}
-
+			panic("debug0")
 			if err = client.CreateOrUpdateThenPoll(ctx, id, parameters); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
