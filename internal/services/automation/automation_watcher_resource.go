@@ -141,6 +141,7 @@ func (m WatcherResource) Create() sdk.ResourceFunc {
 			scriptParameters := expandStringInterfaceMap(model.ScriptParameters)
 
 			param := watcher.Watcher{
+				Name: pointer.To(model.Name),
 				Properties: &watcher.WatcherProperties{
 					Description:                 pointer.To(model.Description),
 					ExecutionFrequencyInSeconds: pointer.To(model.ExecutionFrequencyInSeconds),
@@ -227,7 +228,9 @@ func (m WatcherResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("decoding err: %+v", err)
 			}
 
-			var upd watcher.WatcherUpdateParameters
+			upd := watcher.WatcherUpdateParameters{
+				Name: &id.WatcherName,
+			}
 			upd.Properties = &watcher.WatcherUpdateProperties{}
 			if meta.ResourceData.HasChange("execution_frequency_in_seconds") {
 				upd.Properties.ExecutionFrequencyInSeconds = pointer.To(model.ExecutionFrequencyInSeconds)
