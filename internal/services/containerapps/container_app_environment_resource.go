@@ -421,37 +421,33 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 					state.WorkloadProfiles = helpers.FlattenWorkloadProfiles(props.WorkloadProfiles)
 					state.InfrastructureResourceGroup = pointer.From(props.InfrastructureResourceGroup)
 					state.Mtls = pointer.From(props.PeerAuthentication.Mtls.Enabled)
-					old, new := metadata.ResourceData.GetChange("workload_profiles")
-					fmt.Println("debug0", old, new)
-					if rawWorkloadProfiles, ok := metadata.ResourceData.GetOk("workload_profiles"); ok {
-						fmt.Println("debug1")
-						workloadProfiles := rawWorkloadProfiles.(*pluginsdk.Set).List()
-						if len(state.WorkloadProfiles) == len(workloadProfiles)+1 {
-							fmt.Println("debug2")
-							consumptionConfigured := false
-							consumptionIndex := -1
 
-							for _, workloadProfile := range workloadProfiles {
-								if workloadProfile.(map[string]interface{})["workload_profile_type"] == string(helpers.WorkloadProfileSkuConsumption) {
-									consumptionConfigured = true
+					fmt.Println("debug0", len(existingState.WorkloadProfiles))
+					if len(state.WorkloadProfiles) == len(existingState.WorkloadProfiles)+1 {
+						fmt.Println("debug2")
+						consumptionConfigured := false
+						consumptionIndex := -1
+
+						for _, workloadProfile := range existingState.WorkloadProfiles {
+							if workloadProfile.WorkloadProfileType == string(helpers.WorkloadProfileSkuConsumption) {
+								consumptionConfigured = true
+								break
+							}
+						}
+
+						if !consumptionConfigured {
+							fmt.Println("debug3")
+							for i, workloadProfile := range state.WorkloadProfiles {
+								if workloadProfile.WorkloadProfileType == string(helpers.WorkloadProfileSkuConsumption) {
+									consumptionIndex = i
 									break
 								}
 							}
+						}
 
-							if !consumptionConfigured {
-								fmt.Println("debug3")
-								for i, workloadProfile := range state.WorkloadProfiles {
-									if workloadProfile.WorkloadProfileType == string(helpers.WorkloadProfileSkuConsumption) {
-										consumptionIndex = i
-										break
-									}
-								}
-							}
-
-							if consumptionIndex >= 0 {
-								fmt.Println("debug4")
-								state.WorkloadProfiles = slices.Delete(state.WorkloadProfiles, consumptionIndex, consumptionIndex+1)
-							}
+						if consumptionIndex >= 0 {
+							fmt.Println("debug4")
+							state.WorkloadProfiles = slices.Delete(state.WorkloadProfiles, consumptionIndex, consumptionIndex+1)
 						}
 					}
 				}
