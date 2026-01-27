@@ -421,7 +421,7 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 					state.WorkloadProfiles = helpers.FlattenWorkloadProfiles(props.WorkloadProfiles)
 					state.InfrastructureResourceGroup = pointer.From(props.InfrastructureResourceGroup)
 					state.Mtls = pointer.From(props.PeerAuthentication.Mtls.Enabled)
-					old, new := metadata.ResourceDiff.GetChange("workload_profiles")
+					old, new := metadata.ResourceData.GetChange("workload_profiles")
 					fmt.Println("debug0", old, new)
 					if rawWorkloadProfiles, ok := metadata.ResourceData.GetOk("workload_profiles"); ok {
 						fmt.Println("debug1")
