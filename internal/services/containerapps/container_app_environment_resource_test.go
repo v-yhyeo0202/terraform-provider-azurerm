@@ -955,6 +955,11 @@ resource "azurerm_container_app_environment" "test" {
   zone_redundancy_enabled        = true
   internal_load_balancer_enabled = true
 
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+  }
+
   tags = {
     Foo    = "Bar"
     secret = "sauce"
