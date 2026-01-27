@@ -422,7 +422,7 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 					state.InfrastructureResourceGroup = pointer.From(props.InfrastructureResourceGroup)
 					state.Mtls = pointer.From(props.PeerAuthentication.Mtls.Enabled)
 
-					if rawWorkloadProfiles, ok := metadata.ResourceDiff.GetOk("workload_profiles"); ok {
+					if rawWorkloadProfiles, ok := metadata.ResourceData.GetOk("workload_profiles"); ok {
 						workloadProfiles := rawWorkloadProfiles.(*pluginsdk.Set).List()
 						if len(state.WorkloadProfiles) == len(workloadProfiles)+1 {
 							consumptionConfigured := false
@@ -445,7 +445,7 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 							}
 
 							if consumptionIndex >= 0 {
-								state.WorkloadProfiles = slices.Delete(state.WorkloadProfiles, consumptionIndex, consumptionIndex + 1)
+								state.WorkloadProfiles = slices.Delete(state.WorkloadProfiles, consumptionIndex, consumptionIndex+1)
 							}
 						}
 					}

@@ -422,7 +422,6 @@ func (r RedHatOpenShiftCluster) Create() sdk.ResourceFunc {
 			}
 
 			metadata.SetID(id)
-
 			return nil
 		},
 	}
