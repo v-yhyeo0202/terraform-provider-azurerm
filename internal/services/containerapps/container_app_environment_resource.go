@@ -421,10 +421,12 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 					state.WorkloadProfiles = helpers.FlattenWorkloadProfiles(props.WorkloadProfiles)
 					state.InfrastructureResourceGroup = pointer.From(props.InfrastructureResourceGroup)
 					state.Mtls = pointer.From(props.PeerAuthentication.Mtls.Enabled)
-
+					fmt.Println("debug0", metadata.ResourceData.Get("workload_profiles"))
 					if rawWorkloadProfiles, ok := metadata.ResourceData.GetOk("workload_profiles"); ok {
+						fmt.Println("debug1")
 						workloadProfiles := rawWorkloadProfiles.(*pluginsdk.Set).List()
 						if len(state.WorkloadProfiles) == len(workloadProfiles)+1 {
+							fmt.Println("debug2")
 							consumptionConfigured := false
 							consumptionIndex := -1
 
@@ -436,6 +438,7 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 							}
 
 							if !consumptionConfigured {
+								fmt.Println("debug3")
 								for i, workloadProfile := range state.WorkloadProfiles {
 									if workloadProfile.WorkloadProfileType == string(helpers.WorkloadProfileSkuConsumption) {
 										consumptionIndex = i
@@ -445,6 +448,7 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 							}
 
 							if consumptionIndex >= 0 {
+								fmt.Println("debug4")
 								state.WorkloadProfiles = slices.Delete(state.WorkloadProfiles, consumptionIndex, consumptionIndex+1)
 							}
 						}
