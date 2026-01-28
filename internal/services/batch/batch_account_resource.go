@@ -447,11 +447,11 @@ func resourceBatchAccountUpdate(d *pluginsdk.ResourceData, meta interface{}) err
 			parameters.Properties.AutoStorage = &batchaccount.AutoStorageBaseProperties{
 				StorageAccountId: v.(string),
 			}
-		} else {
+		}/* else {
 			parameters.Properties.AutoStorage = &batchaccount.AutoStorageBaseProperties{
 				StorageAccountId: "",
 			}
-		}
+		}*/
 	}
 
 	authMode := d.Get("storage_account_authentication_mode").(string)
