@@ -280,7 +280,7 @@ func resourceBatchAccountCreate(d *pluginsdk.ResourceData, meta interface{}) err
 			return fmt.Errorf("`storage_account_authentication_mode` is required when `storage_account_id` ")
 		}
 		parameters.Properties.AutoStorage = &batchaccount.AutoStorageBaseProperties{
-			StorageAccountId:   pointer.To(storageAccountId),
+			StorageAccountId:   storageAccountId,
 			AuthenticationMode: pointer.To(batchaccount.AutoStorageAuthenticationMode(authMode)),
 		}
 	}
@@ -445,10 +445,12 @@ func resourceBatchAccountUpdate(d *pluginsdk.ResourceData, meta interface{}) err
 	if d.HasChange("storage_account_id") {
 		if v, ok := d.GetOk("storage_account_id"); ok {
 			parameters.Properties.AutoStorage = &batchaccount.AutoStorageBaseProperties{
-				StorageAccountId: pointer.To(v.(string)),
+				StorageAccountId: v.(string),
 			}
 		} else {
-			parameters.Properties.AutoStorage = &batchaccount.AutoStorageBaseProperties{}
+			parameters.Properties.AutoStorage = &batchaccount.AutoStorageBaseProperties{
+				StorageAccountId: nil,
+			}
 		}
 	}
 
@@ -460,7 +462,7 @@ func resourceBatchAccountUpdate(d *pluginsdk.ResourceData, meta interface{}) err
 	storageAccountId := d.Get("storage_account_id").(string)
 	if storageAccountId != "" {
 		parameters.Properties.AutoStorage = &batchaccount.AutoStorageBaseProperties{
-			StorageAccountId:   pointer.To(storageAccountId),
+			StorageAccountId:   storageAccountId,
 			AuthenticationMode: pointer.To(batchaccount.AutoStorageAuthenticationMode(authMode)),
 		}
 	}
