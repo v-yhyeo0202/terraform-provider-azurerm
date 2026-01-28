@@ -824,7 +824,7 @@ resource "azurerm_container_app_environment" "test" {
     secret = "sauce"
   }
 }
-`, r.templateVnetSubnetNotDelegated(data), data.RandomInteger)
+`, r.templateVnet(data), data.RandomInteger)
 }
 
 func (r ContainerAppEnvironmentResource) consumptionWorkloadProfile(data acceptance.TestData) string {
@@ -1158,7 +1158,7 @@ resource "azurerm_subnet" "control" {
 
 `, r.template(data), data.RandomInteger)
 }
-
+/*
 func (r ContainerAppEnvironmentResource) templateVnetSubnetNotDelegated(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
@@ -1179,7 +1179,7 @@ resource "azurerm_subnet" "control" {
 }
 `, r.template(data), data.RandomInteger)
 }
-
+*/
 func (r ContainerAppEnvironmentResource) infraResourceGroup(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
