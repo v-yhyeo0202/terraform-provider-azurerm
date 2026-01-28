@@ -214,9 +214,13 @@ func (r ContainerAppResource) Create() sdk.ResourceFunc {
 					},
 					ManagedEnvironmentId: pointer.To(app.ManagedEnvironmentId),
 					Template:             helpers.ExpandContainerAppTemplate(app.Template, metadata),
-					WorkloadProfileName:  pointer.To(app.WorkloadProfileName),
+					// WorkloadProfileName:  pointer.To(app.WorkloadProfileName),
 				},
 				Tags: tags.Expand(app.Tags),
+			}
+
+			if app.WorkloadProfileName != "" {
+				containerApp.Properties.WorkloadProfileName = pointer.To(app.WorkloadProfileName)
 			}
 
 			ident, err := identity.ExpandSystemAndUserAssignedMapFromModel(app.Identity)
