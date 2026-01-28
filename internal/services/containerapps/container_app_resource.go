@@ -108,9 +108,16 @@ func (r ContainerAppResource) Arguments() map[string]*pluginsdk.Schema {
 		"identity": commonschema.SystemAssignedUserAssignedIdentityOptional(),
 
 		"workload_profile_name": {
-			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			Type:                  pluginsdk.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsNotEmpty,
+			DiffSuppressOnRefresh: true,
+			DiffSuppressFunc: func(k, oldValue, newValue string, d *pluginsdk.ResourceData) bool {
+				if oldValue == "Consumption" && newValue == "" {
+					return true
+				}
+				return false
+			},
 		},
 
 		"max_inactive_revisions": {
@@ -214,13 +221,9 @@ func (r ContainerAppResource) Create() sdk.ResourceFunc {
 					},
 					ManagedEnvironmentId: pointer.To(app.ManagedEnvironmentId),
 					Template:             helpers.ExpandContainerAppTemplate(app.Template, metadata),
-					// WorkloadProfileName:  pointer.To(app.WorkloadProfileName),
+					WorkloadProfileName:  pointer.To(app.WorkloadProfileName),
 				},
 				Tags: tags.Expand(app.Tags),
-			}
-
-			if app.WorkloadProfileName != "" {
-				containerApp.Properties.WorkloadProfileName = pointer.To(app.WorkloadProfileName)
 			}
 
 			ident, err := identity.ExpandSystemAndUserAssignedMapFromModel(app.Identity)
