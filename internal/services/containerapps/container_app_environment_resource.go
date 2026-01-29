@@ -123,7 +123,7 @@ func (r ContainerAppEnvironmentResource) Arguments() map[string]*pluginsdk.Schem
 		"infrastructure_resource_group_name": {
 			Type:                  pluginsdk.TypeString,
 			Optional:              true,
-			Computed: true,
+			Computed:              true,
 			ForceNew:              true,
 			RequiredWith:          []string{"workload_profile"},
 			ValidateFunc:          resourcegroups.ValidateName,
@@ -418,7 +418,7 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 					state.InfrastructureResourceGroup = pointer.From(props.InfrastructureResourceGroup)
 					state.Mtls = pointer.From(props.PeerAuthentication.Mtls.Enabled)
 
-					if !(len(state.WorkloadProfiles) == 1 && len(existingState.WorkloadProfiles) == 0 && state.WorkloadProfiles[0] == string(helpers.WorkloadProfileSkuConsumption)) {
+					if !(len(state.WorkloadProfiles) == 1 && len(existingState.WorkloadProfiles) == 0 && state.WorkloadProfiles[0].WorkloadProfileType == string(helpers.WorkloadProfileSkuConsumption)) {
 						state.WorkloadProfiles = helpers.FlattenWorkloadProfiles(props.WorkloadProfiles)
 					}
 				}
