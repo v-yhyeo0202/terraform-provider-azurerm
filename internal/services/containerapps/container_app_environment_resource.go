@@ -123,6 +123,7 @@ func (r ContainerAppEnvironmentResource) Arguments() map[string]*pluginsdk.Schem
 		"infrastructure_resource_group_name": {
 			Type:                  pluginsdk.TypeString,
 			Optional:              true,
+			Computed: true,
 			ForceNew:              true,
 			RequiredWith:          []string{"workload_profile"},
 			ValidateFunc:          resourcegroups.ValidateName,
