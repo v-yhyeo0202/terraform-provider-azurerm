@@ -415,9 +415,12 @@ func (r ContainerAppEnvironmentResource) Read() sdk.ResourceFunc {
 					state.ZoneRedundant = pointer.From(props.ZoneRedundant)
 					state.StaticIP = pointer.From(props.StaticIP)
 					state.DefaultDomain = pointer.From(props.DefaultDomain)
-					state.WorkloadProfiles = helpers.FlattenWorkloadProfiles(props.WorkloadProfiles)
 					state.InfrastructureResourceGroup = pointer.From(props.InfrastructureResourceGroup)
 					state.Mtls = pointer.From(props.PeerAuthentication.Mtls.Enabled)
+
+					if !(len(state.WorkloadProfiles) == 1 && len(existingState.WorkloadProfiles) == 0 && state.WorkloadProfiles[0] == string(helpers.WorkloadProfileSkuConsumption)) {
+						state.WorkloadProfiles = helpers.FlattenWorkloadProfiles(props.WorkloadProfiles)
+					}
 				}
 			}
 
