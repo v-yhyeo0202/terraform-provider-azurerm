@@ -4,6 +4,8 @@
 package helpers
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/containerapps/2025-07-01/managedenvironments"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
@@ -143,11 +145,14 @@ func FlattenWorkloadProfiles(input *[]managedenvironments.WorkloadProfile) []Wor
 
 func OneAdditionalConsumptionProfileReturnedByAPI(returnedProfiles, definedProfiles *pluginsdk.Set) bool {
 	// if 1 more profile is returned by the API than is defined, then check if it is a consumption profile
+	fmt.Println("debug0")
 	if returnedProfiles.Len() == definedProfiles.Len()+1 {
+		fmt.Println("debug1")
 		// check if we have defined a consumption profile
 		for _, v := range definedProfiles.List() {
 			profile := v.(map[string]interface{})
 			if profile["workload_profile_type"].(string) == string(WorkloadProfileSkuConsumption) {
+				fmt.Println("debug2")
 				return false
 			}
 		}
@@ -156,9 +161,11 @@ func OneAdditionalConsumptionProfileReturnedByAPI(returnedProfiles, definedProfi
 		for _, v := range returnedProfiles.List() {
 			profile := v.(map[string]interface{})
 			if profile["workload_profile_type"].(string) == string(WorkloadProfileSkuConsumption) {
+				fmt.Println("debug3")
 				return true
 			}
 		}
 	}
+	fmt.Println("debug4")
 	return false
 }
