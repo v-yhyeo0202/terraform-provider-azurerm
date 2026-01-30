@@ -820,7 +820,7 @@ resource "azurerm_container_app_environment" "test" {
     secret = "sauce"
   }
 }
-`, r.templateVnetSubnetNotDelegated(data), data.RandomInteger)
+`, r.templateVNet(data), data.RandomInteger)
 }
 
 func (r ContainerAppEnvironmentResource) consumptionWorkloadProfile(data acceptance.TestData) string {
