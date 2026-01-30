@@ -24,12 +24,20 @@ import (
 type StorageDefenderResource struct{}
 
 type StorageDefenderModel struct {
-	StorageAccountId                 string `tfschema:"storage_account_id"`
-	OverrideSubscriptionSettings     bool   `tfschema:"override_subscription_settings_enabled"`
-	MalwareScanningOnUploadEnabled   bool   `tfschema:"malware_scanning_on_upload_enabled"`
-	MalwareScanningOnUploadCapPerMon int64  `tfschema:"malware_scanning_on_upload_cap_gb_per_month"`
-	SensitiveDataDiscoveryEnabled    bool   `tfschema:"sensitive_data_discovery_enabled"`
-	ScanResultsEventGridTopicId      string `tfschema:"scan_results_event_grid_topic_id"`
+	StorageAccountId                         string                           `tfschema:"storage_account_id"`
+	OverrideSubscriptionSettings             bool                             `tfschema:"override_subscription_settings_enabled"`
+	MalwareScanningWriteResultsOnTagsEnabled bool                             `tfschema:"malware_scanning_write_results_on_tags_enabled"`
+	MalwareScanningOnUploadEnabled           bool                             `tfschema:"malware_scanning_on_upload_enabled"`
+	MalwareScanningOnUploadCapPerMon         int64                            `tfschema:"malware_scanning_on_upload_cap_gb_per_month"`
+	MalwareScanningOnUploadFilters           []MalwareScanningOnUploadFilters `tfschema:"malware_scanning_on_upload_filters"`
+	SensitiveDataDiscoveryEnabled            bool                             `tfschema:"sensitive_data_discovery_enabled"`
+	ScanResultsEventGridTopicId              string                           `tfschema:"scan_results_event_grid_topic_id"`
+}
+
+type MalwareScanningOnUploadFilters struct {
+	ExcludeBlobsLargerThan int64    `tfschema:"exclude_blobs_larger_than"`
+	ExcludeBlobsWithPrefix []string `tfschema:"exclude_blobs_with_prefix"`
+	ExcludeBlobsWithSuffix []string `tfschema:"exclude_blobs_with_suffix"`
 }
 
 var _ sdk.ResourceWithUpdate = StorageDefenderResource{}
@@ -61,6 +69,12 @@ func (s StorageDefenderResource) Arguments() map[string]*schema.Schema {
 			Default:  false,
 		},
 
+		"malware_scanning_write_results_on_tags_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
+
 		"malware_scanning_on_upload_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
@@ -75,6 +89,39 @@ func (s StorageDefenderResource) Arguments() map[string]*schema.Schema {
 				validation.IntAtLeast(1),
 				validation.IntInSlice([]int{-1}),
 			),
+		},
+
+		"malware_scanning_on_upload_filters": {
+			Type:     pluginsdk.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"exclude_blobs_larger_than": {
+						Type:         pluginsdk.TypeInt,
+						Optional:     true,
+						ValidateFunc: validation.IntAtLeast(0), // verify this!
+					},
+
+					"exclude_blobs_with_prefix": {
+						Type:     pluginsdk.TypeList,
+						Optional: true,
+						Elem: &pluginsdk.Schema{
+							Type: pluginsdk.TypeString,
+							// ValidateFunc: regex?
+						},
+					},
+
+					"exclude_blobs_with_suffix": {
+						Type:     pluginsdk.TypeString,
+						Optional: true,
+						Elem: &pluginsdk.Schema{
+							Type: pluginsdk.TypeString,
+							// ValidateFunc: regex?
+						},
+					},
+				},
+			},
 		},
 
 		"sensitive_data_discovery_enabled": {
