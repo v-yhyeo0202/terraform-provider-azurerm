@@ -193,9 +193,26 @@ func (r SecurityCenterStorageDefenderResource) complete(data acceptance.TestData
 resource "azurerm_security_center_storage_defender" "test" {
   storage_account_id                          = azurerm_storage_account.test.id
   override_subscription_settings_enabled      = true
+  malware_scanning_write_results_on_tags_enabled = true
   malware_scanning_on_upload_enabled          = true
   malware_scanning_on_upload_cap_gb_per_month = 4
   sensitive_data_discovery_enabled            = true
+
+  malware_scanning_on_upload_filters {
+	exclude_blobs_larger_than = 65536
+	
+	exclude_blobs_with_prefix = [
+	  "container-0",
+	  "container-1/",
+	  "container-2/blob",
+	  "container-3/blob-0"
+	]
+	
+	exclude_blobs_with_suffix = [
+	  ".jpg",
+	  ".cpkt.index"
+	]
+  }
 }
 `, r.template(data))
 }

@@ -108,9 +108,11 @@ func (s StorageDefenderResource) Arguments() map[string]*schema.Schema {
 						Type:     pluginsdk.TypeList,
 						Optional: true,
 						Elem: &pluginsdk.Schema{
-							Type:         pluginsdk.TypeString,
-							ValidateFunc: validation.StringIsNotEmpty,
-							// ValidateFunc: regex?
+							Type: pluginsdk.TypeString,
+							ValidateFunc: validation.All(
+								validation.StringDoesNotContainAny("\\?#%&+:*\"|"),
+								validation.StringIsNotEmpty,
+							),
 						},
 					},
 
@@ -118,9 +120,11 @@ func (s StorageDefenderResource) Arguments() map[string]*schema.Schema {
 						Type:     pluginsdk.TypeString,
 						Optional: true,
 						Elem: &pluginsdk.Schema{
-							Type:         pluginsdk.TypeString,
-							ValidateFunc: validation.StringIsNotEmpty,
-							// ValidateFunc: regex?
+							Type: pluginsdk.TypeString,
+							ValidateFunc: validation.All(
+								validation.StringDoesNotContainAny("\\?#%&+:*\"|"),
+								validation.StringIsNotEmpty,
+							),
 						},
 					},
 				},
@@ -333,9 +337,16 @@ func (s StorageDefenderResource) Read() sdk.ResourceFunc {
 					state.OverrideSubscriptionSettings = pointer.From(prop.OverrideSubscriptionLevelSettings)
 
 					if ms := prop.MalwareScanning; ms != nil {
+						if ms.BlobScanResultsOptions != nil {
+							state.MalwareScanningWriteResultsOnTagsEnabled = true
+							if pointer.From(ms.BlobScanResultsOptions) == defenderforstorage.BlobScanResultsOptionsNone {
+								state.MalwareScanningWriteResultsOnTagsEnabled = false
+							}
+						}
 						if onUpload := ms.OnUpload; onUpload != nil {
 							state.MalwareScanningOnUploadEnabled = pointer.From(onUpload.IsEnabled)
 							state.MalwareScanningOnUploadCapPerMon = pointer.From(onUpload.CapGBPerMonth)
+							state.MalwareScanningOnUploadFilters = flattenSecurityCenterStorageDefenderMalwareScanningOnUploadFilter(onUpload.Filters)
 						}
 						if ms.ScanResultsEventGridTopicResourceId != nil {
 							topicId, err := topics.ParseTopicID(*ms.ScanResultsEventGridTopicResourceId)
@@ -411,4 +422,23 @@ func expandSecurityCenterStorageDefenderMalwareScanningOnUploadFilter(input []Ma
 	}
 
 	return onUploadFilter
+}
+
+func flattenSecurityCenterStorageDefenderMalwareScanningOnUploadFilter(input *defenderforstorage.OnUploadFilters) []MalwareScanningOnUploadFilterModel {
+	if input == nil {
+		return make([]MalwareScanningOnUploadFilterModel, 0)
+	}
+
+	malwareScanningOnUploadFilter := MalwareScanningOnUploadFilterModel{}
+	if input.ExcludeBlobsLargerThan != nil {
+		malwareScanningOnUploadFilter.ExcludeBlobsLargerThan = pointer.From(input.ExcludeBlobsLargerThan).(int64)
+	}
+	if input.ExcludeBlobsWithPrefix != nil {
+		malwareScanningOnUploadFilter.ExcludeBlobsWithPrefix = pointer.From(input.ExcludeBlobsWithPrefix)
+	}
+	if input.ExcludeBlobsWithSuffix != nil {
+		malwareScanningOnUploadFilter.ExcludeBlobsWithSuffix = pointer.From(input.ExcludeBlobsWithSuffix)
+	}
+
+	return []MalwareScanningOnUploadFilterModel{malwareScanningOnUploadFilter}
 }
