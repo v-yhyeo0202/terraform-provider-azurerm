@@ -278,8 +278,7 @@ resource "azurerm_security_center_storage_defender" "test" {
 
   malware_scanning_on_upload_filters {
 	exclude_blobs_with_prefix = [
-	  "test?/#",
-	  "test|*"
+	  "test/\\"
 	]
   }
 }
