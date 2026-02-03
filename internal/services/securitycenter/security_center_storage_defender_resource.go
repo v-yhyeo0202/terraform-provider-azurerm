@@ -69,12 +69,6 @@ func (s StorageDefenderResource) Arguments() map[string]*schema.Schema {
 			Default:  false,
 		},
 
-		"malware_scanning_write_results_on_tags_enabled": {
-			Type:     pluginsdk.TypeBool,
-			Optional: true,
-			Default:  true,
-		},
-
 		"malware_scanning_on_upload_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
@@ -117,7 +111,7 @@ func (s StorageDefenderResource) Arguments() map[string]*schema.Schema {
 					},
 
 					"exclude_blobs_with_suffix": {
-						Type:     pluginsdk.TypeString,
+						Type:     pluginsdk.TypeList,
 						Optional: true,
 						Elem: &pluginsdk.Schema{
 							Type: pluginsdk.TypeString,
@@ -129,6 +123,12 @@ func (s StorageDefenderResource) Arguments() map[string]*schema.Schema {
 					},
 				},
 			},
+		},
+
+		"malware_scanning_write_results_on_tags_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  true,
 		},
 
 		"sensitive_data_discovery_enabled": {
@@ -255,14 +255,6 @@ func (s StorageDefenderResource) Update() sdk.ResourceFunc {
 				prop.MalwareScanning.OnUpload = &defenderforstorage.OnUploadProperties{}
 			}
 
-			if metadata.ResourceData.HasChange("malware_scanning_write_results_on_tags_enabled") {
-				prop.MalwareScanning.BlobScanResultsOptions = pointer.To(defenderforstorage.BlobScanResultsOptionsBlobIndexTags)
-
-				if !plan.MalwareScanningWriteResultsOnTagsEnabled {
-					prop.MalwareScanning.BlobScanResultsOptions = pointer.To(defenderforstorage.BlobScanResultsOptionsNone)
-				}
-			}
-
 			if metadata.ResourceData.HasChange("malware_scanning_on_upload_enabled") {
 				prop.MalwareScanning.OnUpload.IsEnabled = pointer.To(plan.MalwareScanningOnUploadEnabled)
 			}
@@ -273,6 +265,14 @@ func (s StorageDefenderResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("malware_scanning_on_upload_filters") {
 				prop.MalwareScanning.OnUpload.Filters = expandSecurityCenterStorageDefenderMalwareScanningOnUploadFilter(plan.MalwareScanningOnUploadFilters)
+			}
+
+			if metadata.ResourceData.HasChange("malware_scanning_write_results_on_tags_enabled") {
+				prop.MalwareScanning.BlobScanResultsOptions = pointer.To(defenderforstorage.BlobScanResultsOptionsBlobIndexTags)
+
+				if !plan.MalwareScanningWriteResultsOnTagsEnabled {
+					prop.MalwareScanning.BlobScanResultsOptions = pointer.To(defenderforstorage.BlobScanResultsOptionsNone)
+				}
 			}
 
 			if metadata.ResourceData.HasChange("scan_results_event_grid_topic_id") {
@@ -337,16 +337,16 @@ func (s StorageDefenderResource) Read() sdk.ResourceFunc {
 					state.OverrideSubscriptionSettings = pointer.From(prop.OverrideSubscriptionLevelSettings)
 
 					if ms := prop.MalwareScanning; ms != nil {
+						if onUpload := ms.OnUpload; onUpload != nil {
+							state.MalwareScanningOnUploadEnabled = pointer.From(onUpload.IsEnabled)
+							state.MalwareScanningOnUploadCapPerMon = pointer.From(onUpload.CapGBPerMonth)
+							state.MalwareScanningOnUploadFilters = flattenSecurityCenterStorageDefenderMalwareScanningOnUploadFilter(onUpload.Filters)
+						}
 						if ms.BlobScanResultsOptions != nil {
 							state.MalwareScanningWriteResultsOnTagsEnabled = true
 							if pointer.From(ms.BlobScanResultsOptions) == defenderforstorage.BlobScanResultsOptionsNone {
 								state.MalwareScanningWriteResultsOnTagsEnabled = false
 							}
-						}
-						if onUpload := ms.OnUpload; onUpload != nil {
-							state.MalwareScanningOnUploadEnabled = pointer.From(onUpload.IsEnabled)
-							state.MalwareScanningOnUploadCapPerMon = pointer.From(onUpload.CapGBPerMonth)
-							state.MalwareScanningOnUploadFilters = flattenSecurityCenterStorageDefenderMalwareScanningOnUploadFilter(onUpload.Filters)
 						}
 						if ms.ScanResultsEventGridTopicResourceId != nil {
 							topicId, err := topics.ParseTopicID(*ms.ScanResultsEventGridTopicResourceId)
