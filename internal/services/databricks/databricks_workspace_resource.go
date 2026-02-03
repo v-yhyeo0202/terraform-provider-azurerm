@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/tags"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/databricks/2022-10-01-preview/accessconnector"
-	previousWorkspaces "github.com/hashicorp/go-azure-sdk/resource-manager/databricks/2024-05-01/workspaces"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/databricks/2026-01-01/workspaces"
 	mlworkspace "github.com/hashicorp/go-azure-sdk/resource-manager/machinelearningservices/2025-06-01/workspaces"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-09-01/loadbalancers"
@@ -367,11 +367,7 @@ func resourceDatabricksWorkspace() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									// previous Databrick workspaces API with version 2024-05-01 is used as the following constant are not present in API with version 2026-01-01
-									string(previousWorkspaces.ComplianceStandardHIPAA),
-									string(previousWorkspaces.ComplianceStandardPCIDSS),
-								}, false),
+								ValidateFunc: validation.StringInSlice(validate.PossibleValuesForComplianceStandard(), false),
 							},
 						},
 						"enhanced_security_monitoring_enabled": {
@@ -453,8 +449,8 @@ func resourceDatabricksWorkspace() *pluginsdk.Resource {
 					for _, rawEnhancedSecurityCompliance := range enhancedSecurityCompliance.([]interface{}) {
 						if complianceSecurityProfileStandards, ok := rawEnhancedSecurityCompliance.(map[string]interface{})["compliance_security_profile_standards"]; ok {
 							for _, complianceSecurityProfileStandard := range complianceSecurityProfileStandards.(*pluginsdk.Set).List() {
-								if complianceSecurityProfileStandard.(string) == string(previousWorkspaces.ComplianceStandardPCIDSS) {
-									return fmt.Errorf("`%s` `compliance_security_profile_standards` is not supported when `compute_mode` is `%s`", previousWorkspaces.ComplianceStandardPCIDSS, workspaces.ComputeModeServerless)
+								if !slices.Contains(validate.ServerlessComputeModeComplianceStandards, complianceSecurityProfileStandard.(string)) {
+									return fmt.Errorf("`%s` `compliance_security_profile_standards` is not supported when `compute_mode` is `%s`", complianceSecurityProfileStandard, workspaces.ComputeModeServerless)
 								}
 							}
 						}
@@ -1597,7 +1593,7 @@ func flattenWorkspaceEnhancedSecurity(input *workspaces.EnhancedSecurityComplian
 
 		standards := pluginsdk.NewSet(pluginsdk.HashString, nil)
 		for _, s := range pointer.From(v.ComplianceStandards) {
-			if s == string(previousWorkspaces.ComplianceStandardNONE) {
+			if s == string(validate.ComplianceStandardNONE) {
 				continue
 			}
 			standards.Add(s)
@@ -1639,7 +1635,7 @@ func expandWorkspaceEnhancedSecurity(input []interface{}) *workspaces.EnhancedSe
 	}
 
 	if complianceSecurityProfileEnabled == workspaces.ComplianceSecurityProfileValueEnabled && len(complianceStandards) == 0 {
-		complianceStandards = append(complianceStandards, string(previousWorkspaces.ComplianceStandardNONE))
+		complianceStandards = append(complianceStandards, string(validate.ComplianceStandardNONE))
 	}
 
 	return &workspaces.EnhancedSecurityComplianceDefinition{
