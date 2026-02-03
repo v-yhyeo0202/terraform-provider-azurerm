@@ -26,10 +26,10 @@ type StorageDefenderResource struct{}
 type StorageDefenderModel struct {
 	StorageAccountId                         string                               `tfschema:"storage_account_id"`
 	OverrideSubscriptionSettings             bool                                 `tfschema:"override_subscription_settings_enabled"`
-	MalwareScanningWriteResultsOnTagsEnabled bool                                 `tfschema:"malware_scanning_write_results_on_tags_enabled"`
 	MalwareScanningOnUploadEnabled           bool                                 `tfschema:"malware_scanning_on_upload_enabled"`
 	MalwareScanningOnUploadCapPerMon         int64                                `tfschema:"malware_scanning_on_upload_cap_gb_per_month"`
 	MalwareScanningOnUploadFilters           []MalwareScanningOnUploadFilterModel `tfschema:"malware_scanning_on_upload_filters"`
+	MalwareScanningWriteResultsOnTagsEnabled bool                                 `tfschema:"malware_scanning_write_results_on_tags_enabled"`
 	SensitiveDataDiscoveryEnabled            bool                                 `tfschema:"sensitive_data_discovery_enabled"`
 	ScanResultsEventGridTopicId              string                               `tfschema:"scan_results_event_grid_topic_id"`
 }
