@@ -431,7 +431,7 @@ func flattenSecurityCenterStorageDefenderMalwareScanningOnUploadFilter(input *de
 
 	malwareScanningOnUploadFilter := MalwareScanningOnUploadFilterModel{}
 	if input.ExcludeBlobsLargerThan != nil {
-		malwareScanningOnUploadFilter.ExcludeBlobsLargerThan = pointer.From(input.ExcludeBlobsLargerThan).(int64)
+		malwareScanningOnUploadFilter.ExcludeBlobsLargerThan = int64(pointer.From(input.ExcludeBlobsLargerThan).(float64))
 	}
 	if input.ExcludeBlobsWithPrefix != nil {
 		malwareScanningOnUploadFilter.ExcludeBlobsWithPrefix = pointer.From(input.ExcludeBlobsWithPrefix)
