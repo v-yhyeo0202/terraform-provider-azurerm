@@ -1,8 +1,12 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 package loadtestservice
 
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -36,10 +40,12 @@ type PlaywrightWorkspaceModel struct {
 func (PlaywrightWorkspaceResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
-			Type:         pluginsdk.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
+			ValidateFunc: validation.StringMatch(
+				regexp.MustCompile(`[a-zA-Z0-9-]{3,24}`),
+				"length of `name` must be between 3 and 24 characters (inclusive) and contain only numbers, letters, and hyphens (-)"),
 		},
 
 		"resource_group_name": commonschema.ResourceGroupName(),
@@ -233,6 +239,14 @@ func (PlaywrightWorkspaceResource) Read() sdk.ResourceFunc {
 
 					if regionalAffinity := properties.RegionalAffinity; regionalAffinity != nil {
 						state.RegionalAffinityEnabled = pointer.From(regionalAffinity) == playwrightworkspaces.EnablementStatusEnabled
+					}
+
+					if dataplaneUri := properties.DataplaneUri; dataplaneUri != nil {
+						state.DataplaneUri = pointer.From(dataplaneUri)
+					}
+
+					if workspaceId := properties.WorkspaceId; workspaceId != nil {
+						state.WorkspaceId = pointer.From(workspaceId)
 					}
 				}
 
