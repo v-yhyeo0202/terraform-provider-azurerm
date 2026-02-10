@@ -42,8 +42,8 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "test" {
-  name     = "acctest-lts-%[1]d"
-  location = "%[2]s"
+  name     = "acctest-lts-%d"
+  location = "%s"
 
   tags = {
 	Environment = "Sandbox"
@@ -52,7 +52,7 @@ resource "azurerm_resource_group" "test" {
 }
 
 resource "azurerm_playwright_workspace" "test" {
-  name                = "acctest-pww-%[1]d"
+  name                = "acctest-pww-%d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
 }
@@ -61,5 +61,5 @@ data "azurerm_playwright_workspace" "test" {
   name = azurerm_playwright_workspace.test.name
   resource_group_name = azurerm_playwright_workspace.test.resource_group_name
 }
-`, data.RandomInteger, data.Locations.Primary)
+`, data.RandomInteger, data.Locations.Primary, data.RandomIntOfLength(8))
 }

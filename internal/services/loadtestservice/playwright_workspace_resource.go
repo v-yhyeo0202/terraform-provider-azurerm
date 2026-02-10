@@ -32,7 +32,7 @@ type PlaywrightWorkspaceModel struct {
 	Location                string            `tfschema:"location"`
 	LocalAuthEnabled        bool              `tfschema:"local_auth_enabled"`
 	RegionalAffinityEnabled bool              `tfschema:"regional_affinity_enabled"`
-	DataplaneUri            string            `tfschema:"dataplance_uri"`
+	DataplaneUri            string            `tfschema:"dataplane_uri"`
 	WorkspaceId             string            `tfschema:"workspace_id"`
 	Tags                    map[string]string `tfschema:"tags"`
 }
@@ -44,7 +44,7 @@ func (PlaywrightWorkspaceResource) Arguments() map[string]*pluginsdk.Schema {
 			Required: true,
 			ForceNew: true,
 			ValidateFunc: validation.StringMatch(
-				regexp.MustCompile(`[a-zA-Z0-9-]{3,24}`),
+				regexp.MustCompile(`^[a-zA-Z0-9-]{3,24}$`),
 				"length of `name` must be between 3 and 24 characters (inclusive) and contain only numbers, letters, and hyphens (-)"),
 		},
 
@@ -124,9 +124,9 @@ func (r PlaywrightWorkspaceResource) Create() sdk.ResourceFunc {
 				properties.LocalAuth = pointer.To(playwrightworkspaces.EnablementStatusEnabled)
 			}
 
-			properties.RegionalAffinity = pointer.To(playwrightworkspaces.EnablementStatusEnabled)
+			properties.RegionalAffinity = pointer.To(playwrightworkspaces.EnablementStatusDisabled)
 			if config.RegionalAffinityEnabled {
-				properties.RegionalAffinity = pointer.To(playwrightworkspaces.EnablementStatusDisabled)
+				properties.RegionalAffinity = pointer.To(playwrightworkspaces.EnablementStatusEnabled)
 			}
 
 			param := playwrightworkspaces.PlaywrightWorkspace{
@@ -167,10 +167,14 @@ func (r PlaywrightWorkspaceResource) Update() sdk.ResourceFunc {
 
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
-
-			model := resp.Model
-			if model == nil {
-				return fmt.Errorf("retrieving %s: model is nil", id)
+			/*
+				model := resp.Model
+				if model == nil {
+					return fmt.Errorf("retrieving %s: model is nil", id)
+				}
+			*/
+			param := playwrightworkspaces.PlaywrightWorkspaceUpdate{
+				Properties: &playwrightworkspaces.PlaywrightWorkspaceUpdateProperties{},
 			}
 
 			var config PlaywrightWorkspaceModel
@@ -179,24 +183,24 @@ func (r PlaywrightWorkspaceResource) Update() sdk.ResourceFunc {
 			}
 
 			if metadata.ResourceData.HasChange("local_auth_enabled") {
-				model.Properties.LocalAuth = pointer.To(playwrightworkspaces.EnablementStatusDisabled)
+				param.Properties.LocalAuth = pointer.To(playwrightworkspaces.EnablementStatusDisabled)
 				if config.LocalAuthEnabled {
-					model.Properties.LocalAuth = pointer.To(playwrightworkspaces.EnablementStatusEnabled)
+					param.Properties.LocalAuth = pointer.To(playwrightworkspaces.EnablementStatusEnabled)
 				}
 			}
 
 			if metadata.ResourceData.HasChange("regional_affinity_enabled") {
-				model.Properties.RegionalAffinity = pointer.To(playwrightworkspaces.EnablementStatusEnabled)
-				if !config.RegionalAffinityEnabled {
-					model.Properties.RegionalAffinity = pointer.To(playwrightworkspaces.EnablementStatusDisabled)
+				param.Properties.RegionalAffinity = pointer.To(playwrightworkspaces.EnablementStatusDisabled)
+				if config.RegionalAffinityEnabled {
+					param.Properties.RegionalAffinity = pointer.To(playwrightworkspaces.EnablementStatusEnabled)
 				}
 			}
 
 			if metadata.ResourceData.HasChange("tags") {
-				model.Tags = pointer.To(config.Tags)
+				param.Tags = pointer.To(config.Tags)
 			}
 
-			if _, err := client.CreateOrUpdate(ctx, *id, *model); err != nil {
+			if _, err := client.Update(ctx, *id, param); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
