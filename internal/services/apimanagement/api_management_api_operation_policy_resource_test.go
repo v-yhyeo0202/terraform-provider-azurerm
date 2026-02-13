@@ -117,7 +117,7 @@ resource "azurerm_api_management_api_operation_policy" "test" {
   api_management_name = azurerm_api_management.test.name
   resource_group_name = azurerm_resource_group.test.name
   operation_id        = azurerm_api_management_api_operation.test.operation_id
-  xml_link            = "https://gist.githubusercontent.com/v-yhyeo0202/b9dbe2b45203c729189d39bdb3df629e/raw/82f546b89fcb9c11e36cefe432ff65b74860a5da/api_management_api_operation_policy.xml"
+  xml_link            = "https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/apimanagement/testdata/api_management_api_operation_policy.xml"
 }
 `, ApiManagementApiOperationResource{}.basic(data))
 }
