@@ -214,7 +214,7 @@ func (m WatcherResource) Read() sdk.ResourceFunc {
 
 func (m WatcherResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
-		Timeout: 10 * time.Minute,
+		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, meta sdk.ResourceMetaData) (err error) {
 			client := meta.Client.Automation.WatcherClient
 
@@ -235,15 +235,31 @@ func (m WatcherResource) Update() sdk.ResourceFunc {
 			if meta.ResourceData.HasChange("execution_frequency_in_seconds") {
 				upd.Properties.ExecutionFrequencyInSeconds = pointer.To(model.ExecutionFrequencyInSeconds)
 			}
-			panic("debug0")
-			if _, err = client.Stop(ctx, *id); err != nil {
-				return fmt.Errorf("stopping %s: %v", *id, err)
+
+			stateConf := &pluginsdk.StateChangeConf{
+				Pending: []string{
+					"New",
+				},
+				Target: []string{
+					"Running",
+					"Stopped",
+					"Suspended",
+				},
+				Refresh:    automationWatcherStateRefreshFunc(ctx, client, id),
+				MinTimeout: 30 * time.Second,
+				Timeout:    meta.ResourceData.Timeout(pluginsdk.TimeoutUpdate),
 			}
-			for i := 0; i < 10; i++ {
-				if _, err := client.Get(ctx, *id); err != nil {
-					return err
+
+			resp, err := stateConf.WaitForStateContext(ctx)
+			if err != nil {
+				return fmt.Errorf("waiting for creation of %s: %+v", id, err)
+			}
+
+			status := pointer.From(resp.(watcher.GetOperationResponse).Model.Properties.Status)
+			if status == "Running" {
+				if _, err = client.Stop(ctx, *id); err != nil {
+					return fmt.Errorf("stopping %s: %v", *id, err)
 				}
-				time.Sleep(10 * time.Second)
 			}
 
 			if _, err = client.Update(ctx, *id, upd); err != nil {
@@ -276,4 +292,23 @@ func (m WatcherResource) Delete() sdk.ResourceFunc {
 
 func (m WatcherResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return watcher.ValidateWatcherID
+}
+
+func automationWatcherStateRefreshFunc(ctx context.Context, client *watcher.WatcherClient, id *watcher.WatcherId) pluginsdk.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := client.Get(ctx, *id)
+		if err != nil {
+			return nil, "", fmt.Errorf("retrieving %s: %+v", id, err)
+		}
+
+		if model := resp.Model; model != nil {
+			if properties := model.Properties; properties != nil {
+				if status := properties.Status; status != nil {
+					return resp, pointer.From(status), nil
+				}
+			}
+		}
+
+		return resp, "", fmt.Errorf("retrieving %s: status is not returned", id)
+	}
 }
