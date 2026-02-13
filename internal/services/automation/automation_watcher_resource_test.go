@@ -107,8 +107,6 @@ resource "azurerm_automation_watcher" "test" {
 
 func (a WatcherResource) update(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-
 %s
 
 resource "azurerm_automation_watcher" "test" {
@@ -129,6 +127,11 @@ resource "azurerm_automation_watcher" "test" {
   script_name                    = azurerm_automation_runbook.test.name
   script_run_on                  = azurerm_automation_hybrid_runbook_worker_group.test.name
   description                    = "example-watcher desc"
+
+  depends_on = [
+    azurerm_linux_virtual_machine.test,
+    azurerm_automation_hybrid_runbook_worker.test
+  ]
 }
 `, a.template(data), data.RandomInteger, data.Locations.Primary)
 }
@@ -222,6 +225,14 @@ resource "azurerm_linux_virtual_machine" "test" {
     azsecpack                                                                  = "nonprod"
     "platformsettings.host_environment.service.platform_optedin_for_rootcerts" = "true"
   }
+}
+
+resource "azurerm_automation_hybrid_runbook_worker" "test" {
+  resource_group_name     = azurerm_resource_group.test.name
+  automation_account_name = azurerm_automation_account.test.name
+  worker_group_name       = azurerm_automation_hybrid_runbook_worker_group.test.name
+  worker_id               = "%[3]s"
+  vm_resource_id          = azurerm_linux_virtual_machine.test.id
 }
 
 resource "azurerm_automation_runbook" "test" {

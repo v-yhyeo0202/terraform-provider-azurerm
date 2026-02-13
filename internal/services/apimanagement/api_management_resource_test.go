@@ -151,6 +151,20 @@ func TestAccApiManagement_complete(t *testing.T) {
 	})
 }
 
+func TestAccApiManagement_issue31708(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_api_management", "test")
+	r := ApiManagementResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.issue31708(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+	})
+}
+
 func TestAccApiManagement_premiumV2(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_api_management", "test")
 	r := ApiManagementResource{}
@@ -1681,6 +1695,59 @@ resource "azurerm_api_management" "test" {
   resource_group_name = azurerm_resource_group.test1.name
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.Locations.Secondary, data.RandomInteger, data.Locations.Ternary, data.RandomInteger, data.RandomInteger)
+}
+
+func (ApiManagementResource) issue31708(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "test1" {
+  name     = "acctestRG-api1-%[1]d"
+  location = "%[2]s"
+}
+
+resource "azurerm_api_management" "test" {
+  resource_group_name = azurerm_resource_group.test1.name
+  location            = azurerm_resource_group.test1.location
+  name                      = "acctestAM-%[1]d"
+  publisher_name            = "pub1"
+  publisher_email           = "pub1@email.com"
+  sku_name = "StandardV2_1"
+  
+  certificate {
+    encoded_certificate = filebase64("/home/v-yyeo/terraform-provider-azurerm-0/terraform-provider-azurerm/internal/services/apimanagement/testdata/api_management_api_test.cer")
+    store_name          = "Root"
+  }
+
+  certificate {
+    encoded_certificate = filebase64("/home/v-yyeo/terraform-provider-azurerm-0/terraform-provider-azurerm/internal/services/iothub/testdata/application_gateway_test.cer")
+    store_name          = "Root"
+  }
+  
+  tags = {
+    "Acceptance" = "Test"
+  }
+}
+/*
+resource "azurerm_api_management_certificate" "test0" {
+  name                = "Root"
+  api_management_name = azurerm_api_management.test.name
+  resource_group_name = azurerm_resource_group.test1.name
+  data                = filebase64("/home/v-yyeo/terraform-provider-azurerm-0/terraform-provider-azurerm/internal/services/apimanagement/testdata/api_management_api_test.cer")
+  password            = ""
+}
+
+resource "azurerm_api_management_certificate" "test1" {
+  name                = "CertificateAuthority"
+  api_management_name = azurerm_api_management.test.name
+  resource_group_name = azurerm_resource_group.test1.name
+  data                = filebase64("/home/v-yyeo/terraform-provider-azurerm-0/terraform-provider-azurerm/internal/services/iothub/testdata/application_gateway_test.cer")
+  password            = ""
+}
+*/
+`, data.RandomInteger, data.Locations.Primary)
 }
 
 func (ApiManagementResource) completeUpdateAdditionalLocations(data acceptance.TestData) string {

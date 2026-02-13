@@ -235,17 +235,17 @@ func (m WatcherResource) Update() sdk.ResourceFunc {
 			if meta.ResourceData.HasChange("execution_frequency_in_seconds") {
 				upd.Properties.ExecutionFrequencyInSeconds = pointer.To(model.ExecutionFrequencyInSeconds)
 			}
-			/*
-				if _, err = client.Stop(ctx, *id); err != nil {
-					return fmt.Errorf("stopping %s: %v", *id, err)
+			panic("debug0")
+			if _, err = client.Stop(ctx, *id); err != nil {
+				return fmt.Errorf("stopping %s: %v", *id, err)
+			}
+			for i := 0; i < 10; i++ {
+				if _, err := client.Get(ctx, *id); err != nil {
+					return err
 				}
-				for i := 0; i < 10; i++ {
-					if _, err := client.Get(ctx, *id); err != nil {
-						return err
-					}
-					time.Sleep(10 * time.Second)
-				}
-			*/
+				time.Sleep(10 * time.Second)
+			}
+
 			if _, err = client.Update(ctx, *id, upd); err != nil {
 				return fmt.Errorf("updating %s: %v", *id, err)
 			}
