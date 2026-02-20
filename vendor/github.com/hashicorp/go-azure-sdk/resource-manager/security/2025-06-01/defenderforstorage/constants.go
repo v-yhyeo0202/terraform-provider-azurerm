@@ -12,7 +12,7 @@ import (
 type BlobScanResultsOptions string
 
 const (
-	BlobScanResultsOptionsBlobIndexTags BlobScanResultsOptions = "BlobIndexTags"
+	BlobScanResultsOptionsBlobIndexTags BlobScanResultsOptions = "blobIndexTags"
 	BlobScanResultsOptionsNone          BlobScanResultsOptions = "None"
 )
 
