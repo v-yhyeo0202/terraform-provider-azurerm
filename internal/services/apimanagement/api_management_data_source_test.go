@@ -268,6 +268,38 @@ resource "azurerm_subnet" "test1" {
   resource_group_name  = azurerm_resource_group.test1.name
   virtual_network_name = azurerm_virtual_network.test1.name
   address_prefixes     = ["10.0.1.0/24"]
+
+  delegation {
+    name = "first"
+
+    service_delegation {
+      name = "Microsoft.Web/serverFarms"
+    }
+  }
+}
+
+resource "azurerm_network_security_group" "test1" {
+  name                = "acctest-nsg1-%d"
+  location            = azurerm_resource_group.test1.location
+  resource_group_name = azurerm_resource_group.test1.name
+  /*
+  security_rule {
+    name                         = "test123"
+    priority                     = 100
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_ranges           = ["10000-40000"]
+    destination_port_ranges      = ["80", "443", "8080", "8190"]
+    source_address_prefixes      = ["10.0.0.0/8", "192.168.0.0/16"]
+    destination_address_prefixes = ["172.16.0.0/20", "8.8.8.8"]
+  }
+  */
+}
+
+resource "azurerm_subnet_network_security_group_association" "test1" {
+  subnet_id                 = azurerm_subnet.test1.id
+  network_security_group_id = azurerm_network_security_group.test1.id
 }
 
 resource "azurerm_virtual_network" "test2" {
@@ -282,6 +314,38 @@ resource "azurerm_subnet" "test2" {
   resource_group_name  = azurerm_resource_group.test2.name
   virtual_network_name = azurerm_virtual_network.test2.name
   address_prefixes     = ["10.1.1.0/24"]
+
+  delegation {
+    name = "first"
+
+    service_delegation {
+      name = "Microsoft.Web/serverFarms"
+    }
+  }
+}
+
+resource "azurerm_network_security_group" "test2" {
+  name                = "acctest-nsg2-%d"
+  location            = azurerm_resource_group.test2.location
+  resource_group_name = azurerm_resource_group.test2.name
+  /*
+  security_rule {
+    name                         = "test123"
+    priority                     = 100
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_ranges           = ["10000-40000"]
+    destination_port_ranges      = ["80", "443", "8080", "8190"]
+    source_address_prefixes      = ["10.0.0.0/8", "192.168.0.0/16"]
+    destination_address_prefixes = ["172.16.0.0/20", "8.8.8.8"]
+  }
+  */
+}
+
+resource "azurerm_subnet_network_security_group_association" "test2" {
+  subnet_id                 = azurerm_subnet.test2.id
+  network_security_group_id = azurerm_network_security_group.test2.id
 }
 
 resource "azurerm_api_management" "test" {
@@ -304,11 +368,16 @@ resource "azurerm_api_management" "test" {
   virtual_network_configuration {
     subnet_id = azurerm_subnet.test1.id
   }
+
+  depends_on = [
+    azurerm_subnet_network_security_group_association.test1,
+    azurerm_subnet_network_security_group_association.test2
+  ]
 }
 
 data "azurerm_api_management" "test" {
   name                = azurerm_api_management.test.name
   resource_group_name = azurerm_api_management.test.resource_group_name
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.Locations.Secondary, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.Locations.Secondary, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
