@@ -268,33 +268,103 @@ resource "azurerm_subnet" "test1" {
   resource_group_name  = azurerm_resource_group.test1.name
   virtual_network_name = azurerm_virtual_network.test1.name
   address_prefixes     = ["10.0.1.0/24"]
-
-  delegation {
-    name = "first"
-
-    service_delegation {
-      name = "Microsoft.Web/serverFarms"
-    }
-  }
 }
 
 resource "azurerm_network_security_group" "test1" {
   name                = "acctest-nsg1-%d"
   location            = azurerm_resource_group.test1.location
   resource_group_name = azurerm_resource_group.test1.name
-  /*
+
   security_rule {
-    name                         = "test123"
-    priority                     = 100
-    direction                    = "Inbound"
-    access                       = "Allow"
-    protocol                     = "Tcp"
-    source_port_ranges           = ["10000-40000"]
-    destination_port_ranges      = ["80", "443", "8080", "8190"]
-    source_address_prefixes      = ["10.0.0.0/8", "192.168.0.0/16"]
-    destination_address_prefixes = ["172.16.0.0/20", "8.8.8.8"]
+    name                       = "Allow-APIM-Management-Inbound-3443"
+    priority                   = 210
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3443"
+    source_address_prefix      = "ApiManagement"
+    destination_address_prefix = "VirtualNetwork"
+    description                = "Management endpoint for Azure portal and PowerShell"
   }
-  */
+
+  security_rule {
+    name                       = "Allow-AzureLoadBalancer-Inbound-6390"
+    priority                   = 220
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6390"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "VirtualNetwork"
+    description                = "Azure Infrastructure Load Balancer"
+  }
+
+  security_rule {
+    name                       = "Allow-Internet-Outbound-80"
+    priority                   = 240
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "Internet"
+    description                = "Certificate validation/management"
+  }
+
+  security_rule {
+    name                       = "Allow-Storage-Outbound-443"
+    priority                   = 250
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "Storage"
+    description                = "Azure Storage dependency (core)"
+  }
+
+  security_rule {
+    name                       = "Allow-SQL-Outbound-1433"
+    priority                   = 260
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1433"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "Sql"
+    description                = "Azure SQL dependency (core)"
+  }
+
+  security_rule {
+    name                       = "Allow-KeyVault-Outbound-443"
+    priority                   = 270
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "AzureKeyVault"
+    description                = "Azure Key Vault dependency (core)"
+  }
+
+  security_rule {
+    name                       = "Allow-AzureMonitor-Outbound-1886-443"
+    priority                   = 280
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["1886", "443"]
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "AzureMonitor"
+    description                = "Azure Monitor dependency for diagnostics/metrics/health/App Insights"
+  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "test1" {
@@ -314,33 +384,129 @@ resource "azurerm_subnet" "test2" {
   resource_group_name  = azurerm_resource_group.test2.name
   virtual_network_name = azurerm_virtual_network.test2.name
   address_prefixes     = ["10.1.1.0/24"]
-
-  delegation {
-    name = "first"
-
-    service_delegation {
-      name = "Microsoft.Web/serverFarms"
-    }
-  }
 }
 
 resource "azurerm_network_security_group" "test2" {
   name                = "acctest-nsg2-%d"
   location            = azurerm_resource_group.test2.location
   resource_group_name = azurerm_resource_group.test2.name
-  /*
+
   security_rule {
-    name                         = "test123"
-    priority                     = 100
-    direction                    = "Inbound"
-    access                       = "Allow"
-    protocol                     = "Tcp"
-    source_port_ranges           = ["10000-40000"]
-    destination_port_ranges      = ["80", "443", "8080", "8190"]
-    source_address_prefixes      = ["10.0.0.0/8", "192.168.0.0/16"]
-    destination_address_prefixes = ["172.16.0.0/20", "8.8.8.8"]
+    name                       = "Allow-APIM-Client-Inbound-80-443"
+    priority                   = 200
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["80", "443"]
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "VirtualNetwork"
+    description                = "Client communication to API Management (external mode only)"
   }
-  */
+
+  security_rule {
+    name                       = "Allow-APIM-Management-Inbound-3443"
+    priority                   = 210
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3443"
+    source_address_prefix      = "ApiManagement"
+    destination_address_prefix = "VirtualNetwork"
+    description                = "Management endpoint for Azure portal and PowerShell"
+  }
+
+  security_rule {
+    name                       = "Allow-AzureLoadBalancer-Inbound-6390"
+    priority                   = 220
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6390"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "VirtualNetwork"
+    description                = "Azure Infrastructure Load Balancer"
+  }
+
+  security_rule {
+    name                       = "Allow-AzureTrafficManager-Inbound-443"
+    priority                   = 230
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "AzureTrafficManager"
+    destination_address_prefix = "VirtualNetwork"
+    description                = "Azure Traffic Manager routing for multi-region deployment (external mode only)"
+  }
+
+  security_rule {
+    name                       = "Allow-Internet-Outbound-80"
+    priority                   = 240
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "Internet"
+    description                = "Validation and management of Microsoft-managed and customer-managed certificates"
+  }
+
+  security_rule {
+    name                       = "Allow-Storage-Outbound-443"
+    priority                   = 250
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "Storage"
+    description                = "Dependency on Azure Storage for core service functionality"
+  }
+
+  security_rule {
+    name                       = "Allow-SQL-Outbound-1433"
+    priority                   = 260
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1433"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "Sql"
+    description                = "Access to Azure SQL endpoints for core service functionality"
+  }
+
+  security_rule {
+    name                       = "Allow-KeyVault-Outbound-443"
+    priority                   = 270
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "AzureKeyVault"
+    description                = "Access to Azure Key Vault for core service functionality"
+  }
+
+  security_rule {
+    name                       = "Allow-AzureMonitor-Outbound-1886-443"
+    priority                   = 280
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["1886", "443"]
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "AzureMonitor"
+    description                = "Publish diagnostics logs and metrics, Resource Health, and Application Insights"
+  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "test2" {
