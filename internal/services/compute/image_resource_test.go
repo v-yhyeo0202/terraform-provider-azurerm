@@ -294,6 +294,7 @@ func (ImageResource) generalizeVirtualMachine(data acceptance.TestData) func(con
 				ssh.LinuxAgentDeprovisionCommand,
 			},
 		}
+		time.Sleep(30 * time.Minute)
 		if err := sshGeneralizationCommand.Run(ctx); err != nil {
 			return fmt.Errorf("Bad: running generalization command: %+v", err)
 		}
@@ -470,7 +471,7 @@ resource "azurerm_virtual_machine" "testsource" {
   location              = azurerm_resource_group.test.location
   resource_group_name   = azurerm_resource_group.test.name
   network_interface_ids = [azurerm_network_interface.testsource.id]
-  vm_size               = "Standard_D1_v2"
+  vm_size               = "Standard_D2s_v3"
 
   delete_os_disk_on_termination = true
 
@@ -953,7 +954,7 @@ resource "azurerm_public_ip" "test" {
   resource_group_name = azurerm_resource_group.test.name
   allocation_method   = "Static"
   domain_name_label   = local.domain_name_label
-  sku                 = "Basic"
+  sku                 = "Standard"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomString, data.RandomString, data.RandomInteger, data.RandomInteger)
 }

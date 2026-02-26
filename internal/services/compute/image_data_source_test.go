@@ -89,8 +89,8 @@ resource "azurerm_public_ip" "test" {
   name                = "acctestpip%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  allocation_method   = "Dynamic"
-  sku                 = "Basic"
+  allocation_method   = "Static"
+  sku                 = "Standard"
   domain_name_label   = "acctestpip%d"
 }
 
@@ -131,7 +131,7 @@ resource "azurerm_virtual_machine" "testsource" {
   location              = azurerm_resource_group.test.location
   resource_group_name   = azurerm_resource_group.test.name
   network_interface_ids = [azurerm_network_interface.testsource.id]
-  vm_size               = "Standard_D1_v2"
+  vm_size               = "Standard_D2s_v3"
 
   storage_image_reference {
     publisher = "Canonical"
@@ -175,6 +175,7 @@ resource "azurerm_image" "test" {
     blob_uri = azurerm_virtual_machine.testsource.storage_os_disk[0].vhd_uri
     size_gb  = 30
     caching  = "None"
+    storage_type = "StandardSSD_LRS"
   }
 
   tags = {
@@ -309,6 +310,7 @@ resource "azurerm_image" "abc" {
     blob_uri = azurerm_virtual_machine.testsource.storage_os_disk[0].vhd_uri
     size_gb  = 30
     caching  = "None"
+    storage_type = "StandardSSD_LRS"
   }
 
   tags = {
@@ -328,6 +330,7 @@ resource "azurerm_image" "def" {
     blob_uri = azurerm_virtual_machine.testsource.storage_os_disk[0].vhd_uri
     size_gb  = 30
     caching  = "None"
+    storage_type = "StandardSSD_LRS"
   }
 
   tags = {

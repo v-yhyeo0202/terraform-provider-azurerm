@@ -802,7 +802,17 @@ resource "azurerm_linux_virtual_machine_scale_set" "test" {
   admin_password                  = "P@ssword1234!"
   disable_password_authentication = false
   upgrade_mode                    = "Automatic"
-
+  automatic_os_upgrade_policy {
+    disable_automatic_rollback  = false
+    enable_automatic_os_upgrade = false
+  }
+  rolling_upgrade_policy {
+    max_batch_instance_percent              = 22
+    max_unhealthy_instance_percent          = 23
+    max_unhealthy_upgraded_instance_percent = 24
+    pause_time_between_batches              = "PT30S"
+    prioritize_unhealthy_instances_enabled = true
+  }
   source_image_reference {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"

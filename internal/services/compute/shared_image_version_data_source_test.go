@@ -66,7 +66,7 @@ func TestAccDataSourceSharedImageVersion_excludeFromLatest(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azurerm_shared_image_version", "test")
 	r := SharedImageVersionDataSource{}
 
-	expectedVersion := "0.0.1"
+	expectedVersion := "0.0.2"
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
@@ -184,7 +184,7 @@ func (SharedImageVersionDataSource) excludeFromLatest(data acceptance.TestData) 
 	return fmt.Sprintf(`
 %s
 
-resource "azurerm_shared_image_version" "test2" {
+resource "azurerm_shared_image_version" "test" {
   name                = "0.0.2"
   gallery_name        = azurerm_shared_image_gallery.test.name
   image_name          = azurerm_shared_image.test.name
@@ -201,11 +201,11 @@ resource "azurerm_shared_image_version" "test2" {
 
 data "azurerm_shared_image_version" "test" {
   name                = "latest"
-  gallery_name        = azurerm_shared_image_version.test2.gallery_name
-  image_name          = azurerm_shared_image_version.test2.image_name
-  resource_group_name = azurerm_shared_image_version.test2.resource_group_name
+  gallery_name        = azurerm_shared_image_version.test.gallery_name
+  image_name          = azurerm_shared_image_version.test.image_name
+  resource_group_name = azurerm_shared_image_version.test.resource_group_name
 }
-`, SharedImageVersionResource{}.imageVersion(data))
+`, SharedImageVersionResource{}.provision(data))
 }
 
 func (SharedImageVersionDataSource) recent(data acceptance.TestData) string {
