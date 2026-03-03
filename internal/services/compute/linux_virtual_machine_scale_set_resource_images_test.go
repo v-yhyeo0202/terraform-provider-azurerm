@@ -170,7 +170,7 @@ func TestAccLinuxVirtualMachineScaleSet_imagesRollingUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_linux_virtual_machine_scale_set", "test")
 	r := LinuxVirtualMachineScaleSetResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.imagesRollingUpdate(data, "0001-com-ubuntu-server-focal", "20_04-lts"),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -180,6 +180,11 @@ func TestAccLinuxVirtualMachineScaleSet_imagesRollingUpdate(t *testing.T) {
 		data.ImportStep("admin_password"),
 		{
 			Config: r.imagesRollingUpdate(data, "0001-com-ubuntu-server-jammy", "22_04-lts"),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
+				},
+			},
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -472,7 +477,7 @@ resource "azurerm_image" "first" {
     blob_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/osdisk.vhd"
     size_gb  = 30
     caching  = "None"
-    storage_account_type = "Standard_LRS"
+    storage_type = "Standard_LRS"
   }
 }
 
@@ -487,7 +492,7 @@ resource "azurerm_image" "second" {
     blob_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/osdisk.vhd"
     size_gb  = 30
     caching  = "None"
-    storage_account_type = "Standard_LRS"
+    storage_type = "Standard_LRS"
   }
 
   depends_on = ["azurerm_image.first"]
