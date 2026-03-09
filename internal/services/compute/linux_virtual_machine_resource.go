@@ -1005,7 +1005,7 @@ func resourceLinuxVirtualMachineRead(d *pluginsdk.ResourceData, meta interface{}
 				platformFaultDomain = int(*props.PlatformFaultDomain)
 			}
 			d.Set("platform_fault_domain", platformFaultDomain)
-
+			d.Set("bypass_platform_safety_checks_on_user_schedule_enabled", false)
 			if profile := props.OsProfile; profile != nil {
 				d.Set("admin_username", profile.AdminUsername)
 				d.Set("allow_extension_operations", profile.AllowExtensionOperations)

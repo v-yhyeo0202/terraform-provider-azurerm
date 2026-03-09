@@ -1298,7 +1298,7 @@ resource "azurerm_linux_virtual_machine" "test" {
   name                = "acctestVM-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  size                = "Standard_F2"
+  size                = "Standard_D2s_v3"
   admin_username      = "adminuser"
   network_interface_ids = [
     azurerm_network_interface.test.id,
@@ -1344,7 +1344,7 @@ resource "azurerm_linux_virtual_machine" "test" {
   name                = "acctestVMimport-%[2]d" // Changing the name to trigger ForceNew and use the existing Managed OSDisk import path
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  size                = "Standard_F2"
+  size                = "Standard_D2s_v3"
 
   network_interface_ids = [
     azurerm_network_interface.test.id,
@@ -1415,7 +1415,7 @@ resource "azurerm_linux_virtual_machine" "test" {
   name                = "acctestVMimport-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  size                = "Standard_F2"
+  size                = "Standard_D2s_v3"
 
   network_interface_ids = [
     azurerm_network_interface.test.id,
