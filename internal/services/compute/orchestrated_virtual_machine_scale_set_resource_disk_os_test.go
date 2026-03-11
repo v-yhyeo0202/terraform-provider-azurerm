@@ -133,7 +133,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
 
-  sku_name  = "Standard_D2s_v3"
+  sku_name  = "Standard_D4s_v3"
   instances = 1
 
   platform_fault_domain_count = 2
