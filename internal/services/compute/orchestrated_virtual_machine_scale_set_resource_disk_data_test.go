@@ -775,9 +775,9 @@ resource "azurerm_lb_backend_address_pool" "test" {
 }
 
 resource "azurerm_marketplace_agreement" "barracuda" {
-  publisher = "micro-focus"
-  offer     = "arcsight-logger"
-  plan      = "arcsight_logger_72_byol"
+  publisher = "canonical"
+  offer     = "ubuntu-24_04-lts"
+  plan      = "ubuntu-pro"
 }
 
 resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
@@ -785,7 +785,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
 
-  sku_name  = "Standard_F2"
+  sku_name  = "Standard_D2s_v3"
   instances = 1
 
   platform_fault_domain_count = 2
@@ -827,16 +827,16 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
   }
 
   source_image_reference {
-    publisher = "micro-focus"
-    offer     = "arcsight-logger"
-    sku       = "arcsight_logger_72_byol"
-    version   = "7.2.0"
+    publisher = "canonical"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "ubuntu-pro"
+    version   = "latest"
   }
 
   plan {
-    name      = "arcsight_logger_72_byol"
-    product   = "arcsight-logger"
-    publisher = "micro-focus"
+    name      = "ubuntu-pro"
+    product   = "ubuntu-24_04-lts"
+    publisher = "canonical"
   }
 }
 `, data.RandomInteger, data.Locations.Primary)
