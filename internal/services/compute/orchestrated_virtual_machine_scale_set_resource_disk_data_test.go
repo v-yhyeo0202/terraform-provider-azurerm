@@ -775,9 +775,9 @@ resource "azurerm_lb_backend_address_pool" "test" {
 }
 
 resource "azurerm_marketplace_agreement" "barracuda" {
-  publisher = "canonical"
-  offer     = "ubuntu-24_04-lts"
-  plan      = "ubuntu-pro"
+  publisher = "paloaltonetworks"
+  offer     = "panorama"
+  plan      = "byol"
 }
 
 resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
@@ -818,25 +818,25 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
   }
-
+  /*
   data_disk {
     caching              = "ReadWrite"
     disk_size_gb         = 900
     create_option        = "FromImage"
     storage_account_type = "Standard_LRS"
   }
-
+  */
   source_image_reference {
-    publisher = "canonical"
-    offer     = "ubuntu-24_04-lts"
-    sku       = "ubuntu-pro"
+    publisher = "paloaltonetworks"
+    offer     = "panorama"
+    sku       = "byol"
     version   = "latest"
   }
 
   plan {
-    name      = "ubuntu-pro"
-    product   = "ubuntu-24_04-lts"
-    publisher = "canonical"
+    name      = "byol"
+    product   = "panorama"
+    publisher = "paloaltonetworks"
   }
 }
 `, data.RandomInteger, data.Locations.Primary)
