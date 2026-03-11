@@ -357,7 +357,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
 
-  sku_name = "Standard_D1_v2"
+  sku_name = "Standard_D2s_v3"
 
   # Orchestrated VMSS allocation will timeout at service side due to extension, set instances to 0 to avoid the timeout
   instances = 0
@@ -375,7 +375,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
   }
 
   network_interface {
-    name    = "TestNetworkProfile"
+    name    = "TestNetworkProfile-%[1]d"
     primary = true
 
     ip_configuration {

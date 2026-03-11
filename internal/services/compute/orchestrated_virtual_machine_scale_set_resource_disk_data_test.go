@@ -780,6 +780,11 @@ resource "azurerm_marketplace_agreement" "barracuda" {
   plan      = "byol"
 }
 
+import {
+  to = azurerm_marketplace_agreement.barracuda
+  id = "/subscriptions/%[3]s/providers/Microsoft.MarketplaceOrdering/agreements/paloaltonetworks/offers/panorama/plans/byol"
+}
+
 resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
   name                = "acctestOVMSS-%[1]d"
   resource_group_name = azurerm_resource_group.test.name
@@ -818,14 +823,14 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
   }
-  /*
+  
   data_disk {
     caching              = "ReadWrite"
     disk_size_gb         = 900
-    create_option        = "FromImage"
+    # create_option        = "FromImage"
     storage_account_type = "Standard_LRS"
   }
-  */
+  
   source_image_reference {
     publisher = "paloaltonetworks"
     offer     = "panorama"
@@ -839,5 +844,5 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
     publisher = "paloaltonetworks"
   }
 }
-`, data.RandomInteger, data.Locations.Primary)
+`, data.RandomInteger, data.Locations.Primary, data.Subscriptions.Primary)
 }

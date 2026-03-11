@@ -707,7 +707,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
 
   zones = []
 
-  sku_name  = "Standard_D1_v2"
+  sku_name  = "Standard_D2s_v3"
   instances = 2
 
   platform_fault_domain_count = 2
