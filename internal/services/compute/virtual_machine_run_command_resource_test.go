@@ -64,6 +64,7 @@ func TestAccVirtualMachineRunCommand_recreate(t *testing.T) {
 		{
 			Config:      r.basicWithScriptError(data),
 			ExpectError: regexp.MustCompile("running the command"),
+			Destroy:     false,
 		},
 		{
 			Config: r.basic(data),
