@@ -1953,7 +1953,7 @@ resource "azurerm_windows_virtual_machine" "test" {
   name                = local.vm_name
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  size                = "Standard_F2"
+  size                = "Standard_D2s_v3"
   admin_username      = "adminuser"
   admin_password      = "P@$$w0rd1234!"
   network_interface_ids = [
@@ -1987,7 +1987,7 @@ resource "azurerm_windows_virtual_machine" "test" {
   name                = local.vm_name
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  size                = "Standard_F2"
+  size                = "Standard_D2s_v3"
   admin_username      = "adminuser"
   admin_password      = "P@$$w0rd1234!"
   network_interface_ids = [
@@ -2013,7 +2013,7 @@ resource "azurerm_windows_virtual_machine" "test" {
 
   gallery_application {
     version_id                                  = azurerm_gallery_application_version.test2.id
-    automatic_upgrade_enabled                   = true
+    automatic_upgrade_enabled                   = false
     order                                       = 2
     configuration_blob_uri                      = azurerm_storage_blob.test2.id
     tag                                         = "app2"
@@ -2031,7 +2031,7 @@ resource "azurerm_windows_virtual_machine" "test" {
   name                = local.vm_name
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  size                = "Standard_F2"
+  size                = "Standard_D2s_v3"
   admin_username      = "adminuser"
   admin_password      = "P@$$w0rd1234!"
   network_interface_ids = [

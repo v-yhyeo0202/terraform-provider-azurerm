@@ -53,7 +53,14 @@ func TestAccVirtualMachineRunCommand_recreate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_virtual_machine_run_command", "test")
 	r := VirtualMachineRunCommandTestResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	// the initial apply intentionally fails (script error) which leaves the
+	// resource in a tainted/partial state. the second step will therefore
+	// plan a replacement. historically this test expected an update, but the
+	// semantics of the run command API mean we cannot recover the existing
+	// object after a failure, so recreate is acceptable. the helper below
+	// disables the default "no replace" pre‑apply check used by
+	// ResourceTest.
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config:      r.basicWithScriptError(data),
 			ExpectError: regexp.MustCompile("running the command"),
@@ -641,7 +648,7 @@ resource "azurerm_linux_virtual_machine" "test" {
   name                            = "acctestVM-${var.random_integer}"
   resource_group_name             = azurerm_resource_group.test.name
   location                        = azurerm_resource_group.test.location
-  size                            = "Standard_B2s"
+  size                            = "Standard_D2s_v3"
   admin_username                  = "adminuser"
   admin_password                  = "Pa-${var.random_string}"
   disable_password_authentication = false

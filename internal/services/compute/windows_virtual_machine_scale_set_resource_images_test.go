@@ -375,8 +375,8 @@ resource "azurerm_public_ip" "source" {
   name                = "source-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
-  allocation_method   = "Dynamic"
-  sku                 = "Basic"
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 resource "azurerm_network_interface" "source" {
@@ -418,7 +418,7 @@ resource "azurerm_virtual_machine" "source" {
   location              = azurerm_resource_group.test.location
   resource_group_name   = azurerm_resource_group.test.name
   network_interface_ids = [azurerm_network_interface.source.id]
-  vm_size               = "Standard_F2"
+  vm_size               = "Standard_D2s_v3"
 
   storage_image_reference {
     publisher = "MicrosoftWindowsServer"
@@ -463,6 +463,7 @@ resource "azurerm_image" "first" {
     blob_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/osdisk.vhd"
     size_gb  = 128
     caching  = "None"
+    storage_type = "Standard_LRS"
   }
 }
 
@@ -477,6 +478,7 @@ resource "azurerm_image" "second" {
     blob_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/osdisk.vhd"
     size_gb  = 128
     caching  = "None"
+    storage_type = "Standard_LRS"
   }
 
   depends_on = ["azurerm_image.first"]
@@ -492,7 +494,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "test" {
   name                = local.vm_name
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2"
+  sku                 = "Standard_D2s_v3"
   instances           = 1
   admin_username      = "mradministrator"
   admin_password      = "P@ssword1234!"
