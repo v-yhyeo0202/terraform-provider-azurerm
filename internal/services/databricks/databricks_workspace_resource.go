@@ -357,7 +357,7 @@ func resourceDatabricksWorkspace() *pluginsdk.Resource {
 							Optional: true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
-								ValidateFunc: validation.StringInSlice(validate.PossibleValuesForComplianceStandard(), false),
+								ValidateFunc: validation.StringInSlice(validate.PossibleValuesForHybridComputeModeComplianceStandard(), false),
 							},
 						},
 						"enhanced_security_monitoring_enabled": {
