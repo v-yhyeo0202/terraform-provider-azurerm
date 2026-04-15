@@ -126,18 +126,21 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 		"created_by": {
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
+			ForceNew:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"description": {
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
+			ForceNew:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"display_name": {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
+			ForceNew:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
@@ -146,6 +149,7 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 			Optional: true,
 			// NOTE: O+C API sets this if omitted without issues for overwriting/reverting to default so this can remain
 			Computed:         true,
+			ForceNew:         true,
 			ValidateFunc:     validation.StringIsJSON,
 			DiffSuppressFunc: pluginsdk.SuppressJsonDiff,
 		},
@@ -153,11 +157,13 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 		"external_reference": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
+			// ForceNew: true,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"description": {
 						Type:         pluginsdk.TypeString,
 						Optional:     true,
+						ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
@@ -169,20 +175,24 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 					"hashes": {
 						Type:     pluginsdk.TypeMap,
 						Optional: true,
+						ForceNew: true,
 						Elem: &pluginsdk.Schema{
-							Type: pluginsdk.TypeString,
+							Type:     pluginsdk.TypeString,
+							ForceNew: true,
 						},
 					},
 
 					"source_name": {
 						Type:         pluginsdk.TypeString,
 						Optional:     true,
+						ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"url": {
 						Type:         pluginsdk.TypeString,
 						Optional:     true,
+						ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 				},
@@ -192,25 +202,30 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 		"granular_marking": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
+			// ForceNew: true,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"language": {
 						Type:         pluginsdk.TypeString,
 						Optional:     true,
+						ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"marking_ref": {
 						Type:         pluginsdk.TypeString,
 						Optional:     true,
+						ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"selectors": {
 						Type:     pluginsdk.TypeList,
 						Optional: true,
+						ForceNew: true,
 						Elem: &pluginsdk.Schema{
-							Type: pluginsdk.TypeString,
+							Type:     pluginsdk.TypeString,
+							ForceNew: true,
 						},
 					},
 				},
@@ -220,11 +235,13 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 		"kill_chain_phase": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
+			// ForceNew: true,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"name": {
 						Type:         pluginsdk.TypeString,
 						Optional:     true,
+						ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 				},
@@ -242,26 +259,31 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 		"language": {
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
+			ForceNew:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"object_marking_refs": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
+			ForceNew: true,
 			Elem: &pluginsdk.Schema{
 				Type: pluginsdk.TypeString,
+				// ForceNew: true,
 			},
 		},
 
 		"pattern": {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
+			ForceNew:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"pattern_type": {
 			Type:     pluginsdk.TypeString,
 			Required: true,
+			ForceNew: true,
 			ValidateFunc: validation.StringInSlice([]string{
 				string(PatternTypeDomainName),
 				string(PatternTypeFile),
@@ -274,12 +296,14 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 		"pattern_version": {
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
+			ForceNew:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"revoked": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
+			ForceNew: true,
 			Default:  false,
 		},
 
@@ -301,6 +325,7 @@ func (r ThreatIntelligenceIndicator) Arguments() map[string]*pluginsdk.Schema {
 		"validate_from_utc": {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
+			ForceNew:     true,
 			ValidateFunc: validation.IsRFC3339Time,
 		},
 

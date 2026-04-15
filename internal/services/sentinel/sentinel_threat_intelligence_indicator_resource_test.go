@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -109,7 +107,7 @@ func TestAccSecurityInsightsIndicator_complete(t *testing.T) {
 func TestAccSecurityInsightsIndicator_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_sentinel_threat_intelligence_indicator", "test")
 	r := SecurityInsightsIndicatorResource{}
-	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data, "domain-name", "http://example.com"),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -119,11 +117,6 @@ func TestAccSecurityInsightsIndicator_update(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.update(data, "domain-name", "http://example.com"),
-			ConfigPlanChecks: resource.ConfigPlanChecks{
-				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(data.ResourceName, plancheck.ResourceActionReplace),
-				},
-			},
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -222,19 +215,30 @@ resource "azurerm_sentinel_threat_intelligence_indicator" "test" {
   created_by      = "testcraeted@microsoft.com"
   description     = "test indicator"
   display_name    = "test"
+  extensions = jsonencode({
+    sentinel-ext = {
+	  severity = "low"
+	}
+  })
   language        = "en"
   pattern_version = 1
   revoked         = true
   tags            = ["test-tags"]
+  threat_types    = ["compromised"]
+
   kill_chain_phase {
     name = "testtest"
   }
   external_reference {
     description = "test-external"
+	hashes = ["MD5:78ecc5c05cd8baaaa480df2f8fba0b9d"]
     source_name = "test-sourcename"
+	url = "http://test.com"
   }
   granular_marking {
     language = "en"
+	marking_ref = "42"
+	selectors = ["test"]
   }
   source            = "test Sentinel"
   validate_from_utc = "2022-12-14T16:00:00Z"
@@ -270,7 +274,7 @@ resource "azurerm_sentinel_threat_intelligence_indicator" "test" {
   granular_marking {
     language = "en"
   }
-  source            = "updated Sentinel"
+  source            = "test Sentinel"
   validate_from_utc = "2022-12-15T16:00:00Z"
 
   depends_on = [azurerm_sentinel_log_analytics_workspace_onboarding.test]
