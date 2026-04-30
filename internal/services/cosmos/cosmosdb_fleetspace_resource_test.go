@@ -127,7 +127,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   resource_group_name = azurerm_resource_group.test.name
   fleet_name          = azurerm_cosmosdb_fleet.test.name
   service_tier        = "GeneralPurpose"
-  data_regions        = [
+  data_regions = [
     azurerm_resource_group.test.location
   ]
 }
@@ -143,7 +143,7 @@ resource "azurerm_cosmosdb_fleetspace" "import" {
   resource_group_name = azurerm_cosmosdb_fleetspace.test.resource_group_name
   fleet_name          = azurerm_cosmosdb_fleetspace.test.fleet_name
   service_tier        = azurerm_cosmosdb_fleetspace.test.service_tier
-  data_regions         = azurerm_cosmosdb_fleetspace.test.data_regions
+  data_regions        = azurerm_cosmosdb_fleetspace.test.data_regions
 }
 `, r.basic(data))
 }
@@ -165,10 +165,10 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   service_tier        = "BusinessCritical"
   min_throughput      = 100000
   max_throughput      = 110000
-  data_regions         = [
+  data_regions = [
     azurerm_resource_group.test.location,
-	"%[3]s",
-	"%[4]s"
+    "%[3]s",
+    "%[4]s"
   ]
 }
 `, r.template(data), data.RandomInteger, data.Locations.Secondary, data.Locations.Ternary)
@@ -191,10 +191,10 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   service_tier        = "BusinessCritical"
   min_throughput      = 110000
   max_throughput      = 120000
-  data_regions         = [
+  data_regions = [
     azurerm_resource_group.test.location,
-	"%[3]s",
-	"%[4]s"
+    "%[3]s",
+    "%[4]s"
   ]
 }
 `, r.template(data), data.RandomInteger, data.Locations.Secondary, data.Locations.Ternary)

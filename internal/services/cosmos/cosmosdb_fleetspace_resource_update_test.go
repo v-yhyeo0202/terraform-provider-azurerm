@@ -121,7 +121,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   data_region         = ["%s"]
   service_tier        = "GeneralPurpose"
   min_throughput      = %d
-  max_throughput = 101000
+  max_throughput      = 101000
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.Locations.Primary, minThroughput)
 }
@@ -149,7 +149,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   resource_group_name = azurerm_resource_group.test.name
   data_region         = ["%s"]
   service_tier        = "GeneralPurpose"
-  min_throughput = 100000
+  min_throughput      = 100000
   max_throughput      = %d
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.Locations.Primary, maxThroughput)

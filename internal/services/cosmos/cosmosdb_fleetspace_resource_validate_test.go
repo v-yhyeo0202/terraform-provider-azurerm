@@ -101,7 +101,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   name                = "%s"
   fleet_name          = azurerm_cosmosdb_fleet.test.name
   resource_group_name = azurerm_resource_group.test.name
-  data_regions         = ["%s"]
+  data_regions        = ["%s"]
   service_tier        = "GeneralPurpose"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, name, data.Locations.Primary)
@@ -122,7 +122,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   name                = "acctest-cosfs-%d"
   fleet_name          = "%s"
   resource_group_name = azurerm_resource_group.test.name
-  data_regions         = ["%s"]
+  data_regions        = ["%s"]
   service_tier        = "GeneralPurpose"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, fleetName, data.Locations.Primary)
@@ -138,7 +138,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   name                = "acctest-cosfs-%d"
   fleet_name          = "acctest-cosfleet-%d"
   resource_group_name = "%s"
-  data_regions         = ["%s"]
+  data_regions        = ["%s"]
   service_tier        = "GeneralPurpose"
 }
 `, data.RandomInteger, data.RandomInteger, resourceGroupName, data.Locations.Primary)
@@ -165,7 +165,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   name                = "acctest-cosfs-%d"
   fleet_name          = azurerm_cosmosdb_fleet.test.name
   resource_group_name = azurerm_resource_group.test.name
-  data_regions         = %s
+  data_regions        = %s
   service_tier        = "GeneralPurpose"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, dataRegion)
@@ -192,7 +192,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   name                = "acctest-cosfs-%d"
   fleet_name          = azurerm_cosmosdb_fleet.test.name
   resource_group_name = azurerm_resource_group.test.name
-  data_regions         = [
+  data_regions = [
     "australiacentral",
     "australiacentral2",
     "australiaeast",
@@ -269,7 +269,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
     "southwestus",
     "westcentralusfre"
   ]
-  service_tier        = "GeneralPurpose"
+  service_tier = "GeneralPurpose"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger)
 }
@@ -295,7 +295,7 @@ resource "azurerm_cosmosdb_fleetspace" "test" {
   name                = "acctest-cosfs-%d"
   fleet_name          = azurerm_cosmosdb_fleet.test.name
   resource_group_name = azurerm_resource_group.test.name
-  data_regions         = ["%s"]
+  data_regions        = ["%s"]
   service_tier        = "%s"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.Locations.Primary, serviceTier)
