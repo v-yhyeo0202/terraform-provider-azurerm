@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
+	azurefleets "github.com/hashicorp/go-azure-sdk/resource-manager/azurefleet/2024-11-01/fleets"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2021-07-01/skus"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2022-03-01/capacityreservationgroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2022-03-01/capacityreservations"
@@ -47,6 +48,7 @@ import (
 type Client struct {
 	// TODO: move the Compute client to using Meta Clients where possible
 	// TODO: @tombuildsstuff: investigate _if_ that's possible given Compute uses a myriad of API Versions
+	FleetsClient                                *azurefleets.FleetsClient
 	AvailabilitySetsClient                      *availabilitysets.AvailabilitySetsClient
 	CapacityReservationsClient                  *capacityreservations.CapacityReservationsClient
 	CapacityReservationGroupsClient             *capacityreservationgroups.CapacityReservationGroupsClient
@@ -81,6 +83,12 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) (*Client, error) {
+	fleetsClient, err := azurefleets.NewFleetsClientWithBaseURI(o.Environment.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building Fleets client: %+v", err)
+	}
+	o.Configure(fleetsClient.Client, o.Authorizers.ResourceManager)
+
 	availabilitySetsClient, err := availabilitysets.NewAvailabilitySetsClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
 		return nil, fmt.Errorf("building AvailabilitySets client: %+v", err)
@@ -268,6 +276,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	o.Configure(vmImageClient.Client, o.Authorizers.ResourceManager)
 
 	return &Client{
+		FleetsClient:                                fleetsClient,
 		AvailabilitySetsClient:                      availabilitySetsClient,
 		CapacityReservationsClient:                  capacityReservationsClient,
 		CapacityReservationGroupsClient:             capacityReservationGroupsClient,
