@@ -79,17 +79,19 @@ resource "azurerm_compute_fleet" "test" {
   location            = azurerm_resource_group.test.location
 
   vm_sizes_profile {
-    name = "Standard_D2s_v3"
+    name = "Standard_F1als_v7"
   }
 
   create_option = "FromImage"
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"

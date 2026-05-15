@@ -34,10 +34,7 @@ type ComputeFleetResourceModel struct {
 	VmSizesProfile                 []ComputeFleetVmSizeProfile      `tfschema:"vm_sizes_profile"`
 	CreateOption                   string                           `tfschema:"create_option"`
 	OsType                         string                           `tfschema:"os_type"`
-	Publisher                      string                           `tfschema:"publisher"`
-	Offer                          string                           `tfschema:"offer"`
-	Sku                            string                           `tfschema:"sku"`
-	Version                        string                           `tfschema:"version"`
+	ImageReference                 []ComputeFleetImageReference     `tfschema:"image_reference"`
 	AdminUsername                  string                           `tfschema:"admin_username"`
 	AdminPassword                  string                           `tfschema:"admin_password"`
 	ComputerNamePrefix             string                           `tfschema:"computer_name_prefix"`
@@ -114,6 +111,13 @@ type ComputeFleetResourceModel struct {
 	ImageReferenceId        string `tfschema:"image_reference_id"`
 	SharedGalleryImageId    string `tfschema:"shared_gallery_image_id"`
 	CommunityGalleryImageId string `tfschema:"community_gallery_image_id"`
+}
+
+type ComputeFleetImageReference struct {
+	Publisher string `tfschema:"publisher"`
+	Offer     string `tfschema:"offer"`
+	Sku       string `tfschema:"sku"`
+	Version   string `tfschema:"version"`
 }
 
 type ComputeFleetPlan struct {
@@ -209,9 +213,13 @@ type ComputeFleetWinRMListener struct {
 }
 
 type ComputeFleetSecret struct {
-	SourceVaultId string `tfschema:"source_vault_id"`
-	// vault_certificates (1 child) flattened per rule 9 → TypeList<string>
-	CertificateUrl []string `tfschema:"certificate_url"`
+	SourceVaultId     string                         `tfschema:"source_vault_id"`
+	VaultCertificates []ComputeFleetVaultCertificate `tfschema:"vault_certificates"`
+}
+
+type ComputeFleetVaultCertificate struct {
+	CertificateUrl   string `tfschema:"certificate_url"`
+	CertificateStore string `tfschema:"certificate_store"`
 }
 
 type ComputeFleetDataDisk struct {
@@ -280,28 +288,41 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			ForceNew: true,
 		},
 
-		"publisher": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
+		"image_reference": {
+			Type:     pluginsdk.TypeList,
+			Optional: true,
 			ForceNew: true,
-		},
-
-		"offer": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-
-		"sku": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-
-		"version": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
-			ForceNew: true,
+			MaxItems: 1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"publisher": {
+						Type:     pluginsdk.TypeString,
+						Required: true,
+						ForceNew: true,
+					},
+					"offer": {
+						Type:     pluginsdk.TypeString,
+						Required: true,
+						ForceNew: true,
+					},
+					"sku": {
+						Type:     pluginsdk.TypeString,
+						Required: true,
+						ForceNew: true,
+					},
+					"version": {
+						Type:     pluginsdk.TypeString,
+						Required: true,
+						ForceNew: true,
+					},
+				},
+			},
+			ExactlyOneOf: []string{
+				"image_reference",
+				"image_reference_id",
+				"shared_gallery_image_id",
+				"community_gallery_image_id",
+			},
 		},
 
 		"admin_username": {
@@ -487,7 +508,7 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 				Schema: map[string]*pluginsdk.Schema{
 					"package_reference_id": {
 						Type:     pluginsdk.TypeString,
-						Optional: true,
+						Required: true,
 						ForceNew: true,
 					},
 					"enable_automatic_upgrade": {
@@ -528,7 +549,7 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 				Schema: map[string]*pluginsdk.Schema{
 					"name": {
 						Type:     pluginsdk.TypeString,
-						Optional: true,
+						Required: true,
 						ForceNew: true,
 					},
 					"publisher": {
@@ -755,13 +776,23 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 						Optional: true,
 						ForceNew: true,
 					},
-					// vault_certificates (1 child certificate_url) flattened per rule 9 → TypeList<string>
-					"certificate_url": {
+					"vault_certificates": {
 						Type:     pluginsdk.TypeList,
 						Optional: true,
 						ForceNew: true,
-						Elem: &pluginsdk.Schema{
-							Type: pluginsdk.TypeString,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"certificate_url": {
+									Type:     pluginsdk.TypeString,
+									Required: true,
+									ForceNew: true,
+								},
+								"certificate_store": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+									ForceNew: true,
+								},
+							},
 						},
 					},
 				},
@@ -1104,18 +1135,36 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			Type:     pluginsdk.TypeString,
 			Optional: true,
 			ForceNew: true,
+			ExactlyOneOf: []string{
+				"image_reference",
+				"image_reference_id",
+				"shared_gallery_image_id",
+				"community_gallery_image_id",
+			},
 		},
 
 		"shared_gallery_image_id": {
 			Type:     pluginsdk.TypeString,
 			Optional: true,
 			ForceNew: true,
+			ExactlyOneOf: []string{
+				"image_reference",
+				"image_reference_id",
+				"shared_gallery_image_id",
+				"community_gallery_image_id",
+			},
 		},
 
 		"community_gallery_image_id": {
 			Type:     pluginsdk.TypeString,
 			Optional: true,
 			ForceNew: true,
+			ExactlyOneOf: []string{
+				"image_reference",
+				"image_reference_id",
+				"shared_gallery_image_id",
+				"community_gallery_image_id",
+			},
 		},
 	}
 }
@@ -1153,7 +1202,7 @@ func (r ComputeFleetResource) Create() sdk.ResourceFunc {
 				Tags:     tags.Expand(config.Tags),
 				Properties: &fleets.FleetProperties{
 					VMSizesProfile: expandComputeFleetVmSizesProfile(config.VmSizesProfile, metadata),
-					ComputeProfile: expandComputeFleetComputeProfile(config),
+					ComputeProfile: expandComputeFleetComputeProfile(config, metadata),
 				},
 			}
 
@@ -1168,11 +1217,11 @@ func (r ComputeFleetResource) Create() sdk.ResourceFunc {
 			}
 			parameters.Identity = expandedIdentity
 
-			if rpp := expandComputeFleetRegularPriorityProfile(config); rpp != nil {
+			if rpp := expandComputeFleetRegularPriorityProfile(config, metadata); rpp != nil {
 				parameters.Properties.RegularPriorityProfile = rpp
 			}
 
-			if spp := expandComputeFleetSpotPriorityProfile(config); spp != nil {
+			if spp := expandComputeFleetSpotPriorityProfile(config, metadata); spp != nil {
 				parameters.Properties.SpotPriorityProfile = spp
 			}
 
@@ -1235,17 +1284,21 @@ func (r ComputeFleetResource) Read() sdk.ResourceFunc {
 
 					if sp := vmProfile.StorageProfile; sp != nil {
 						if sp.ImageReference != nil {
+							imgRef := ComputeFleetImageReference{}
 							if sp.ImageReference.Publisher != nil {
-								schema.Publisher = *sp.ImageReference.Publisher
+								imgRef.Publisher = *sp.ImageReference.Publisher
 							}
 							if sp.ImageReference.Offer != nil {
-								schema.Offer = *sp.ImageReference.Offer
+								imgRef.Offer = *sp.ImageReference.Offer
 							}
 							if sp.ImageReference.Sku != nil {
-								schema.Sku = *sp.ImageReference.Sku
+								imgRef.Sku = *sp.ImageReference.Sku
 							}
 							if sp.ImageReference.Version != nil {
-								schema.Version = *sp.ImageReference.Version
+								imgRef.Version = *sp.ImageReference.Version
+							}
+							if imgRef.Publisher != "" || imgRef.Offer != "" || imgRef.Sku != "" || imgRef.Version != "" {
+								schema.ImageReference = []ComputeFleetImageReference{imgRef}
 							}
 							if sp.ImageReference.Id != nil {
 								schema.ImageReferenceId = *sp.ImageReference.Id
@@ -1464,10 +1517,10 @@ func (r ComputeFleetResource) Update() sdk.ResourceFunc {
 					payload.Properties.VMSizesProfile = expandComputeFleetVmSizesProfile(config.VmSizesProfile, metadata)
 				}
 				if metadata.ResourceData.HasChange("regular_priority_profile") {
-					payload.Properties.RegularPriorityProfile = expandComputeFleetRegularPriorityProfile(config)
+					payload.Properties.RegularPriorityProfile = expandComputeFleetRegularPriorityProfile(config, metadata)
 				}
 				if metadata.ResourceData.HasChange("spot_priority_profile") {
-					payload.Properties.SpotPriorityProfile = expandComputeFleetSpotPriorityProfile(config)
+					payload.Properties.SpotPriorityProfile = expandComputeFleetSpotPriorityProfile(config, metadata)
 				}
 			}
 
@@ -1582,7 +1635,7 @@ func flattenComputeFleetVmSizesProfile(input []fleets.VMSizeProfile) []ComputeFl
 	return result
 }
 
-func expandComputeFleetComputeProfile(config ComputeFleetResourceModel) fleets.ComputeProfile {
+func expandComputeFleetComputeProfile(config ComputeFleetResourceModel, metadata sdk.ResourceMetaData) fleets.ComputeProfile {
 	osDisk := &fleets.VirtualMachineScaleSetOSDisk{
 		CreateOption: fleets.DiskCreateOptionTypes(config.CreateOption),
 	}
@@ -1598,7 +1651,7 @@ func expandComputeFleetComputeProfile(config ComputeFleetResourceModel) fleets.C
 		d := fleets.DiskDeleteOptionTypes(config.OsDiskDeleteOption)
 		osDisk.DeleteOption = &d
 	}
-	if config.OsDiskSizeGB != 0 {
+	if !metadata.ResourceData.GetRawConfig().AsValueMap()["os_disk_size_gb"].IsNull() {
 		sz := config.OsDiskSizeGB
 		osDisk.DiskSizeGB = &sz
 	}
@@ -1640,19 +1693,21 @@ func expandComputeFleetComputeProfile(config ComputeFleetResourceModel) fleets.C
 	}
 
 	var imageRef *fleets.ImageReference
-	if config.Publisher != "" || config.Offer != "" || config.Sku != "" || config.Version != "" {
+	if len(config.ImageReference) > 0 || config.ImageReferenceId != "" || config.SharedGalleryImageId != "" || config.CommunityGalleryImageId != "" {
 		imageRef = &fleets.ImageReference{}
-		if config.Publisher != "" {
-			imageRef.Publisher = &config.Publisher
-		}
-		if config.Offer != "" {
-			imageRef.Offer = &config.Offer
-		}
-		if config.Sku != "" {
-			imageRef.Sku = &config.Sku
-		}
-		if config.Version != "" {
-			imageRef.Version = &config.Version
+		if len(config.ImageReference) > 0 {
+			if config.ImageReference[0].Publisher != "" {
+				imageRef.Publisher = &config.ImageReference[0].Publisher
+			}
+			if config.ImageReference[0].Offer != "" {
+				imageRef.Offer = &config.ImageReference[0].Offer
+			}
+			if config.ImageReference[0].Sku != "" {
+				imageRef.Sku = &config.ImageReference[0].Sku
+			}
+			if config.ImageReference[0].Version != "" {
+				imageRef.Version = &config.ImageReference[0].Version
+			}
 		}
 		if config.ImageReferenceId != "" {
 			imageRef.Id = &config.ImageReferenceId
@@ -1665,7 +1720,7 @@ func expandComputeFleetComputeProfile(config ComputeFleetResourceModel) fleets.C
 		}
 	}
 
-	np := expandComputeFleetNetworkProfile(config.NetworkInterfaceConfigurations, config.NetworkApiVersion)
+	np := expandComputeFleetNetworkProfile(config.NetworkInterfaceConfigurations, config.NetworkApiVersion, metadata)
 
 	osProfile := &fleets.VirtualMachineScaleSetOSProfile{}
 	if config.AdminUsername != "" {
@@ -1698,7 +1753,7 @@ func expandComputeFleetComputeProfile(config ComputeFleetResourceModel) fleets.C
 		ImageReference: imageRef,
 	}
 	if len(config.DataDisks) > 0 {
-		sp.DataDisks = expandComputeFleetDataDisks(config.DataDisks)
+		sp.DataDisks = expandComputeFleetDataDisks(config.DataDisks, metadata)
 	}
 
 	vmProfile := fleets.BaseVirtualMachineProfile{
@@ -1710,7 +1765,7 @@ func expandComputeFleetComputeProfile(config ComputeFleetResourceModel) fleets.C
 	if len(config.GalleryApplications) > 0 {
 		vmProfile.ApplicationProfile = &fleets.ApplicationProfile{
 			GalleryApplications: func() *[]fleets.VMGalleryApplication {
-				v := expandComputeFleetGalleryApplications(config.GalleryApplications)
+				v := expandComputeFleetGalleryApplications(config.GalleryApplications, metadata)
 				return &v
 			}(),
 		}
@@ -1784,7 +1839,7 @@ func expandComputeFleetComputeProfile(config ComputeFleetResourceModel) fleets.C
 	if config.ComputeApiVersion != "" {
 		computeProfile.ComputeApiVersion = &config.ComputeApiVersion
 	}
-	if config.PlatformFaultDomainCount != 0 {
+	if !metadata.ResourceData.GetRawConfig().AsValueMap()["platform_fault_domain_count"].IsNull() {
 		computeProfile.PlatformFaultDomainCount = &config.PlatformFaultDomainCount
 	}
 	if config.UltraSSDEnabled || config.HibernationEnabled {
@@ -1799,9 +1854,9 @@ func expandComputeFleetComputeProfile(config ComputeFleetResourceModel) fleets.C
 	return computeProfile
 }
 
-func expandComputeFleetGalleryApplications(input []ComputeFleetGalleryApplication) []fleets.VMGalleryApplication {
+func expandComputeFleetGalleryApplications(input []ComputeFleetGalleryApplication, metadata sdk.ResourceMetaData) []fleets.VMGalleryApplication {
 	result := make([]fleets.VMGalleryApplication, 0, len(input))
-	for _, v := range input {
+	for i, v := range input {
 		item := fleets.VMGalleryApplication{
 			PackageReferenceId: v.PackageReferenceId,
 		}
@@ -1811,7 +1866,7 @@ func expandComputeFleetGalleryApplications(input []ComputeFleetGalleryApplicatio
 		if v.ConfigurationReference != "" {
 			item.ConfigurationReference = &v.ConfigurationReference
 		}
-		if v.Order != 0 {
+		if !metadata.ResourceData.GetRawConfig().AsValueMap()["gallery_applications"].AsValueSlice()[i].AsValueMap()["order"].IsNull() {
 			order := v.Order
 			item.Order = &order
 		}
@@ -1943,14 +1998,14 @@ func flattenComputeFleetExtensions(input *[]fleets.VirtualMachineScaleSetExtensi
 	return result
 }
 
-func expandComputeFleetNetworkProfile(nics []ComputeFleetNicConfig, networkApiVersion string) *fleets.VirtualMachineScaleSetNetworkProfile {
+func expandComputeFleetNetworkProfile(nics []ComputeFleetNicConfig, networkApiVersion string, metadata sdk.ResourceMetaData) *fleets.VirtualMachineScaleSetNetworkProfile {
 	if len(nics) == 0 {
 		return nil
 	}
 	configs := make([]fleets.VirtualMachineScaleSetNetworkConfiguration, 0, len(nics))
-	for _, nic := range nics {
+	for nicIdx, nic := range nics {
 		ipConfigs := make([]fleets.VirtualMachineScaleSetIPConfiguration, 0, len(nic.IPConfigurations))
-		for _, ip := range nic.IPConfigurations {
+		for ipIdx, ip := range nic.IPConfigurations {
 			ipc := fleets.VirtualMachineScaleSetIPConfiguration{
 				Name: ip.Name,
 			}
@@ -1966,7 +2021,7 @@ func expandComputeFleetNetworkProfile(nics []ComputeFleetNicConfig, networkApiVe
 				ipProps.PrivateIPAddressVersion = &v
 			}
 			if ip.PublicIPAddressConfigurationName != "" || ip.DeleteOption != "" || ip.DomainNameLabel != "" || ip.IdleTimeoutInMinutes != 0 || ip.SkuName != "" {
-				ipProps.PublicIPAddressConfiguration = expandComputeFleetPublicIPConfig(ip)
+				ipProps.PublicIPAddressConfiguration = expandComputeFleetPublicIPConfig(ip, metadata, nicIdx, ipIdx)
 			}
 			ipc.Properties = ipProps
 			ipConfigs = append(ipConfigs, ipc)
@@ -2018,7 +2073,7 @@ func expandComputeFleetNetworkProfile(nics []ComputeFleetNicConfig, networkApiVe
 	return np
 }
 
-func expandComputeFleetPublicIPConfig(input ComputeFleetIPConfig) *fleets.VirtualMachineScaleSetPublicIPAddressConfiguration {
+func expandComputeFleetPublicIPConfig(input ComputeFleetIPConfig, metadata sdk.ResourceMetaData, nicIdx int, ipIdx int) *fleets.VirtualMachineScaleSetPublicIPAddressConfiguration {
 	cfg := &fleets.VirtualMachineScaleSetPublicIPAddressConfiguration{
 		Name: input.PublicIPAddressConfigurationName,
 	}
@@ -2027,7 +2082,7 @@ func expandComputeFleetPublicIPConfig(input ComputeFleetIPConfig) *fleets.Virtua
 		d := fleets.DeleteOptions(input.DeleteOption)
 		props.DeleteOption = &d
 	}
-	if input.IdleTimeoutInMinutes != 0 {
+	if !metadata.ResourceData.GetRawConfig().AsValueMap()["network_interface_configurations"].AsValueSlice()[nicIdx].AsValueMap()["ip_configurations"].AsValueSlice()[ipIdx].AsValueMap()["idle_timeout_in_minutes"].IsNull() {
 		t := input.IdleTimeoutInMinutes
 		props.IdleTimeoutInMinutes = &t
 	}
@@ -2180,7 +2235,10 @@ func expandComputeFleetLinuxConfiguration(config ComputeFleetResourceModel) *fle
 		keys := make([]fleets.SshPublicKey, 0, len(config.KeyData))
 		for _, k := range config.KeyData {
 			kd := k
-			keys = append(keys, fleets.SshPublicKey{KeyData: &kd})
+			keys = append(keys, fleets.SshPublicKey{
+				KeyData: &kd,
+				Path:    pointer.To(fmt.Sprintf("/home/%s/.ssh/authorized_keys", config.AdminUsername)),
+			})
 		}
 		cfg.Ssh = &fleets.SshConfiguration{PublicKeys: &keys}
 	}
@@ -2353,11 +2411,17 @@ func expandComputeFleetSecrets(input []ComputeFleetSecret) *[]fleets.VaultSecret
 		if s.SourceVaultId != "" {
 			vsg.SourceVault = &fleets.SubResource{Id: &s.SourceVaultId}
 		}
-		if len(s.CertificateUrl) > 0 {
-			certs := make([]fleets.VaultCertificate, 0, len(s.CertificateUrl))
-			for _, c := range s.CertificateUrl {
-				cu := c
-				certs = append(certs, fleets.VaultCertificate{CertificateURL: &cu})
+		if len(s.VaultCertificates) > 0 {
+			certs := make([]fleets.VaultCertificate, 0, len(s.VaultCertificates))
+			for _, c := range s.VaultCertificates {
+				vc := fleets.VaultCertificate{}
+				if c.CertificateUrl != "" {
+					vc.CertificateURL = &c.CertificateUrl
+				}
+				if c.CertificateStore != "" {
+					vc.CertificateStore = &c.CertificateStore
+				}
+				certs = append(certs, vc)
 			}
 			vsg.VaultCertificates = &certs
 		}
@@ -2377,20 +2441,27 @@ func flattenComputeFleetSecrets(input *[]fleets.VaultSecretGroup) []ComputeFleet
 			item.SourceVaultId = *s.SourceVault.Id
 		}
 		if s.VaultCertificates != nil {
+			vcerts := make([]ComputeFleetVaultCertificate, 0, len(*s.VaultCertificates))
 			for _, c := range *s.VaultCertificates {
+				vc := ComputeFleetVaultCertificate{}
 				if c.CertificateURL != nil {
-					item.CertificateUrl = append(item.CertificateUrl, *c.CertificateURL)
+					vc.CertificateUrl = *c.CertificateURL
 				}
+				if c.CertificateStore != nil {
+					vc.CertificateStore = *c.CertificateStore
+				}
+				vcerts = append(vcerts, vc)
 			}
+			item.VaultCertificates = vcerts
 		}
 		result = append(result, item)
 	}
 	return result
 }
 
-func expandComputeFleetDataDisks(input []ComputeFleetDataDisk) *[]fleets.VirtualMachineScaleSetDataDisk {
+func expandComputeFleetDataDisks(input []ComputeFleetDataDisk, metadata sdk.ResourceMetaData) *[]fleets.VirtualMachineScaleSetDataDisk {
 	result := make([]fleets.VirtualMachineScaleSetDataDisk, 0, len(input))
-	for _, d := range input {
+	for i, d := range input {
 		disk := fleets.VirtualMachineScaleSetDataDisk{
 			Lun:          d.Lun,
 			CreateOption: fleets.DiskCreateOptionTypes(d.CreateOption),
@@ -2403,7 +2474,7 @@ func expandComputeFleetDataDisks(input []ComputeFleetDataDisk) *[]fleets.Virtual
 			do := fleets.DiskDeleteOptionTypes(d.DeleteOption)
 			disk.DeleteOption = &do
 		}
-		if d.DiskSizeGB != 0 {
+		if !metadata.ResourceData.GetRawConfig().AsValueMap()["data_disks"].AsValueSlice()[i].AsValueMap()["disk_size_gb"].IsNull() {
 			sz := d.DiskSizeGB
 			disk.DiskSizeGB = &sz
 		}
@@ -2461,16 +2532,15 @@ func flattenComputeFleetDataDisks(input *[]fleets.VirtualMachineScaleSetDataDisk
 	return result
 }
 
-func expandComputeFleetRegularPriorityProfile(config ComputeFleetResourceModel) *fleets.RegularPriorityProfile {
+func expandComputeFleetRegularPriorityProfile(config ComputeFleetResourceModel, metadata sdk.ResourceMetaData) *fleets.RegularPriorityProfile {
 	if len(config.RegularPriorityProfile) == 0 {
 		return nil
 	}
 	p := config.RegularPriorityProfile[0]
 	rpp := &fleets.RegularPriorityProfile{}
-	if p.Capacity != 0 {
-		rpp.Capacity = &p.Capacity
-	}
-	if p.MinCapacity != 0 {
+	rpp.Capacity = &p.Capacity
+
+	if !metadata.ResourceData.GetRawConfig().AsValueMap()["regular_priority_profile"].AsValueSlice()[0].AsValueMap()["min_capacity"].IsNull() {
 		rpp.MinCapacity = &p.MinCapacity
 	}
 	if p.AllocationStrategy != "" {
@@ -2498,19 +2568,18 @@ func flattenComputeFleetRegularPriorityProfile(input *fleets.RegularPriorityProf
 	schema.RegularPriorityProfile = []ComputeFleetRegularPriorityProfile{p}
 }
 
-func expandComputeFleetSpotPriorityProfile(config ComputeFleetResourceModel) *fleets.SpotPriorityProfile {
+func expandComputeFleetSpotPriorityProfile(config ComputeFleetResourceModel, metadata sdk.ResourceMetaData) *fleets.SpotPriorityProfile {
 	if len(config.SpotPriorityProfile) == 0 {
 		return nil
 	}
 	p := config.SpotPriorityProfile[0]
 	spp := &fleets.SpotPriorityProfile{}
-	if p.Capacity != 0 {
-		spp.Capacity = &p.Capacity
-	}
-	if p.MinCapacity != 0 {
+	spp.Capacity = &p.Capacity
+
+	if !metadata.ResourceData.GetRawConfig().AsValueMap()["spot_priority_profile"].AsValueSlice()[0].AsValueMap()["min_capacity"].IsNull() {
 		spp.MinCapacity = &p.MinCapacity
 	}
-	if p.MaxPricePerVM != 0 {
+	if !metadata.ResourceData.GetRawConfig().AsValueMap()["spot_priority_profile"].AsValueSlice()[0].AsValueMap()["max_price_per_vm"].IsNull() {
 		spp.MaxPricePerVM = &p.MaxPricePerVM
 	}
 	if p.EvictionPolicy != "" {

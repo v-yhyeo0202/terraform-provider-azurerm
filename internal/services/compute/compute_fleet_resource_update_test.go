@@ -89,10 +89,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -151,10 +153,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -217,10 +221,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -390,10 +396,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -464,10 +472,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -545,10 +555,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -570,7 +582,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   identity {
-    type         = "UserAssigned"
+    type = "UserAssigned"
     identity_ids = [
       azurerm_user_assigned_identity.test.id,
       azurerm_user_assigned_identity.test2.id
@@ -615,10 +627,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -677,10 +691,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -743,10 +759,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -827,10 +845,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -889,10 +909,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1085,10 +1107,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1147,10 +1171,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1209,10 +1235,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1271,10 +1299,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1333,10 +1363,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1354,7 +1386,7 @@ resource "azurerm_compute_fleet" "test" {
   network_api_version = "2020-11-01"
 
   regular_priority_profile {
-    capacity = 1
+    capacity            = 1
     allocation_strategy = "Prioritized"
   }
 }
@@ -1397,10 +1429,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1418,7 +1452,7 @@ resource "azurerm_compute_fleet" "test" {
   network_api_version = "2020-11-01"
 
   regular_priority_profile {
-    capacity = 1
+    capacity            = 1
     allocation_strategy = "Prioritized"
   }
 }
@@ -1466,10 +1500,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1487,7 +1523,7 @@ resource "azurerm_compute_fleet" "test" {
   network_api_version = "2020-11-01"
 
   regular_priority_profile {
-    capacity = 1
+    capacity            = 1
     allocation_strategy = "Prioritized"
   }
 }
@@ -1529,10 +1565,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1591,10 +1629,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
@@ -1657,10 +1697,12 @@ resource "azurerm_compute_fleet" "test" {
 
   os_type = "Linux"
 
-  publisher = "Canonical"
-  offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts-gen2"
-  version   = "latest"
+  image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
 
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
