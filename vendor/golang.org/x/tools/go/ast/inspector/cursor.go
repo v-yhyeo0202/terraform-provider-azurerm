@@ -528,6 +528,7 @@ func (c Cursor) FindByPos(start, end token.Pos) (Cursor, bool) {
 					break // disjoint, after; stop
 				}
 			}
+
 			// Inv: node.{Pos,FileStart} <= start
 			if end <= nodeEnd {
 				// node fully contains target range
