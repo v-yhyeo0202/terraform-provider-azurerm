@@ -20,50 +20,30 @@ var _ sdk.Resource = ComputeFleetResource{}
 type ComputeFleetResource struct{}
 
 type ComputeFleetResourceModel struct {
-	Name                   string                        `tfschema:"name"`
-	ResourceGroupName      string                        `tfschema:"resource_group_name"`
-	Location               string                        `tfschema:"location"`
-	Zones                  []string                      `tfschema:"zones"`
-	ComputeProfile         []ComputeProfileModel         `tfschema:"compute_profile"`
-	VmSizesProfile         []VmSizeProfileModel          `tfschema:"vm_sizes_profile"`
-	SpotPriorityProfile    []SpotPriorityProfileModel    `tfschema:"spot_priority_profile"`
-	RegularPriorityProfile []RegularPriorityProfileModel `tfschema:"regular_priority_profile"`
-	Tags                   map[string]string             `tfschema:"tags"`
-}
-
-type ComputeProfileModel struct {
+	Name                      string                           `tfschema:"name"`
+	ResourceGroupName         string                           `tfschema:"resource_group_name"`
+	Location                  string                           `tfschema:"location"`
+	Zones                     []string                         `tfschema:"zones"`
 	BaseVirtualMachineProfile []BaseVirtualMachineProfileModel `tfschema:"base_virtual_machine_profile"`
+	VmSizesProfile            []string                         `tfschema:"vm_sizes_profile"`
+	SpotPriorityProfile       []SpotPriorityProfileModel       `tfschema:"spot_priority_profile"`
+	RegularPriorityProfile    []RegularPriorityProfileModel    `tfschema:"regular_priority_profile"`
+	Tags                      map[string]string                `tfschema:"tags"`
 }
 
 type BaseVirtualMachineProfileModel struct {
-	OsProfile       []OsProfileModel       `tfschema:"os_profile"`
-	StorageProfile  []StorageProfileModel  `tfschema:"storage_profile"`
-	NetworkProfile  []NetworkProfileModel  `tfschema:"network_profile"`
-	SecurityProfile []SecurityProfileModel `tfschema:"security_profile"`
-	LicenseType     string                 `tfschema:"license_type"`
+	OsProfile                      []OsProfileModel                     `tfschema:"os_profile"`
+	ImageReference                 []ImageReferenceModel                 `tfschema:"image_reference"`
+	NetworkInterfaceConfigurations []NetworkInterfaceConfigurationModel  `tfschema:"network_interface_configuration"`
+	SecurityProfile                []SecurityProfileModel                `tfschema:"security_profile"`
+	LicenseType                    string                                `tfschema:"license_type"`
 }
 
 type OsProfileModel struct {
-	AdminUsername      string                   `tfschema:"admin_username"`
-	AdminPassword      string                   `tfschema:"admin_password"`
-	LinuxConfiguration []LinuxConfigurationModel `tfschema:"linux_configuration"`
-}
-
-type LinuxConfigurationModel struct {
-	DisablePasswordAuthentication bool               `tfschema:"disable_password_authentication"`
-	Ssh                           []SshConfigModel   `tfschema:"ssh"`
-}
-
-type SshConfigModel struct {
-	PublicKeys []SshPublicKeyModel `tfschema:"public_key"`
-}
-
-type SshPublicKeyModel struct {
-	KeyData string `tfschema:"key_data"`
-}
-
-type StorageProfileModel struct {
-	ImageReference []ImageReferenceModel `tfschema:"image_reference"`
+	AdminUsername                 string   `tfschema:"admin_username"`
+	AdminPassword                 string   `tfschema:"admin_password"`
+	DisablePasswordAuthentication bool     `tfschema:"disable_password_authentication"`
+	PublicKey                     []string `tfschema:"public_key"`
 }
 
 type ImageReferenceModel struct {
@@ -73,41 +53,25 @@ type ImageReferenceModel struct {
 	Version   string `tfschema:"version"`
 }
 
-type NetworkProfileModel struct {
-	NetworkInterfaceConfigurations []NetworkInterfaceConfigurationModel `tfschema:"network_interface_configuration"`
-}
-
 type NetworkInterfaceConfigurationModel struct {
-	Name                     string                  `tfschema:"name"`
-	NetworkSecurityGroupId   string                  `tfschema:"network_security_group_id"`
-	EnableAcceleratedNetworking bool                 `tfschema:"enable_accelerated_networking"`
-	IpConfigurations         []IpConfigurationModel  `tfschema:"ip_configuration"`
+	Name                        string                 `tfschema:"name"`
+	NetworkSecurityGroupId      string                 `tfschema:"network_security_group_id"`
+	EnableAcceleratedNetworking bool                   `tfschema:"enable_accelerated_networking"`
+	IpConfigurations            []IpConfigurationModel `tfschema:"ip_configuration"`
 }
 
 type IpConfigurationModel struct {
-	Name                             string                          `tfschema:"name"`
-	SubnetId                         string                          `tfschema:"subnet_id"`
-	PublicIpAddressConfiguration     []PublicIpAddressConfigModel    `tfschema:"public_ip_address_configuration"`
-	LoadBalancerBackendAddressPoolIds []string                       `tfschema:"load_balancer_backend_address_pool_ids"`
-	LoadBalancerInboundNatPoolIds    []string                        `tfschema:"load_balancer_inbound_nat_pool_ids"`
-}
-
-type PublicIpAddressConfigModel struct {
-	Name string `tfschema:"name"`
+	Name                             string   `tfschema:"name"`
+	SubnetId                         string   `tfschema:"subnet_id"`
+	PublicIpAddressConfigurationName string   `tfschema:"public_ip_address_configuration_name"`
+	LoadBalancerBackendAddressPoolIds []string `tfschema:"load_balancer_backend_address_pool_ids"`
+	LoadBalancerInboundNatPoolIds    []string `tfschema:"load_balancer_inbound_nat_pool_ids"`
 }
 
 type SecurityProfileModel struct {
-	SecurityType string             `tfschema:"security_type"`
-	UefiSettings []UefiSettingsModel `tfschema:"uefi_settings"`
-}
-
-type UefiSettingsModel struct {
-	SecureBootEnabled bool `tfschema:"secure_boot_enabled"`
-	VTpmEnabled       bool `tfschema:"v_tpm_enabled"`
-}
-
-type VmSizeProfileModel struct {
-	Name string `tfschema:"name"`
+	SecurityType      string `tfschema:"security_type"`
+	SecureBootEnabled bool   `tfschema:"secure_boot_enabled"`
+	VTpmEnabled       bool   `tfschema:"v_tpm_enabled"`
 }
 
 type SpotPriorityProfileModel struct {
@@ -153,240 +117,167 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 		"vm_sizes_profile": {
 			Type:     pluginsdk.TypeList,
 			Required: true,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"name": {
-						Type:     pluginsdk.TypeString,
-						Required: true,
-					},
-				},
+			Elem: &pluginsdk.Schema{
+				Type: pluginsdk.TypeString,
 			},
 		},
 
-		"compute_profile": {
+		"base_virtual_machine_profile": {
 			Type:     pluginsdk.TypeList,
 			Required: true,
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
-					"base_virtual_machine_profile": {
+					"os_profile": {
 						Type:     pluginsdk.TypeList,
-						Required: true,
+						Optional: true,
 						MaxItems: 1,
 						Elem: &pluginsdk.Resource{
 							Schema: map[string]*pluginsdk.Schema{
-								"os_profile": {
-									Type:     pluginsdk.TypeList,
+								"admin_username": {
+									Type:     pluginsdk.TypeString,
 									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"admin_username": {
-												Type:     pluginsdk.TypeString,
-												Optional: true,
-											},
-
-											"admin_password": {
-												Type:     pluginsdk.TypeString,
-												Optional: true,
-											},
-
-											"linux_configuration": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"disable_password_authentication": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"ssh": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"public_key": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"key_data": {
-																					Type:     pluginsdk.TypeString,
-																					Optional: true,
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
 								},
 
-								"storage_profile": {
-									Type:     pluginsdk.TypeList,
+								"admin_password": {
+									Type:     pluginsdk.TypeString,
 									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"image_reference": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"publisher": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-														},
-
-														"offer": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-														},
-
-														"sku": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-														},
-
-														"version": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-														},
-													},
-												},
-											},
-										},
-									},
 								},
 
-								"network_profile": {
-									Type:     pluginsdk.TypeList,
+								"disable_password_authentication": {
+									Type:     pluginsdk.TypeBool,
 									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"network_interface_configuration": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"name": {
-															Type:     pluginsdk.TypeString,
-															Required: true,
-														},
-
-														"network_security_group_id": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-														},
-
-														"enable_accelerated_networking": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"ip_configuration": {
-															Type:     pluginsdk.TypeList,
-															Required: true,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"name": {
-																		Type:     pluginsdk.TypeString,
-																		Required: true,
-																	},
-
-																	"subnet_id": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																	},
-
-																	"public_ip_address_configuration": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"name": {
-																					Type:     pluginsdk.TypeString,
-																					Required: true,
-																				},
-																			},
-																		},
-																	},
-
-																	"load_balancer_backend_address_pool_ids": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		Elem: &pluginsdk.Schema{
-																			Type: pluginsdk.TypeString,
-																		},
-																	},
-
-																	"load_balancer_inbound_nat_pool_ids": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		Elem: &pluginsdk.Schema{
-																			Type: pluginsdk.TypeString,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
 								},
 
-								"security_profile": {
+								"public_key": {
 									Type:     pluginsdk.TypeList,
 									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"security_type": {
-												Type:     pluginsdk.TypeString,
-												Optional: true,
-											},
-
-											"uefi_settings": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"secure_boot_enabled": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"v_tpm_enabled": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-													},
-												},
-											},
-										},
+									Elem: &pluginsdk.Schema{
+										Type: pluginsdk.TypeString,
 									},
 								},
+							},
+						},
+					},
 
-								"license_type": {
+					"image_reference": {
+						Type:     pluginsdk.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"publisher": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+
+								"offer": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+
+								"sku": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+
+								"version": {
 									Type:     pluginsdk.TypeString,
 									Optional: true,
 								},
 							},
 						},
+					},
+
+					"network_interface_configuration": {
+						Type:     pluginsdk.TypeList,
+						Optional: true,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"name": {
+									Type:     pluginsdk.TypeString,
+									Required: true,
+								},
+
+								"network_security_group_id": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+
+								"enable_accelerated_networking": {
+									Type:     pluginsdk.TypeBool,
+									Optional: true,
+								},
+
+								"ip_configuration": {
+									Type:     pluginsdk.TypeList,
+									Required: true,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"name": {
+												Type:     pluginsdk.TypeString,
+												Required: true,
+											},
+
+											"subnet_id": {
+												Type:     pluginsdk.TypeString,
+												Optional: true,
+											},
+
+											"public_ip_address_configuration_name": {
+												Type:     pluginsdk.TypeString,
+												Optional: true,
+											},
+
+											"load_balancer_backend_address_pool_ids": {
+												Type:     pluginsdk.TypeList,
+												Optional: true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+
+											"load_balancer_inbound_nat_pool_ids": {
+												Type:     pluginsdk.TypeList,
+												Optional: true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+
+					"security_profile": {
+						Type:     pluginsdk.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"security_type": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+
+								"secure_boot_enabled": {
+									Type:     pluginsdk.TypeBool,
+									Optional: true,
+								},
+
+								"v_tpm_enabled": {
+									Type:     pluginsdk.TypeBool,
+									Optional: true,
+								},
+							},
+						},
+					},
+
+					"license_type": {
+						Type:     pluginsdk.TypeString,
+						Optional: true,
 					},
 				},
 			},
