@@ -11,14 +11,24 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msixpackage"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
-var _ sdk.ResourceWithUpdate = VirtualDesktopMsixPackageResource{}
+//go:generate go run ../../tools/generator-tests resourceidentity -resource-name virtual_desktop_msix_package -service-package-name desktopvirtualization -properties "name,resource_group_name,host_pool_name" -known-values "subscription_id:data.Subscriptions.Primary"
+
+var (
+	_ sdk.ResourceWithUpdate   = VirtualDesktopMsixPackageResource{}
+	_ sdk.ResourceWithIdentity = VirtualDesktopMsixPackageResource{}
+)
 
 type VirtualDesktopMsixPackageResource struct{}
+
+func (r VirtualDesktopMsixPackageResource) Identity() resourceids.ResourceId {
+	return &msixpackage.MsixPackageId{}
+}
 
 type VirtualDesktopMsixPackageModel struct {
 	ResourceGroupName     string `tfschema:"resource_group_name"`
@@ -127,6 +137,9 @@ func (r VirtualDesktopMsixPackageResource) Create() sdk.ResourceFunc {
 			}
 
 			metadata.SetID(id)
+			if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, &id); err != nil {
+				return err
+			}
 			return nil
 		},
 	}
@@ -197,28 +210,7 @@ func (r VirtualDesktopMsixPackageResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving %s: %+v", *id, err)
 			}
 
-			state := VirtualDesktopMsixPackageModel{
-				ResourceGroupName: id.ResourceGroupName,
-				HostPoolName:      id.HostPoolName,
-				Name:              id.MsixPackageName,
-			}
-
-			if model := resp.Model; model != nil {
-				if model.Properties.DisplayName != nil {
-					state.DisplayName = pointer.From(model.Properties.DisplayName)
-				}
-				if model.Properties.ImagePath != nil {
-					state.ImagePath = pointer.From(model.Properties.ImagePath)
-				}
-				if model.Properties.IsRegularRegistration != nil {
-					state.IsRegularRegistration = pointer.From(model.Properties.IsRegularRegistration)
-				}
-				if model.Properties.IsActive != nil {
-					state.IsActive = pointer.From(model.Properties.IsActive)
-				}
-			}
-
-			return metadata.Encode(&state)
+			return r.flatten(metadata, id, resp.Model)
 		},
 	}
 }
@@ -245,4 +237,33 @@ func (r VirtualDesktopMsixPackageResource) Delete() sdk.ResourceFunc {
 
 func (r VirtualDesktopMsixPackageResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return msixpackage.ValidateMsixPackageID
+}
+
+func (r VirtualDesktopMsixPackageResource) flatten(metadata sdk.ResourceMetaData, id *msixpackage.MsixPackageId, model *msixpackage.MSIXPackage) error {
+	state := VirtualDesktopMsixPackageModel{
+		ResourceGroupName: id.ResourceGroupName,
+		HostPoolName:      id.HostPoolName,
+		Name:              id.MsixPackageName,
+	}
+
+	if model != nil {
+		if model.Properties.DisplayName != nil {
+			state.DisplayName = pointer.From(model.Properties.DisplayName)
+		}
+		if model.Properties.ImagePath != nil {
+			state.ImagePath = pointer.From(model.Properties.ImagePath)
+		}
+		if model.Properties.IsRegularRegistration != nil {
+			state.IsRegularRegistration = pointer.From(model.Properties.IsRegularRegistration)
+		}
+		if model.Properties.IsActive != nil {
+			state.IsActive = pointer.From(model.Properties.IsActive)
+		}
+	}
+
+	if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, id); err != nil {
+		return err
+	}
+
+	return metadata.Encode(&state)
 }
