@@ -27,27 +27,38 @@ func (r VirtualDesktopMsixPackageResource) Arguments() map[string]*pluginsdk.Sch
 		"resource_group_name": commonschema.ResourceGroupName(),
 
 		"host_pool_name": {
-			Type: pluginsdk.TypeString,
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
 		},
 
 		"name": {
-			Type: pluginsdk.TypeString,
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
 		},
 
 		"image_path": {
-			Type: pluginsdk.TypeString,
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+			ForceNew: true,
 		},
 
 		"display_name": {
-			Type: pluginsdk.TypeString,
+			Type:     pluginsdk.TypeString,
+			Optional: true,
 		},
 
 		"is_regular_registration": {
-			Type: pluginsdk.TypeBool,
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  true,
 		},
 
 		"is_active": {
-			Type: pluginsdk.TypeBool,
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
 		},
 	}
 }
