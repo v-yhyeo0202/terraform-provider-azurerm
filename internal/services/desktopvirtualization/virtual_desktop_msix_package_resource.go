@@ -31,29 +31,25 @@ func (r VirtualDesktopMsixPackageResource) Identity() resourceids.ResourceId {
 }
 
 type VirtualDesktopMsixPackageModel struct {
-	ResourceGroupName     string               `tfschema:"resource_group_name"`
-	HostPoolName          string               `tfschema:"host_pool_name"`
-	Name                  string               `tfschema:"name"`
-	ImagePath             string               `tfschema:"image_path"`
-	DisplayName           string               `tfschema:"display_name"`
-	IsRegularRegistration bool                 `tfschema:"is_regular_registration"`
-	IsActive              bool                 `tfschema:"is_active"`
-	LastUpdated           string               `tfschema:"last_updated"`
-	PackageFamilyName     string               `tfschema:"package_family_name"`
-	PackageName           string               `tfschema:"package_name"`
-	PackageRelativePath   string               `tfschema:"package_relative_path"`
-	Version               string               `tfschema:"version"`
-	PackageApplications   []PackageApplication `tfschema:"package_application"`
-}
-
-type PackageApplication struct {
-	AppId          string `tfschema:"app_id"`
-	AppUserModelID string `tfschema:"app_user_model_id"`
-	Description    string `tfschema:"description"`
-	FriendlyName   string `tfschema:"friendly_name"`
-	IconImageName  string `tfschema:"icon_image_name"`
-	RawIcon        string `tfschema:"raw_icon"`
-	RawPng         string `tfschema:"raw_png"`
+	ResourceGroupName     string `tfschema:"resource_group_name"`
+	HostPoolName          string `tfschema:"host_pool_name"`
+	Name                  string `tfschema:"name"`
+	ImagePath             string `tfschema:"image_path"`
+	DisplayName           string `tfschema:"display_name"`
+	IsRegularRegistration bool   `tfschema:"is_regular_registration"`
+	IsActive              bool   `tfschema:"is_active"`
+	LastUpdated           string `tfschema:"last_updated"`
+	PackageFamilyName     string `tfschema:"package_family_name"`
+	PackageName           string `tfschema:"package_name"`
+	PackageRelativePath   string `tfschema:"package_relative_path"`
+	Version               string `tfschema:"version"`
+	AppId                 string `tfschema:"app_id"`
+	AppUserModelID        string `tfschema:"app_user_model_id"`
+	Description           string `tfschema:"description"`
+	FriendlyName          string `tfschema:"friendly_name"`
+	IconImageName         string `tfschema:"icon_image_name"`
+	RawIcon               string `tfschema:"raw_icon"`
+	RawPng                string `tfschema:"raw_png"`
 }
 
 func (r VirtualDesktopMsixPackageResource) Arguments() map[string]*pluginsdk.Schema {
@@ -121,47 +117,39 @@ func (r VirtualDesktopMsixPackageResource) Arguments() map[string]*pluginsdk.Sch
 			Optional: true,
 		},
 
-		"package_application": {
-			Type:     pluginsdk.TypeList,
+		"app_id": {
+			Type:     pluginsdk.TypeString,
 			Optional: true,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"app_id": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-					},
+		},
 
-					"app_user_model_id": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-					},
+		"app_user_model_id": {
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+		},
 
-					"description": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-					},
+		"description": {
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+		},
 
-					"friendly_name": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-					},
+		"friendly_name": {
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+		},
 
-					"icon_image_name": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-					},
+		"icon_image_name": {
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+		},
 
-					"raw_icon": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-					},
+		"raw_icon": {
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+		},
 
-					"raw_png": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-					},
-				},
-			},
+		"raw_png": {
+			Type:     pluginsdk.TypeString,
+			Optional: true,
 		},
 	}
 }
@@ -237,34 +225,30 @@ func (r VirtualDesktopMsixPackageResource) Create() sdk.ResourceFunc {
 				params.Properties.LastUpdated = pointer.To(model.LastUpdated)
 			}
 
-			if len(model.PackageApplications) > 0 {
-				apps := make([]msixpackage.MsixPackageApplications, 0, len(model.PackageApplications))
-				for _, a := range model.PackageApplications {
-					app := msixpackage.MsixPackageApplications{}
-					if a.AppId != "" {
-						app.AppId = pointer.To(a.AppId)
-					}
-					if a.AppUserModelID != "" {
-						app.AppUserModelID = pointer.To(a.AppUserModelID)
-					}
-					if a.Description != "" {
-						app.Description = pointer.To(a.Description)
-					}
-					if a.FriendlyName != "" {
-						app.FriendlyName = pointer.To(a.FriendlyName)
-					}
-					if a.IconImageName != "" {
-						app.IconImageName = pointer.To(a.IconImageName)
-					}
-					if a.RawIcon != "" {
-						app.RawIcon = pointer.To(a.RawIcon)
-					}
-					if a.RawPng != "" {
-						app.RawPng = pointer.To(a.RawPng)
-					}
-					apps = append(apps, app)
+			if model.AppId != "" || model.AppUserModelID != "" || model.Description != "" || model.FriendlyName != "" || model.IconImageName != "" || model.RawIcon != "" || model.RawPng != "" {
+				app := msixpackage.MsixPackageApplications{}
+				if model.AppId != "" {
+					app.AppId = pointer.To(model.AppId)
 				}
-				params.Properties.PackageApplications = &apps
+				if model.AppUserModelID != "" {
+					app.AppUserModelID = pointer.To(model.AppUserModelID)
+				}
+				if model.Description != "" {
+					app.Description = pointer.To(model.Description)
+				}
+				if model.FriendlyName != "" {
+					app.FriendlyName = pointer.To(model.FriendlyName)
+				}
+				if model.IconImageName != "" {
+					app.IconImageName = pointer.To(model.IconImageName)
+				}
+				if model.RawIcon != "" {
+					app.RawIcon = pointer.To(model.RawIcon)
+				}
+				if model.RawPng != "" {
+					app.RawPng = pointer.To(model.RawPng)
+				}
+				params.Properties.PackageApplications = &[]msixpackage.MsixPackageApplications{app}
 			}
 
 			if _, err := client.CreateOrUpdate(ctx, id, params); err != nil {
@@ -337,34 +321,30 @@ func (r VirtualDesktopMsixPackageResource) Update() sdk.ResourceFunc {
 				existing.Properties.LastUpdated = pointer.To(model.LastUpdated)
 			}
 
-			if metadata.ResourceData.HasChange("package_application") {
-				apps := make([]msixpackage.MsixPackageApplications, 0, len(model.PackageApplications))
-				for _, a := range model.PackageApplications {
-					app := msixpackage.MsixPackageApplications{}
-					if a.AppId != "" {
-						app.AppId = pointer.To(a.AppId)
-					}
-					if a.AppUserModelID != "" {
-						app.AppUserModelID = pointer.To(a.AppUserModelID)
-					}
-					if a.Description != "" {
-						app.Description = pointer.To(a.Description)
-					}
-					if a.FriendlyName != "" {
-						app.FriendlyName = pointer.To(a.FriendlyName)
-					}
-					if a.IconImageName != "" {
-						app.IconImageName = pointer.To(a.IconImageName)
-					}
-					if a.RawIcon != "" {
-						app.RawIcon = pointer.To(a.RawIcon)
-					}
-					if a.RawPng != "" {
-						app.RawPng = pointer.To(a.RawPng)
-					}
-					apps = append(apps, app)
+			if metadata.ResourceData.HasChange("app_id") || metadata.ResourceData.HasChange("app_user_model_id") || metadata.ResourceData.HasChange("description") || metadata.ResourceData.HasChange("friendly_name") || metadata.ResourceData.HasChange("icon_image_name") || metadata.ResourceData.HasChange("raw_icon") || metadata.ResourceData.HasChange("raw_png") {
+				app := msixpackage.MsixPackageApplications{}
+				if model.AppId != "" {
+					app.AppId = pointer.To(model.AppId)
 				}
-				existing.Properties.PackageApplications = &apps
+				if model.AppUserModelID != "" {
+					app.AppUserModelID = pointer.To(model.AppUserModelID)
+				}
+				if model.Description != "" {
+					app.Description = pointer.To(model.Description)
+				}
+				if model.FriendlyName != "" {
+					app.FriendlyName = pointer.To(model.FriendlyName)
+				}
+				if model.IconImageName != "" {
+					app.IconImageName = pointer.To(model.IconImageName)
+				}
+				if model.RawIcon != "" {
+					app.RawIcon = pointer.To(model.RawIcon)
+				}
+				if model.RawPng != "" {
+					app.RawPng = pointer.To(model.RawPng)
+				}
+				existing.Properties.PackageApplications = &[]msixpackage.MsixPackageApplications{app}
 			}
 
 			if _, err := client.CreateOrUpdate(ctx, *id, *existing); err != nil {
@@ -459,20 +439,15 @@ func (r VirtualDesktopMsixPackageResource) flatten(metadata sdk.ResourceMetaData
 		if model.Properties.LastUpdated != nil {
 			state.LastUpdated = pointer.From(model.Properties.LastUpdated)
 		}
-		if model.Properties.PackageApplications != nil {
-			apps := make([]PackageApplication, 0, len(*model.Properties.PackageApplications))
-			for _, a := range *model.Properties.PackageApplications {
-				apps = append(apps, PackageApplication{
-					AppId:          pointer.From(a.AppId),
-					AppUserModelID: pointer.From(a.AppUserModelID),
-					Description:    pointer.From(a.Description),
-					FriendlyName:   pointer.From(a.FriendlyName),
-					IconImageName:  pointer.From(a.IconImageName),
-					RawIcon:        pointer.From(a.RawIcon),
-					RawPng:         pointer.From(a.RawPng),
-				})
-			}
-			state.PackageApplications = apps
+		if model.Properties.PackageApplications != nil && len(*model.Properties.PackageApplications) > 0 {
+			a := (*model.Properties.PackageApplications)[0]
+			state.AppId = pointer.From(a.AppId)
+			state.AppUserModelID = pointer.From(a.AppUserModelID)
+			state.Description = pointer.From(a.Description)
+			state.FriendlyName = pointer.From(a.FriendlyName)
+			state.IconImageName = pointer.From(a.IconImageName)
+			state.RawIcon = pointer.From(a.RawIcon)
+			state.RawPng = pointer.From(a.RawPng)
 		}
 	}
 

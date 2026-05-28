@@ -77,16 +77,13 @@ resource "azurerm_virtual_desktop_msix_package" "test" {
   package_relative_path = "MsixPackage_RelativePath"
   version               = "1.0.0.0"
   last_updated          = "2024-01-01T00:00:00"
-
-  package_application {
-    app_id            = "MsixPackage_AppId"
-    app_user_model_id = "MsixPackage_AppUserModelID"
-    description       = "MsixPackage_Description"
-    friendly_name     = "MsixPackage_FriendlyName"
-    icon_image_name   = "MsixPackage_IconImageName"
-    raw_icon          = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
-    raw_png           = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
-  }
+  app_id                = "MsixPackage_AppId"
+  app_user_model_id     = "MsixPackage_AppUserModelID"
+  description           = "MsixPackage_Description"
+  friendly_name         = "MsixPackage_FriendlyName"
+  icon_image_name       = "MsixPackage_IconImageName"
+  raw_icon              = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
+  raw_png               = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomString, data.RandomString)
 }
