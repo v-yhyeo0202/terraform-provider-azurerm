@@ -6,6 +6,7 @@ package desktopvirtualization
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -34,11 +35,27 @@ func (r VirtualDesktopAppAttachPackageResource) Identity() resourceids.ResourceI
 }
 
 type VirtualDesktopAppAttachPackageImageModel struct {
-	ImagePath             string `tfschema:"image_path"`
-	PackageFullName       string `tfschema:"package_full_name"`
-	DisplayName           string `tfschema:"display_name"`
-	IsRegularRegistration bool   `tfschema:"is_regular_registration"`
-	IsActive              bool   `tfschema:"is_active"`
+	ImagePath             string                                                  `tfschema:"image_path"`
+	PackageFullName       string                                                  `tfschema:"package_full_name"`
+	PackageName           string                                                  `tfschema:"package_name"`
+	PackageFamilyName     string                                                  `tfschema:"package_family_name"`
+	PackageRelativePath   string                                                  `tfschema:"package_relative_path"`
+	LastUpdated           string                                                  `tfschema:"last_updated"`
+	DisplayName           string                                                  `tfschema:"display_name"`
+	IsRegularRegistration bool                                                    `tfschema:"is_regular_registration"`
+	IsActive              bool                                                    `tfschema:"is_active"`
+	Version               string                                                  `tfschema:"version"`
+	PackageApplications   []VirtualDesktopAppAttachPackagePackageApplicationModel `tfschema:"package_applications"`
+}
+
+type VirtualDesktopAppAttachPackagePackageApplicationModel struct {
+	AppId          string `tfschema:"app_id"`
+	AppUserModelID string `tfschema:"app_user_model_id"`
+	Description    string `tfschema:"description"`
+	FriendlyName   string `tfschema:"friendly_name"`
+	IconImageName  string `tfschema:"icon_image_name"`
+	RawIcon        string `tfschema:"raw_icon"`
+	RawPng         string `tfschema:"raw_png"`
 }
 
 type VirtualDesktopAppAttachPackageModel struct {
@@ -74,18 +91,39 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 
 		"image": {
 			Type:     pluginsdk.TypeList,
-			Optional: true,
+			Required: true,
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"image_path": {
 						Type:     pluginsdk.TypeString,
-						Optional: true,
+						Required: true,
 					},
 
 					"package_full_name": {
 						Type:     pluginsdk.TypeString,
 						Optional: true,
+					},
+
+					"package_name": {
+						Type:     pluginsdk.TypeString,
+						Optional: true,
+					},
+
+					"package_family_name": {
+						Type:     pluginsdk.TypeString,
+						Optional: true,
+					},
+
+					"package_relative_path": {
+						Type:     pluginsdk.TypeString,
+						Optional: true,
+					},
+
+					"last_updated": {
+						Type:         pluginsdk.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.IsRFC3339Time,
 					},
 
 					"display_name": {
@@ -103,6 +141,54 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 						Type:     pluginsdk.TypeBool,
 						Optional: true,
 						Default:  false,
+					},
+
+					"version": {
+						Type:     pluginsdk.TypeString,
+						Optional: true,
+					},
+
+					"package_applications": {
+						Type:     pluginsdk.TypeList,
+						Optional: true,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"app_id": {
+									Type:     pluginsdk.TypeString,
+									Required: true,
+								},
+
+								"app_user_model_id": {
+									Type:     pluginsdk.TypeString,
+									Required: true,
+								},
+
+								"description": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+
+								"friendly_name": {
+									Type:     pluginsdk.TypeString,
+									Required: true,
+								},
+
+								"icon_image_name": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+
+								"raw_icon": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+
+								"raw_png": {
+									Type:     pluginsdk.TypeString,
+									Optional: true,
+								},
+							},
+						},
 					},
 				},
 			},
@@ -161,7 +247,6 @@ func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
 				Tags:       pointer.To(model.Tags),
 			}
 
-			fmt.Println("debug0", model.FailHealthCheckOnStagingFailure)
 			if model.FailHealthCheckOnStagingFailure != "" {
 				failHealthCheck := appattachpackage.FailHealthCheckOnStagingFailure(model.FailHealthCheckOnStagingFailure)
 				params.Properties.FailHealthCheckOnStagingFailure = &failHealthCheck
@@ -342,8 +427,47 @@ func expandAppAttachPackageImage(input []VirtualDesktopAppAttachPackageImageMode
 	if item.PackageFullName != "" {
 		result.PackageFullName = pointer.To(item.PackageFullName)
 	}
+	if item.PackageName != "" {
+		result.PackageName = pointer.To(item.PackageName)
+	}
+	if item.PackageFamilyName != "" {
+		result.PackageFamilyName = pointer.To(item.PackageFamilyName)
+	}
+	if item.PackageRelativePath != "" {
+		result.PackageRelativePath = pointer.To(item.PackageRelativePath)
+	}
+	if item.LastUpdated != "" {
+		result.LastUpdated = pointer.To(item.LastUpdated)
+	}
 	if item.DisplayName != "" {
 		result.DisplayName = pointer.To(item.DisplayName)
+	}
+	if item.Version != "" {
+		result.Version = pointer.To(item.Version)
+	}
+	if len(item.PackageApplications) > 0 {
+		apps := make([]appattachpackage.MsixPackageApplications, 0, len(item.PackageApplications))
+		for _, app := range item.PackageApplications {
+			msixApp := appattachpackage.MsixPackageApplications{
+				AppId:          pointer.To(app.AppId),
+				AppUserModelID: pointer.To(app.AppUserModelID),
+				FriendlyName:   pointer.To(app.FriendlyName),
+			}
+			if app.Description != "" {
+				msixApp.Description = pointer.To(app.Description)
+			}
+			if app.IconImageName != "" {
+				msixApp.IconImageName = pointer.To(app.IconImageName)
+			}
+			if app.RawIcon != "" {
+				msixApp.RawIcon = pointer.To(app.RawIcon)
+			}
+			if app.RawPng != "" {
+				msixApp.RawPng = pointer.To(app.RawPng)
+			}
+			apps = append(apps, msixApp)
+		}
+		result.PackageApplications = &apps
 	}
 	return &result
 }
@@ -359,6 +483,22 @@ func flattenAppAttachPackageImage(input *appattachpackage.AppAttachPackageInfoPr
 	if input.PackageFullName != nil {
 		result.PackageFullName = pointer.From(input.PackageFullName)
 	}
+	if input.PackageName != nil {
+		result.PackageName = pointer.From(input.PackageName)
+	}
+	if input.PackageFamilyName != nil {
+		result.PackageFamilyName = pointer.From(input.PackageFamilyName)
+	}
+	if input.PackageRelativePath != nil {
+		result.PackageRelativePath = pointer.From(input.PackageRelativePath)
+	}
+	if input.LastUpdated != nil {
+		lastUpdated := pointer.From(input.LastUpdated)
+		if lastUpdated != "" && !strings.HasSuffix(lastUpdated, "Z") {
+			lastUpdated += "Z"
+		}
+		result.LastUpdated = lastUpdated
+	}
 	if input.DisplayName != nil {
 		result.DisplayName = pointer.From(input.DisplayName)
 	}
@@ -367,6 +507,24 @@ func flattenAppAttachPackageImage(input *appattachpackage.AppAttachPackageInfoPr
 	}
 	if input.IsActive != nil {
 		result.IsActive = pointer.From(input.IsActive)
+	}
+	if input.Version != nil {
+		result.Version = pointer.From(input.Version)
+	}
+	if input.PackageApplications != nil {
+		apps := make([]VirtualDesktopAppAttachPackagePackageApplicationModel, 0, len(*input.PackageApplications))
+		for _, app := range *input.PackageApplications {
+			apps = append(apps, VirtualDesktopAppAttachPackagePackageApplicationModel{
+				AppId:          pointer.From(app.AppId),
+				AppUserModelID: pointer.From(app.AppUserModelID),
+				Description:    pointer.From(app.Description),
+				FriendlyName:   pointer.From(app.FriendlyName),
+				IconImageName:  pointer.From(app.IconImageName),
+				RawIcon:        pointer.From(app.RawIcon),
+				RawPng:         pointer.From(app.RawPng),
+			})
+		}
+		result.PackageApplications = apps
 	}
 	return []VirtualDesktopAppAttachPackageImageModel{result}
 }
