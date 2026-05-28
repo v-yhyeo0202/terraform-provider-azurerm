@@ -386,10 +386,24 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 
 	if msixImageProperties == nil {
 		if packageFullName != "" {
-			return nil, fmt.Errorf("no matched MSIX image with package full name %s was found", packageFullName)
+			availablePackageFullNames := make([]string, 0)
+			for _, msixImage := range msixImages {
+				if properties := msixImage.Properties; properties != nil && properties.PackageFullName != nil {
+					availablePackageFullNames = append(availablePackageFullNames, pointer.From(properties.PackageFullName))
+				}
+			}
+
+			return nil, fmt.Errorf("no matched MSIX image with package full name %s was found. The available package full names are: %v", packageFullName, availablePackageFullNames)
 		}
 
-		return nil, fmt.Errorf("no matched MSIX image with package relative path %s was found", packageRelativePath)
+		availablePackageRelativePaths := make([]string, 0)
+		for _, msixImage := range msixImages {
+			if properties := msixImage.Properties; properties != nil && properties.PackageRelativePath != nil {
+				availablePackageRelativePaths = append(availablePackageRelativePaths, pointer.From(properties.PackageRelativePath))
+			}
+		}
+
+		return nil, fmt.Errorf("no matched MSIX image with package relative path %s was found. The available package relative paths are: %v", packageRelativePath, availablePackageRelativePaths)
 	}
 
 	return msixImageProperties, nil
