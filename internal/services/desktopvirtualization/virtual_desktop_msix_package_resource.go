@@ -1,0 +1,396 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package desktopvirtualization
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msiximage"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msixpackage"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
+)
+
+//go:generate go run ../../tools/generator-tests resourceidentity -resource-name virtual_desktop_msix_package -service-package-name desktopvirtualization -properties "name" -compare-values "subscription_id:host_pool_id,resource_group_name:host_pool_id,host_pool_name:host_pool_id"
+
+var (
+	_ sdk.Resource             = VirtualDesktopMsixPackageResource{}
+	_ sdk.ResourceWithUpdate   = VirtualDesktopMsixPackageResource{}
+	_ sdk.ResourceWithIdentity = VirtualDesktopMsixPackageResource{}
+)
+
+type VirtualDesktopMsixPackageResource struct{}
+
+func (r VirtualDesktopMsixPackageResource) Identity() resourceids.ResourceId {
+	return &msixpackage.MsixPackageId{}
+}
+
+type VirtualDesktopMsixPackageModel struct {
+	ResourceGroupName     string `tfschema:"resource_group_name"`
+	HostPoolName          string `tfschema:"host_pool_name"`
+	Name                  string `tfschema:"name"`
+	PackageFullName       string `tfschema:"package_full_name"`
+	ImageUri              string `tfschema:"image_uri"`
+	DisplayName           string `tfschema:"display_name"`
+	IsRegularRegistration bool   `tfschema:"is_regular_registration"`
+	IsActive              bool   `tfschema:"is_active"`
+}
+
+func (r VirtualDesktopMsixPackageResource) ModelObject() interface{} {
+	return &VirtualDesktopMsixPackageModel{}
+}
+
+func (r VirtualDesktopMsixPackageResource) ResourceType() string {
+	return "azurerm_virtual_desktop_msix_package"
+}
+
+func (r VirtualDesktopMsixPackageResource) Arguments() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"resource_group_name": commonschema.ResourceGroupName(),
+
+		"host_pool_name": {
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+
+		"name": {
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+
+		"package_full_name": {
+			Type:     pluginsdk.TypeString,
+			Required: true,
+		},
+
+		"image_uri": {
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+
+		"display_name": {
+			Type:     pluginsdk.TypeString,
+			Required: true,
+		},
+
+		"is_regular_registration": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
+
+		"is_active": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+	}
+}
+
+func (r VirtualDesktopMsixPackageResource) Attributes() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{}
+}
+
+func (r VirtualDesktopMsixPackageResource) Create() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DesktopVirtualization.MsixPackagesClient
+			subscriptionId := metadata.Client.Account.SubscriptionId
+
+			var model VirtualDesktopMsixPackageModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			id := msixpackage.NewMsixPackageID(subscriptionId, model.ResourceGroupName, model.HostPoolName, model.Name)
+
+			existing, err := client.Get(ctx, id)
+			if err != nil {
+				if !response.WasNotFound(existing.HttpResponse) {
+					return fmt.Errorf("checking for the presence of an existing %s: %+v", id, err)
+				}
+			}
+
+			if !response.WasNotFound(existing.HttpResponse) {
+				return metadata.ResourceRequiresImport(r.ResourceType(), id)
+			}
+
+			hostPoolId := msiximage.NewHostPoolID(subscriptionId, model.ResourceGroupName, model.HostPoolName)
+			msixImageProperties, err := getMsixImageProperties(ctx, metadata, hostPoolId, model.ImageUri, model.PackageFullName, "")
+			if err != nil {
+				return fmt.Errorf("retrieving MSIX image properties: %+v", err)
+			}
+
+			imagePath := strings.ReplaceAll(model.ImageUri, "/", "\\\\")
+			imagePath = strings.TrimLeft(imagePath, "https:")
+
+			param := msixpackage.MSIXPackage{
+				Properties: msixpackage.MSIXPackageProperties{
+					DisplayName:           pointer.To(model.DisplayName),
+					ImagePath:             pointer.To(imagePath),
+					IsActive:              pointer.To(model.IsActive),
+					IsRegularRegistration: pointer.To(model.IsRegularRegistration),
+					LastUpdated:           msixImageProperties.LastUpdated,
+					PackageApplications:   r.expandPackageApplications(msixImageProperties.PackageApplications),
+					PackageFamilyName:     msixImageProperties.PackageFamilyName,
+					PackageName:           msixImageProperties.PackageName,
+					PackageRelativePath:   msixImageProperties.PackageRelativePath,
+					Version:               msixImageProperties.Version,
+				},
+			}
+
+			if _, err := client.CreateOrUpdate(ctx, id, param); err != nil {
+				return fmt.Errorf("creating %s: %+v", id, err)
+			}
+
+			metadata.SetID(id)
+			if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, &id); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+}
+
+func (r VirtualDesktopMsixPackageResource) Update() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DesktopVirtualization.MsixPackagesClient
+
+			id, err := msixpackage.ParseMsixPackageID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			var model VirtualDesktopMsixPackageModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			existing, err := client.Get(ctx, *id)
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
+			}
+			if existing.Model == nil {
+				return fmt.Errorf("retrieving %s: `model` was nil", *id)
+			}
+
+			param := *existing.Model
+
+			if metadata.ResourceData.HasChange("package_full_name") {
+				hostPoolId := msiximage.NewHostPoolID(metadata.Client.Account.SubscriptionId, model.ResourceGroupName, model.HostPoolName)
+				msixImageProperties, err := getMsixImageProperties(ctx, metadata, hostPoolId, model.ImageUri, model.PackageFullName, "")
+				if err != nil {
+					return fmt.Errorf("retrieving MSIX image properties: %+v", err)
+				}
+
+				param.Properties.LastUpdated = msixImageProperties.LastUpdated
+				param.Properties.PackageApplications = r.expandPackageApplications(msixImageProperties.PackageApplications)
+				param.Properties.PackageFamilyName = msixImageProperties.PackageFamilyName
+				param.Properties.PackageName = msixImageProperties.PackageName
+				param.Properties.PackageRelativePath = msixImageProperties.PackageRelativePath
+				param.Properties.Version = msixImageProperties.Version
+			}
+
+			if metadata.ResourceData.HasChange("display_name") {
+				param.Properties.DisplayName = pointer.To(model.DisplayName)
+			}
+
+			if metadata.ResourceData.HasChange("is_regular_registration") {
+				param.Properties.IsRegularRegistration = pointer.To(model.IsRegularRegistration)
+			}
+
+			if metadata.ResourceData.HasChange("is_active") {
+				param.Properties.IsActive = pointer.To(model.IsActive)
+			}
+
+			if _, err := client.CreateOrUpdate(ctx, *id, param); err != nil {
+				return fmt.Errorf("updating %s: %+v", *id, err)
+			}
+
+			return nil
+		},
+	}
+}
+
+func (r VirtualDesktopMsixPackageResource) Read() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DesktopVirtualization.MsixPackagesClient
+
+			id, err := msixpackage.ParseMsixPackageID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			resp, err := client.Get(ctx, *id)
+			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return metadata.MarkAsGone(*id)
+				}
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
+			}
+
+			return r.flatten(ctx, metadata, id, resp.Model)
+		},
+	}
+}
+
+func (r VirtualDesktopMsixPackageResource) Delete() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DesktopVirtualization.MsixPackagesClient
+
+			id, err := msixpackage.ParseMsixPackageID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			if _, err := client.Delete(ctx, *id); err != nil {
+				return fmt.Errorf("deleting %s: %+v", *id, err)
+			}
+
+			return nil
+		},
+	}
+}
+
+func (r VirtualDesktopMsixPackageResource) CustomizeDiff() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			resourceGroupName, _ := metadata.ResourceDiff.GetOk("resource_group_name")
+			hostPoolName, _ := metadata.ResourceDiff.GetOk("host_pool_name")
+			hostPoolId := msiximage.NewHostPoolID(metadata.Client.Account.SubscriptionId, resourceGroupName.(string), hostPoolName.(string))
+
+			imageUri, _ := metadata.ResourceDiff.GetOk("image_uri")
+			packageFullName, _ := metadata.ResourceDiff.GetOk("package_full_name")
+			_, err := getMsixImageProperties(ctx, metadata, hostPoolId, imageUri.(string), packageFullName.(string), "")
+			if err != nil {
+				return fmt.Errorf("retrieving MSIX image properties: %+v", err)
+			}
+
+			return nil
+		},
+	}
+}
+
+func (r VirtualDesktopMsixPackageResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+	return msixpackage.ValidateMsixPackageID
+}
+
+func (r VirtualDesktopMsixPackageResource) flatten(ctx context.Context, metadata sdk.ResourceMetaData, id *msixpackage.MsixPackageId, input *msixpackage.MSIXPackage) error {
+	state := VirtualDesktopMsixPackageModel{
+		ResourceGroupName: id.ResourceGroupName,
+		HostPoolName:      id.HostPoolName,
+		Name:              id.MsixPackageName,
+	}
+
+	if input != nil {
+		props := input.Properties
+		hostPoolId := msiximage.NewHostPoolID(metadata.Client.Account.SubscriptionId, id.ResourceGroupName, id.HostPoolName)
+		msixImageProperties, err := getMsixImageProperties(ctx, metadata, hostPoolId, pointer.From(props.ImagePath), "", pointer.From(props.PackageRelativePath))
+		if err != nil {
+			return fmt.Errorf("retrieving MSIX image properties: %+v", err)
+		}
+
+		if packageFullName := msixImageProperties.PackageFullName; packageFullName != nil {
+			state.PackageFullName = pointer.From(packageFullName)
+		}
+
+		if imagePath := props.ImagePath; imagePath != nil {
+			imageUri := strings.ReplaceAll(pointer.From(imagePath), "\\\\", "/")
+			imageUri = fmt.Sprintf("https:%s", imageUri)
+			state.ImageUri = imageUri
+		}
+
+		if displayName := props.DisplayName; displayName != nil {
+			state.DisplayName = pointer.From(displayName)
+		}
+
+		if isRegularRegistration := props.IsRegularRegistration; isRegularRegistration != nil {
+			state.IsRegularRegistration = pointer.From(isRegularRegistration)
+		}
+
+		if isActive := props.IsActive; isActive != nil {
+			state.IsActive = pointer.From(isActive)
+		}
+	}
+
+	if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, id); err != nil {
+		return err
+	}
+	return metadata.Encode(&state)
+}
+
+func (r VirtualDesktopMsixPackageResource) expandPackageApplications(inputs *[]msiximage.MsixPackageApplications) *[]msixpackage.MsixPackageApplications {
+	outputs := make([]msixpackage.MsixPackageApplications, 0)
+	if inputs == nil {
+		return pointer.To(outputs)
+	}
+
+	for _, input := range *inputs {
+		outputs = append(outputs, msixpackage.MsixPackageApplications{
+			AppId:          input.AppId,
+			AppUserModelID: input.AppUserModelID,
+			Description:    input.Description,
+			FriendlyName:   input.FriendlyName,
+			IconImageName:  input.IconImageName,
+			RawIcon:        input.RawIcon,
+			RawPng:         input.RawPng,
+		})
+	}
+
+	return pointer.To(outputs)
+}
+
+func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, hostPoolId msiximage.HostPoolId, imageUri string, packageFullName string, packageRelativePath string) (*msiximage.ExpandMsixImageProperties, error) {
+	client := metadata.Client.DesktopVirtualization.MsixImageClient
+	msixImageUri := msiximage.MSIXImageURI{
+		Uri: pointer.To(imageUri),
+	}
+	result, err := client.ExpandComplete(ctx, hostPoolId, msixImageUri)
+	if err != nil {
+		return nil, fmt.Errorf("expanding MSIX image of host pool %s: %+v", hostPoolId, err)
+	}
+
+	msixImages := result.Items
+	var msixImageProperties *msiximage.ExpandMsixImageProperties = nil
+	for _, msixImage := range msixImages {
+		if properties := msixImage.Properties; properties != nil {
+			packageFullNameMatched := packageFullName != "" && properties.PackageFullName != nil && strings.EqualFold(pointer.From(properties.PackageFullName), packageFullName)
+
+			packageRelativePathMatched := packageRelativePath != "" && properties.PackageRelativePath != nil && strings.EqualFold(pointer.From(properties.PackageRelativePath), packageRelativePath)
+
+			if packageFullNameMatched || packageRelativePathMatched {
+				msixImageProperties = properties
+				break
+			}
+		}
+	}
+
+	if msixImageProperties == nil {
+		if packageFullName != "" {
+			return nil, fmt.Errorf("no matched MSIX image with package full name %s was found", packageFullName)
+		}
+
+		return nil, fmt.Errorf("no matched MSIX image with package relative path %s was found", packageRelativePath)
+	}
+
+	return msixImageProperties, nil
+}
