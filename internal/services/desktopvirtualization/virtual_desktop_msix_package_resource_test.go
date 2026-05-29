@@ -47,22 +47,31 @@ func (VirtualDesktopMsixPackageResource) Exists(ctx context.Context, clients *cl
 	return pointer.To(resp.Model != nil), nil
 }
 
-func (VirtualDesktopMsixPackageResource) basic(data acceptance.TestData) string {
+func (r VirtualDesktopMsixPackageResource) template(data acceptance.TestData) string {
+	cimFileNames := []string{
+		"objectid_c57e6597-3a9f-4723-8865-3272302f8c12_0",
+		"objectid_c57e6597-3a9f-4723-8865-3272302f8c12_1",
+		"objectid_c57e6597-3a9f-4723-8865-3272302f8c12_2",
+		"region_c57e6597-3a9f-4723-8865-3272302f8c12_0",
+		"region_c57e6597-3a9f-4723-8865-3272302f8c12_1",
+		"region_c57e6597-3a9f-4723-8865-3272302f8c12_2",
+		"xmlNotepad.cim",
+	}
+
+	fileShareConfig := ""
+	for i, cimFileName := range cimFileNames {
+		fileShareConfig += fmt.Sprintf(`
+resource "azurerm_storage_share_file" "test%[1]d" {
+  name              = "%[2]s"
+  storage_share_url = azurerm_storage_share.test.url
+  source            = "${path.module}/testdata/%[2]s"
+}
+`, i, cimFileName)
+	}
+
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
-}
-
-locals {
-  cim_file_paths = [
-    "objectid_c57e6597-3a9f-4723-8865-3272302f8c12_0",
-    "objectid_c57e6597-3a9f-4723-8865-3272302f8c12_1",
-    "objectid_c57e6597-3a9f-4723-8865-3272302f8c12_2",
-    "region_c57e6597-3a9f-4723-8865-3272302f8c12_0",
-    "region_c57e6597-3a9f-4723-8865-3272302f8c12_1",
-    "region_c57e6597-3a9f-4723-8865-3272302f8c12_2",
-    "xmlNotepad.cim"
-  ]
 }
 
 resource "azurerm_resource_group" "test" {
@@ -71,7 +80,7 @@ resource "azurerm_resource_group" "test" {
 }
 
 resource "azurerm_storage_account" "test" {
-  name                     = "acctestst%[3]d"
+  name                     = "acctestst%[3]s"
   resource_group_name      = azurerm_resource_group.test.name
   location                 = azurerm_resource_group.test.location
   account_tier             = "Standard"
@@ -84,13 +93,7 @@ resource "azurerm_storage_share" "test" {
   quota              = 16
 }
 
-resource "azurerm_storage_share_file" "test" {
-  for_each = toset(local.cim_file_paths)
-
-  name              = each.value
-  storage_share_url = azurerm_storage_share.test.url
-  source            = "${path.module}/testdata/${each.value}"
-}
+%[4]s
 
 resource "azurerm_virtual_network" "test" {
   name                = "acctest-vnet-%[1]d"
@@ -131,8 +134,21 @@ resource "azurerm_nat_gateway" "test" {
   location            = azurerm_resource_group.test.location
 }
 
+resource "azurerm_virtual_desktop_host_pool" "test" {
+  name                = "acctest-vdpool-%[1]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+  type                = "Pooled"
+  load_balancer_type  = "BreadthFirst"
+}
+
+resource "azurerm_virtual_desktop_host_pool_registration_info" "test" {
+  hostpool_id     = azurerm_virtual_desktop_host_pool.test.id
+  expiration_date = "2026-05-30T00:00:00Z"
+}
+
 resource "azurerm_windows_virtual_machine" "test" {
-  name                = "acctest-vm-%[1]d"
+  name                = "vm-%[3]s"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
   size                = "Standard_F2as_v7"
@@ -160,6 +176,10 @@ resource "azurerm_windows_virtual_machine" "test" {
   identity {
     type = "SystemAssigned"
   }
+
+  depends_on = [
+    azurerm_virtual_desktop_host_pool.test
+  ]
 }
 
 resource "azurerm_virtual_machine_extension" "test0" {
@@ -212,33 +232,27 @@ resource "azurerm_virtual_machine_extension" "test2" {
     azurerm_nat_gateway.test
   ]
 }
-
-resource "azurerm_virtual_desktop_host_pool" "test" {
-  name                = "acctest-vdpool-%[1]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  type                = "Pooled"
-  load_balancer_type  = "BreadthFirst"
+`, data.RandomInteger, data.Locations.Secondary, data.RandomStringOfLength(10), fileShareConfig)
 }
 
-resource "azurerm_virtual_desktop_host_pool_registration_info" "test" {
-  hostpool_id     = azurerm_virtual_desktop_host_pool.test.id
-  expiration_date = "2026-05-30T00:00:00Z"
-}
+func (r VirtualDesktopMsixPackageResource) basic(data acceptance.TestData) string {
+
+	return fmt.Sprintf(`
+%[1]s
 
 resource "azurerm_virtual_desktop_msix_package" "test" {
-  name                = "acctest-msix-%[1]d"
+  name                = "acctest-msix-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   display_name        = "XmlNotepad"
   host_pool_name      = azurerm_virtual_desktop_host_pool.test.name
-  image_uri           = azurerm_storage_share_file.test["xmlNotepad.cim"].id
+  image_uri           = azurerm_storage_share_file.test6.id
   package_full_name   = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
 
   depends_on = [
     azurerm_virtual_machine_extension.test0,
-	azurerm_virtual_machine_extension.test1,
-	azurerm_virtual_machine_extension.test2
+    azurerm_virtual_machine_extension.test1,
+    azurerm_virtual_machine_extension.test2
   ]
 }
-`, data.RandomInteger, data.Locations.Secondary, data.RandomIntOfLength(14))
+`, r.template(data), data.RandomInteger)
 }

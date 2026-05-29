@@ -16,10 +16,13 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msiximage"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msixpackage"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/services/desktopvirtualization/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
 //go:generate go run ../../tools/generator-tests resourceidentity -resource-name virtual_desktop_msix_package -service-package-name desktopvirtualization -properties "name" -compare-values "subscription_id:host_pool_id,resource_group_name:host_pool_id,host_pool_name:host_pool_id"
+
+// Use preflight?
 
 var (
 	_ sdk.Resource             = VirtualDesktopMsixPackageResource{}
@@ -57,9 +60,10 @@ func (r VirtualDesktopMsixPackageResource) Arguments() map[string]*pluginsdk.Sch
 		"resource_group_name": commonschema.ResourceGroupName(),
 
 		"host_pool_name": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
-			ForceNew: true,
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.HostPoolName,
 		},
 
 		"name": {
@@ -133,7 +137,7 @@ func (r VirtualDesktopMsixPackageResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving MSIX image properties: %+v", err)
 			}
 
-			imagePath := strings.ReplaceAll(model.ImageUri, "/", "\\\\")
+			imagePath := strings.ReplaceAll(model.ImageUri, "/", "\\")
 			imagePath = strings.TrimLeft(imagePath, "https:")
 
 			param := msixpackage.MSIXPackage{
@@ -270,26 +274,6 @@ func (r VirtualDesktopMsixPackageResource) Delete() sdk.ResourceFunc {
 	}
 }
 
-func (r VirtualDesktopMsixPackageResource) CustomizeDiff() sdk.ResourceFunc {
-	return sdk.ResourceFunc{
-		Timeout: 30 * time.Minute,
-		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			resourceGroupName, _ := metadata.ResourceDiff.GetOk("resource_group_name")
-			hostPoolName, _ := metadata.ResourceDiff.GetOk("host_pool_name")
-			hostPoolId := msiximage.NewHostPoolID(metadata.Client.Account.SubscriptionId, resourceGroupName.(string), hostPoolName.(string))
-
-			imageUri, _ := metadata.ResourceDiff.GetOk("image_uri")
-			packageFullName, _ := metadata.ResourceDiff.GetOk("package_full_name")
-			_, err := getMsixImageProperties(ctx, metadata, hostPoolId, imageUri.(string), packageFullName.(string), "")
-			if err != nil {
-				return fmt.Errorf("retrieving MSIX image properties: %+v", err)
-			}
-
-			return nil
-		},
-	}
-}
-
 func (r VirtualDesktopMsixPackageResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return msixpackage.ValidateMsixPackageID
 }
@@ -303,20 +287,21 @@ func (r VirtualDesktopMsixPackageResource) flatten(ctx context.Context, metadata
 
 	if input != nil {
 		props := input.Properties
-		hostPoolId := msiximage.NewHostPoolID(metadata.Client.Account.SubscriptionId, id.ResourceGroupName, id.HostPoolName)
-		msixImageProperties, err := getMsixImageProperties(ctx, metadata, hostPoolId, pointer.From(props.ImagePath), "", pointer.From(props.PackageRelativePath))
-		if err != nil {
-			return fmt.Errorf("retrieving MSIX image properties: %+v", err)
-		}
-
-		if packageFullName := msixImageProperties.PackageFullName; packageFullName != nil {
-			state.PackageFullName = pointer.From(packageFullName)
-		}
 
 		if imagePath := props.ImagePath; imagePath != nil {
-			imageUri := strings.ReplaceAll(pointer.From(imagePath), "\\\\", "/")
+			imageUri := strings.ReplaceAll(pointer.From(imagePath), "\\", "/")
 			imageUri = fmt.Sprintf("https:%s", imageUri)
 			state.ImageUri = imageUri
+
+			hostPoolId := msiximage.NewHostPoolID(metadata.Client.Account.SubscriptionId, id.ResourceGroupName, id.HostPoolName)
+			msixImageProperties, err := getMsixImageProperties(ctx, metadata, hostPoolId, imageUri, "", pointer.From(props.PackageRelativePath))
+			if err != nil {
+				return fmt.Errorf("retrieving MSIX image properties: %+v", err)
+			}
+
+			if packageFullName := msixImageProperties.PackageFullName; packageFullName != nil {
+				state.PackageFullName = pointer.From(packageFullName)
+			}
 		}
 
 		if displayName := props.DisplayName; displayName != nil {
