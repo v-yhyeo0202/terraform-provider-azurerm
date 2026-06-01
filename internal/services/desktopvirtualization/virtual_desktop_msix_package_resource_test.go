@@ -163,6 +163,14 @@ resource "azurerm_virtual_desktop_host_pool_registration_info" "test" {
   expiration_date = "%[5]s"
 }
 
+resource "azurerm_virtual_desktop_application_group" "test" {
+  name                         = "acctest-vdag-%[1]d"
+  resource_group_name          = azurerm_resource_group.test.name
+  location                     = azurerm_resource_group.test.location
+  host_pool_id                 = azurerm_virtual_desktop_host_pool.test.id
+  type                         = "RemoteApp"
+}
+
 resource "azurerm_windows_virtual_machine" "test" {
   name                = "vm-%[3]s"
   resource_group_name = azurerm_resource_group.test.name
@@ -266,6 +274,16 @@ resource "azurerm_virtual_desktop_msix_package" "test" {
     azurerm_virtual_machine_extension.test2
   ]
 }
+/*
+resource "azurerm_virtual_desktop_application" "test" {
+  name                         = "acctest-vdapp-%[2]d"
+  application_group_id         = azurerm_virtual_desktop_application_group.test.id
+  path                         = azurerm_storage_share_file.test6.id
+  command_line_argument_policy = "DoNotAllow"
+  msix_package_application_id  = azurerm_virtual_desktop_msix_package.test.id
+  show_in_portal               = true
+}
+*/
 `, r.template(data), data.RandomInteger)
 }
 

@@ -115,6 +115,11 @@ func resourceVirtualDesktopApplication() *pluginsdk.Resource {
 				Type:     pluginsdk.TypeInt,
 				Optional: true,
 			},
+
+			"msix_package_application_id": {
+				Type:     pluginsdk.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -156,6 +161,10 @@ func resourceVirtualDesktopApplicationCreateUpdate(d *pluginsdk.ResourceData, me
 			IconPath:             pointer.To(d.Get("icon_path").(string)),
 			IconIndex:            pointer.To(int64(d.Get("icon_index").(int))),
 		},
+	}
+
+	if msixPackageApplicationId := d.Get("msix_package_application_id").(string); msixPackageApplicationId != "" {
+		payload.Properties.MsixPackageApplicationId = pointer.To(msixPackageApplicationId)
 	}
 
 	if _, err := client.CreateOrUpdate(ctx, id, payload); err != nil {
@@ -201,6 +210,7 @@ func resourceVirtualDesktopApplicationRead(d *pluginsdk.ResourceData, meta inter
 		d.Set("show_in_portal", props.ShowInPortal)
 		d.Set("icon_path", props.IconPath)
 		d.Set("icon_index", props.IconIndex)
+		d.Set("msix_package_application_id", props.MsixPackageApplicationId)
 	}
 
 	return nil
