@@ -65,13 +65,13 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 
 	msixPackagesClient, err := msixpackage.NewMSIXPackageClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
-		return nil, fmt.Errorf("building Resources Client: %+v", err)
+		return nil, fmt.Errorf("building MsixPackage Client: %+v", err)
 	}
 	o.Configure(msixPackagesClient.Client, o.Authorizers.ResourceManager)
 
 	msixImageClient, err := msiximage.NewMsixImageClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
-		return nil, fmt.Errorf("building Resources Client: %+v", err)
+		return nil, fmt.Errorf("building MsixImage Client: %+v", err)
 	}
 	o.Configure(msixImageClient.Client, o.Authorizers.ResourceManager)
 

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msixpackage"
@@ -25,6 +26,21 @@ func TestAccVirtualDesktopMsixPackage_basic(t *testing.T) {
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccVirtualDesktopMsixPackage_complete(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_virtual_desktop_msix_package", "test")
+	r := VirtualDesktopMsixPackageResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.complete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -144,7 +160,7 @@ resource "azurerm_virtual_desktop_host_pool" "test" {
 
 resource "azurerm_virtual_desktop_host_pool_registration_info" "test" {
   hostpool_id     = azurerm_virtual_desktop_host_pool.test.id
-  expiration_date = "2026-05-30T00:00:00Z"
+  expiration_date = "%[5]s"
 }
 
 resource "azurerm_windows_virtual_machine" "test" {
@@ -176,10 +192,6 @@ resource "azurerm_windows_virtual_machine" "test" {
   identity {
     type = "SystemAssigned"
   }
-
-  depends_on = [
-    azurerm_virtual_desktop_host_pool.test
-  ]
 }
 
 resource "azurerm_virtual_machine_extension" "test0" {
@@ -232,7 +244,7 @@ resource "azurerm_virtual_machine_extension" "test2" {
     azurerm_nat_gateway.test
   ]
 }
-`, data.RandomInteger, data.Locations.Secondary, data.RandomStringOfLength(10), fileShareConfig)
+`, data.RandomInteger, data.Locations.Secondary, data.RandomStringOfLength(10), fileShareConfig, time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339))
 }
 
 func (r VirtualDesktopMsixPackageResource) basic(data acceptance.TestData) string {
@@ -247,6 +259,30 @@ resource "azurerm_virtual_desktop_msix_package" "test" {
   host_pool_name      = azurerm_virtual_desktop_host_pool.test.name
   image_uri           = azurerm_storage_share_file.test6.id
   package_full_name   = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
+
+  depends_on = [
+    azurerm_virtual_machine_extension.test0,
+    azurerm_virtual_machine_extension.test1,
+    azurerm_virtual_machine_extension.test2
+  ]
+}
+`, r.template(data), data.RandomInteger)
+}
+
+func (r VirtualDesktopMsixPackageResource) complete(data acceptance.TestData) string {
+
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_virtual_desktop_msix_package" "test" {
+  name                    = "acctest-msix-%[2]d"
+  resource_group_name     = azurerm_resource_group.test.name
+  display_name            = "XmlNotepad"
+  host_pool_name          = azurerm_virtual_desktop_host_pool.test.name
+  image_uri               = azurerm_storage_share_file.test6.id
+  package_full_name       = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
+  is_regular_registration = false
+  is_active               = true
 
   depends_on = [
     azurerm_virtual_machine_extension.test0,

@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msiximage"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msixpackage"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/services/desktopvirtualization/validate"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/services/desktopvirtualization/method"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
@@ -60,10 +60,9 @@ func (r VirtualDesktopMsixPackageResource) Arguments() map[string]*pluginsdk.Sch
 		"resource_group_name": commonschema.ResourceGroupName(),
 
 		"host_pool_name": {
-			Type:         pluginsdk.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: validate.HostPoolName,
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
 		},
 
 		"name": {
@@ -345,11 +344,10 @@ func (r VirtualDesktopMsixPackageResource) expandPackageApplications(inputs *[]m
 }
 
 func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, hostPoolId msiximage.HostPoolId, imageUri string, packageFullName string, packageRelativePath string) (*msiximage.ExpandMsixImageProperties, error) {
-	client := metadata.Client.DesktopVirtualization.MsixImageClient
 	msixImageUri := msiximage.MSIXImageURI{
 		Uri: pointer.To(imageUri),
 	}
-	result, err := client.ExpandComplete(ctx, hostPoolId, msixImageUri)
+	result, err := method.ExpandCompleteMsixImage(ctx, metadata, hostPoolId, msixImageUri)
 	if err != nil {
 		return nil, fmt.Errorf("expanding MSIX image of host pool %s: %+v", hostPoolId, err)
 	}

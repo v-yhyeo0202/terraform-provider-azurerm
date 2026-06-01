@@ -52,10 +52,6 @@ func (c MsixImageClient) Expand(ctx context.Context, id HostPoolId, input MSIXIm
 		return
 	}
 
-	if err = req.Marshal(input); err != nil {
-		return
-	}
-
 	var resp *client.Response
 	resp, err = req.ExecutePaged(ctx)
 	if resp != nil {
