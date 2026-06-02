@@ -62,7 +62,7 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 
 		"image": {
 			Type:     pluginsdk.TypeList,
-			Optional: true,
+			Required: true,
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
