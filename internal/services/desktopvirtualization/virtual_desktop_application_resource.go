@@ -81,7 +81,7 @@ func resourceVirtualDesktopApplication() *pluginsdk.Resource {
 
 			"path": {
 				Type:     pluginsdk.TypeString,
-				Required: true,
+				Optional: true,
 			},
 
 			"command_line_argument_policy": {
@@ -114,6 +114,23 @@ func resourceVirtualDesktopApplication() *pluginsdk.Resource {
 			"icon_index": {
 				Type:     pluginsdk.TypeInt,
 				Optional: true,
+			},
+
+			"msix_package_application_id": {
+				Type:     pluginsdk.TypeString,
+				Optional: true,
+			},
+
+			"msix_package_family_name": {
+				Type:     pluginsdk.TypeString,
+				Optional: true,
+			},
+
+			"application_type": {
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(application.PossibleValuesForRemoteApplicationType(), false),
 			},
 		},
 	}
@@ -151,13 +168,28 @@ func resourceVirtualDesktopApplicationCreateUpdate(d *pluginsdk.ResourceData, me
 		Properties: application.ApplicationProperties{
 			FriendlyName:         pointer.To(d.Get("friendly_name").(string)),
 			Description:          pointer.To(d.Get("description").(string)),
-			FilePath:             pointer.To(d.Get("path").(string)),
 			CommandLineSetting:   application.CommandLineSetting(d.Get("command_line_argument_policy").(string)),
 			CommandLineArguments: pointer.To(d.Get("command_line_arguments").(string)),
 			ShowInPortal:         pointer.To(d.Get("show_in_portal").(bool)),
 			IconPath:             pointer.To(d.Get("icon_path").(string)),
 			IconIndex:            pointer.To(int64(d.Get("icon_index").(int))),
 		},
+	}
+
+	if filePath := d.Get("path").(string); filePath != "" {
+		payload.Properties.FilePath = pointer.To(filePath)
+	}
+
+	if msixPackageApplicationId := d.Get("msix_package_application_id").(string); msixPackageApplicationId != "" {
+		payload.Properties.MsixPackageApplicationId = pointer.To(msixPackageApplicationId)
+	}
+
+	if msixPackageFamilyName := d.Get("msix_package_family_name").(string); msixPackageFamilyName != "" {
+		payload.Properties.MsixPackageFamilyName = pointer.To(msixPackageFamilyName)
+	}
+
+	if applicationType := d.Get("application_type").(string); applicationType != "" {
+		payload.Properties.ApplicationType = pointer.To(application.RemoteApplicationType(applicationType))
 	}
 
 	if _, err := client.CreateOrUpdate(ctx, id, payload); err != nil {
@@ -205,6 +237,9 @@ func resourceVirtualDesktopApplicationRead(d *pluginsdk.ResourceData, meta inter
 		d.Set("show_in_portal", props.ShowInPortal)
 		d.Set("icon_path", props.IconPath)
 		d.Set("icon_index", props.IconIndex)
+		d.Set("msix_package_application_id", props.MsixPackageApplicationId)
+		d.Set("msix_package_family_name", props.MsixPackageFamilyName)
+		d.Set("application_type", pointer.FromEnum[application.RemoteApplicationType](props.ApplicationType))
 	}
 
 	return nil
