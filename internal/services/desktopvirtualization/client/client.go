@@ -13,10 +13,12 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/scalingplan"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/sessionhost"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/workspace"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/appattachpackage"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/common"
 )
 
 type Client struct {
+	AppAttachPackagesClient *appattachpackage.AppAttachPackageClient
 	ApplicationGroupsClient *applicationgroup.ApplicationGroupClient
 	ApplicationsClient      *application.ApplicationClient
 	DesktopsClient          *desktop.DesktopClient
@@ -27,6 +29,12 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) (*Client, error) {
+	appAttachPackagesClient, err := appattachpackage.NewAppAttachPackageClientWithBaseURI(o.Environment.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building VirtualDesktopAppAttachPackages Client: %+v", err)
+	}
+	o.Configure(appAttachPackagesClient.Client, o.Authorizers.ResourceManager)
+
 	applicationGroupsClient, err := applicationgroup.NewApplicationGroupClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
 		return nil, fmt.Errorf("building ApplicationGroups Client: %+v", err)
@@ -70,6 +78,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	o.Configure(workspacesClient.Client, o.Authorizers.ResourceManager)
 
 	return &Client{
+		AppAttachPackagesClient: appAttachPackagesClient,
 		ApplicationGroupsClient: applicationGroupsClient,
 		ApplicationsClient:      applicationsClient,
 		DesktopsClient:          desktopsClient,

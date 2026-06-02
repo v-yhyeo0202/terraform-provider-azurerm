@@ -112,3 +112,5 @@ require (
 )
 
 go 1.25.10
+
+replace github.com/hashicorp/go-azure-sdk/resource-manager => ../../go-azure-sdk/resource-manager

@@ -184,7 +184,7 @@ github.com/hashicorp/go-azure-sdk/data-plane/keyvault/7-4/secrets
 github.com/hashicorp/go-azure-sdk/data-plane/keyvault/7-4/settings
 github.com/hashicorp/go-azure-sdk/data-plane/keyvault/7-4/storage
 github.com/hashicorp/go-azure-sdk/data-plane/synapse/2021-06-01-preview/managedprivateendpoints
-# github.com/hashicorp/go-azure-sdk/resource-manager v0.20260520.1174752-0.20260520174819-50f34b9d97b3
+# github.com/hashicorp/go-azure-sdk/resource-manager v0.20260520.1174752-0.20260520174819-50f34b9d97b3 => ../../go-azure-sdk/resource-manager
 ## explicit; go 1.25.5
 github.com/hashicorp/go-azure-sdk/resource-manager/aad/2021-05-01/domainservices
 github.com/hashicorp/go-azure-sdk/resource-manager/aadb2c/2021-04-01-preview
@@ -525,6 +525,7 @@ github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04
 github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/scalingplan
 github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/sessionhost
 github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/workspace
+github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/appattachpackage
 github.com/hashicorp/go-azure-sdk/resource-manager/devcenter/2025-02-01
 github.com/hashicorp/go-azure-sdk/resource-manager/devcenter/2025-02-01/attachednetworkconnections
 github.com/hashicorp/go-azure-sdk/resource-manager/devcenter/2025-02-01/catalogs
@@ -1866,3 +1867,4 @@ gopkg.in/yaml.v3
 ## explicit; go 1.19
 software.sslmate.com/src/go-pkcs12
 software.sslmate.com/src/go-pkcs12/internal/rc2
+# github.com/hashicorp/go-azure-sdk/resource-manager => ../../go-azure-sdk/resource-manager
