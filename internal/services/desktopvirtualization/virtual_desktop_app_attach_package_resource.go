@@ -13,6 +13,8 @@ import (
 
 type VirtualDesktopAppAttachPackageResource struct{}
 
+var _ pluginsdk.Resource = VirtualDesktopAppAttachPackageResource{}
+
 type VirtualDesktopAppAttachPackageModel struct {
 	Name                            string                                     `tfschema:"name"`
 	ResourceGroupName               string                                     `tfschema:"resource_group_name"`
