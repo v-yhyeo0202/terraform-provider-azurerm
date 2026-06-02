@@ -25,7 +25,7 @@ type VirtualDesktopAppAttachPackageModel struct {
 
 type VirtualDesktopAppAttachPackageImageModel struct {
 	ImagePath             string `tfschema:"image_path"`
-	PackageFamilyName     string `tfschema:"package_family_name"`
+	PackageFullName       string `tfschema:"package_full_name"`
 	DisplayName           string `tfschema:"display_name"`
 	IsRegularRegistration bool   `tfschema:"is_regular_registration"`
 	IsActive              bool   `tfschema:"is_active"`
