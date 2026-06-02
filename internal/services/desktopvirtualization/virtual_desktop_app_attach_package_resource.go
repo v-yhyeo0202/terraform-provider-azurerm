@@ -21,7 +21,10 @@ import (
 
 type VirtualDesktopAppAttachPackageResource struct{}
 
-var _ pluginsdk.Resource = VirtualDesktopAppAttachPackageResource{}
+var (
+	_ sdk.Resource           = VirtualDesktopAppAttachPackageResource{}
+	_ sdk.ResourceWithUpdate = VirtualDesktopAppAttachPackageResource{}
+)
 
 type VirtualDesktopAppAttachPackageModel struct {
 	Name                            string                                     `tfschema:"name"`
@@ -172,8 +175,50 @@ func (r VirtualDesktopAppAttachPackageResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DesktopVirtualization.AppAttachPackagesClient
+
+			id, err := appattachpackage.ParseAppAttachPackageID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			var model VirtualDesktopAppAttachPackageModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			existing, err := client.Get(ctx, *id)
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
+			}
+			if existing.Model == nil {
+				return fmt.Errorf("retrieving %s: `model` was nil", *id)
+			}
+
+			param := *existing.Model
+
+			if metadata.ResourceData.HasChange("fail_health_check_on_staging_failure") {
+				param.Properties.FailHealthCheckOnStagingFailure = pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.FailHealthCheckOnStagingFailure)
+			}
+
+			if metadata.ResourceData.HasChange("host_pool_references") {
+				param.Properties.HostPoolReferences = pointer.To(model.HostPoolReferences)
+			}
+
+			if metadata.ResourceData.HasChange("image") {
+				param.Properties.Image = expandVirtualDesktopAppAttachPackageImage(model.Image)
+			}
+
+			if metadata.ResourceData.HasChange("tags") {
+				param.Tags = pointer.To(model.Tags)
+			}
+
+			if _, err := client.CreateOrUpdate(ctx, *id, param); err != nil {
+				return fmt.Errorf("updating %s: %+v", *id, err)
+			}
+
 			return nil
-		}
+		},
 	}
 }
 
@@ -182,7 +227,7 @@ func (r VirtualDesktopAppAttachPackageResource) Read() sdk.ResourceFunc {
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			return nil
-		}
+		},
 	}
 }
 
@@ -190,8 +235,19 @@ func (r VirtualDesktopAppAttachPackageResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DesktopVirtualization.AppAttachPackagesClient
+
+			id, err := appattachpackage.ParseAppAttachPackageID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			if _, err := client.Delete(ctx, *id); err != nil {
+				return fmt.Errorf("deleting %s: %+v", *id, err)
+			}
+
 			return nil
-		}
+		},
 	}
 }
 
