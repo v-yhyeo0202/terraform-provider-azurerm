@@ -14,11 +14,13 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/sessionhost"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/workspace"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/appattachpackage"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msiximage"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/common"
 )
 
 type Client struct {
 	AppAttachPackagesClient *appattachpackage.AppAttachPackageClient
+	MsixImagesClient        *msiximage.MsixImageClient
 	ApplicationGroupsClient *applicationgroup.ApplicationGroupClient
 	ApplicationsClient      *application.ApplicationClient
 	DesktopsClient          *desktop.DesktopClient
@@ -31,9 +33,15 @@ type Client struct {
 func NewClient(o *common.ClientOptions) (*Client, error) {
 	appAttachPackagesClient, err := appattachpackage.NewAppAttachPackageClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
-		return nil, fmt.Errorf("building VirtualDesktopAppAttachPackages Client: %+v", err)
+		return nil, fmt.Errorf("building AppAttachPackages Client: %+v", err)
 	}
 	o.Configure(appAttachPackagesClient.Client, o.Authorizers.ResourceManager)
+
+	msixImagesClient, err := msiximage.NewMsixImageClientWithBaseURI(o.Environment.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building MsixImages Client: %+v", err)
+	}
+	o.Configure(msixImagesClient.Client, o.Authorizers.ResourceManager)
 
 	applicationGroupsClient, err := applicationgroup.NewApplicationGroupClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
@@ -79,6 +87,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 
 	return &Client{
 		AppAttachPackagesClient: appAttachPackagesClient,
+		MsixImagesClient:        msixImagesClient,
 		ApplicationGroupsClient: applicationGroupsClient,
 		ApplicationsClient:      applicationsClient,
 		DesktopsClient:          desktopsClient,
