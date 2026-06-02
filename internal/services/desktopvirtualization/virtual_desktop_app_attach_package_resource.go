@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/hostpool"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/appattachpackage"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
@@ -19,12 +20,19 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 )
 
+//go:generate go run ../../tools/generator-tests resourceidentity -resource-name virtual_desktop_app_attach_package -service-package-name desktopvirtualization -properties "name,resource_group_name" -known-values "subscription_id:data.Subscriptions.Primary"
+
 type VirtualDesktopAppAttachPackageResource struct{}
 
 var (
-	_ sdk.Resource           = VirtualDesktopAppAttachPackageResource{}
-	_ sdk.ResourceWithUpdate = VirtualDesktopAppAttachPackageResource{}
+	_ sdk.Resource             = VirtualDesktopAppAttachPackageResource{}
+	_ sdk.ResourceWithUpdate   = VirtualDesktopAppAttachPackageResource{}
+	_ sdk.ResourceWithIdentity = VirtualDesktopAppAttachPackageResource{}
 )
+
+func (r VirtualDesktopAppAttachPackageResource) Identity() resourceids.ResourceId {
+	return &appattachpackage.AppAttachPackageId{}
+}
 
 type VirtualDesktopAppAttachPackageModel struct {
 	Name                            string                                     `tfschema:"name"`
@@ -152,7 +160,7 @@ func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
 				Properties: appattachpackage.AppAttachPackageProperties{
 					FailHealthCheckOnStagingFailure: pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.FailHealthCheckOnStagingFailure),
 					HostPoolReferences:              pointer.To(model.HostPoolReferences),
-					Image:                           expandVirtualDesktopAppAttachPackageImage(model.Image),
+					Image:                           r.expandVirtualDesktopAppAttachPackageImage(model.Image),
 				},
 			}
 
@@ -165,6 +173,9 @@ func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
 			}
 
 			metadata.SetID(id)
+			if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, &id); err != nil {
+				return err
+			}
 
 			return nil
 		},
@@ -206,7 +217,7 @@ func (r VirtualDesktopAppAttachPackageResource) Update() sdk.ResourceFunc {
 			}
 
 			if metadata.ResourceData.HasChange("image") {
-				param.Properties.Image = expandVirtualDesktopAppAttachPackageImage(model.Image)
+				param.Properties.Image = r.expandVirtualDesktopAppAttachPackageImage(model.Image)
 			}
 
 			if metadata.ResourceData.HasChange("tags") {
@@ -241,24 +252,7 @@ func (r VirtualDesktopAppAttachPackageResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving %s: %+v", *id, err)
 			}
 
-			state := VirtualDesktopAppAttachPackageModel{
-				Name:              id.AppAttachPackageName,
-				ResourceGroupName: id.ResourceGroupName,
-			}
-
-			if model := existing.Model; model != nil {
-				state.Location = location.Normalize(model.Location)
-				state.Tags = pointer.From(model.Tags)
-
-				props := model.Properties
-				if props.FailHealthCheckOnStagingFailure != nil {
-					state.FailHealthCheckOnStagingFailure = pointer.FromEnum(props.FailHealthCheckOnStagingFailure)
-				}
-				state.HostPoolReferences = pointer.From(props.HostPoolReferences)
-				state.Image = r.flattenVirtualDesktopAppAttachPackageImage(props.Image)
-			}
-
-			return metadata.Encode(&state)
+			return r.flatten(metadata, id, existing.Model)
 		},
 	}
 }
@@ -287,7 +281,31 @@ func (r VirtualDesktopAppAttachPackageResource) IDValidationFunc() pluginsdk.Sch
 	return appattachpackage.ValidateAppAttachPackageID
 }
 
-func expandVirtualDesktopAppAttachPackageImage(input []VirtualDesktopAppAttachPackageImageModel) *appattachpackage.AppAttachPackageInfoProperties {
+func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMetaData, id *appattachpackage.AppAttachPackageId, model *appattachpackage.AppAttachPackage) error {
+	state := VirtualDesktopAppAttachPackageModel{
+		Name:              id.AppAttachPackageName,
+		ResourceGroupName: id.ResourceGroupName,
+	}
+
+	if model != nil {
+		state.Location = location.Normalize(model.Location)
+		state.Tags = pointer.From(model.Tags)
+
+		props := model.Properties
+		if props.FailHealthCheckOnStagingFailure != nil {
+			state.FailHealthCheckOnStagingFailure = pointer.FromEnum(props.FailHealthCheckOnStagingFailure)
+		}
+		state.HostPoolReferences = pointer.From(props.HostPoolReferences)
+		state.Image = r.flattenVirtualDesktopAppAttachPackageImage(props.Image)
+	}
+
+	if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, id); err != nil {
+		return err
+	}
+	return metadata.Encode(&state)
+}
+
+func (r VirtualDesktopAppAttachPackageResource) expandVirtualDesktopAppAttachPackageImage(input []VirtualDesktopAppAttachPackageImageModel) *appattachpackage.AppAttachPackageInfoProperties {
 	image := input[0]
 
 	return &appattachpackage.AppAttachPackageInfoProperties{
