@@ -4,9 +4,17 @@
 package desktopvirtualization
 
 import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2024-04-03/hostpool"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/appattachpackage"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 )
@@ -114,6 +122,91 @@ func (r VirtualDesktopAppAttachPackageResource) ResourceType() string {
 	return "azurerm_virtual_desktop_app_attach_package"
 }
 
+func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DesktopVirtualization.AppAttachPackagesClient
+			subscriptionId := metadata.Client.Account.SubscriptionId
+
+			var model VirtualDesktopAppAttachPackageModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			id := appattachpackage.NewAppAttachPackageID(subscriptionId, model.ResourceGroupName, model.Name)
+
+			existing, err := client.Get(ctx, id)
+			if err != nil && !response.WasNotFound(existing.HttpResponse) {
+				return fmt.Errorf("checking for presence of existing %s: %+v", id, err)
+			}
+			if !response.WasNotFound(existing.HttpResponse) {
+				return metadata.ResourceRequiresImport(r.ResourceType(), id)
+			}
+
+			param := appattachpackage.AppAttachPackage{
+				Location: location.Normalize(model.Location),
+				Properties: appattachpackage.AppAttachPackageProperties{
+					FailHealthCheckOnStagingFailure: pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.FailHealthCheckOnStagingFailure),
+					HostPoolReferences:              pointer.To(model.HostPoolReferences),
+					Image:                           expandVirtualDesktopAppAttachPackageImage(model.Image),
+				},
+			}
+
+			if len(model.Tags) > 0 {
+				param.Tags = pointer.To(model.Tags)
+			}
+
+			if _, err := client.CreateOrUpdate(ctx, id, param); err != nil {
+				return fmt.Errorf("creating %s: %+v", id, err)
+			}
+
+			metadata.SetID(id)
+
+			return nil
+		},
+	}
+}
+
+func (r VirtualDesktopAppAttachPackageResource) Update() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			return nil
+		}
+	}
+}
+
+func (r VirtualDesktopAppAttachPackageResource) Read() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			return nil
+		}
+	}
+}
+
+func (r VirtualDesktopAppAttachPackageResource) Delete() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			return nil
+		}
+	}
+}
+
 func (r VirtualDesktopAppAttachPackageResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return appattachpackage.ValidateAppAttachPackageID
+}
+
+func expandVirtualDesktopAppAttachPackageImage(input []VirtualDesktopAppAttachPackageImageModel) *appattachpackage.AppAttachPackageInfoProperties {
+	image := input[0]
+
+	return &appattachpackage.AppAttachPackageInfoProperties{
+		ImagePath:             pointer.To(image.ImagePath),
+		PackageFullName:       pointer.To(image.PackageFullName),
+		DisplayName:           pointer.To(image.DisplayName),
+		IsRegularRegistration: pointer.To(image.IsRegularRegistration),
+		IsActive:              pointer.To(image.IsActive),
+	}
 }
