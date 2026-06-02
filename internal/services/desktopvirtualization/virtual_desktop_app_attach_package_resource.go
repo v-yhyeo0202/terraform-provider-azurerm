@@ -226,7 +226,39 @@ func (r VirtualDesktopAppAttachPackageResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			return nil
+			client := metadata.Client.DesktopVirtualization.AppAttachPackagesClient
+
+			id, err := appattachpackage.ParseAppAttachPackageID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			existing, err := client.Get(ctx, *id)
+			if err != nil {
+				if response.WasNotFound(existing.HttpResponse) {
+					return metadata.MarkAsGone(*id)
+				}
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
+			}
+
+			state := VirtualDesktopAppAttachPackageModel{
+				Name:              id.AppAttachPackageName,
+				ResourceGroupName: id.ResourceGroupName,
+			}
+
+			if model := existing.Model; model != nil {
+				state.Location = location.Normalize(model.Location)
+				state.Tags = pointer.From(model.Tags)
+
+				props := model.Properties
+				if props.FailHealthCheckOnStagingFailure != nil {
+					state.FailHealthCheckOnStagingFailure = pointer.FromEnum(props.FailHealthCheckOnStagingFailure)
+				}
+				state.HostPoolReferences = pointer.From(props.HostPoolReferences)
+				state.Image = r.flattenVirtualDesktopAppAttachPackageImage(props.Image)
+			}
+
+			return metadata.Encode(&state)
 		},
 	}
 }
@@ -265,4 +297,26 @@ func expandVirtualDesktopAppAttachPackageImage(input []VirtualDesktopAppAttachPa
 		IsRegularRegistration: pointer.To(image.IsRegularRegistration),
 		IsActive:              pointer.To(image.IsActive),
 	}
+}
+
+func (r VirtualDesktopAppAttachPackageResource) flattenVirtualDesktopAppAttachPackageImage(input *appattachpackage.AppAttachPackageInfoProperties) []VirtualDesktopAppAttachPackageImageModel {
+	if input == nil {
+		return []VirtualDesktopAppAttachPackageImageModel{}
+	}
+
+	image := VirtualDesktopAppAttachPackageImageModel{
+		ImagePath:       pointer.From(input.ImagePath),
+		PackageFullName: pointer.From(input.PackageFullName),
+		DisplayName:     pointer.From(input.DisplayName),
+	}
+
+	if input.IsRegularRegistration != nil {
+		image.IsRegularRegistration = pointer.From(input.IsRegularRegistration)
+	}
+
+	if input.IsActive != nil {
+		image.IsActive = pointer.From(input.IsActive)
+	}
+
+	return []VirtualDesktopAppAttachPackageImageModel{image}
 }
