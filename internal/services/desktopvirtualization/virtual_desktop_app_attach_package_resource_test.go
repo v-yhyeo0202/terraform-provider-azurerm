@@ -254,12 +254,10 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
   	azurerm_virtual_desktop_host_pool.test.id
   ]
 
-  image {
-    display_name	   = "XmlNotepad"
-    image_uri = azurerm_storage_share_file.test6.id
-    package_full_name = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
-    is_active = true
-  }
+  display_name      = "XmlNotepad"
+  image_uri         = azurerm_storage_share_file.test6.id
+  package_full_name = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
+  is_active         = true
 
   depends_on = [
     azurerm_virtual_machine_extension.test0,
@@ -274,7 +272,7 @@ resource "azurerm_virtual_desktop_application" "test" {
   application_type             = "MsixApplication"
   command_line_argument_policy = "DoNotAllow"
   icon_path = "\\\\${azurerm_storage_account.test.name}.file.core.windows.net\\${azurerm_storage_share.test.name}\\${azurerm_storage_share_file.test7.name}"
-  msix_package_application_id  = azurerm_virtual_desktop_app_attach_package.test.id
+  msix_package_application_id  = azurerm_virtual_desktop_app_attach_package.test.package_applications[0].app_id
   msix_package_family_name     = azurerm_virtual_desktop_app_attach_package.test.package_family_name
   show_in_portal               = true
 }
