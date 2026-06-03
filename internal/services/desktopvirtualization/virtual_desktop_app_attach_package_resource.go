@@ -113,8 +113,9 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 		},
 
 		"display_name": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"is_regular_registration": {
