@@ -70,9 +70,10 @@ type MsixPackageApplicationModel struct {
 func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
-			ForceNew: true,
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringDoesNotContainAny("\\/+?&"),
 		},
 
 		"resource_group_name": commonschema.ResourceGroupName(),
@@ -100,13 +101,15 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 		},
 
 		"image_uri": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 		},
 
 		"package_full_name": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"display_name": {
@@ -224,12 +227,14 @@ func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
 
 			id := appattachpackage.NewAppAttachPackageID(subscriptionId, model.ResourceGroupName, model.Name)
 
-			existing, err := client.Get(ctx, id)
-			if err != nil && !response.WasNotFound(existing.HttpResponse) {
-				return fmt.Errorf("checking for presence of existing %s: %+v", id, err)
-			}
-			if !response.WasNotFound(existing.HttpResponse) {
-				return metadata.ResourceRequiresImport(r.ResourceType(), id)
+			if !metadata.Client.Features.SkipImportCheckOnCreateAndAllowOverwritingExistingResources {
+				existing, err := client.Get(ctx, id)
+				if err != nil && !response.WasNotFound(existing.HttpResponse) {
+					return fmt.Errorf("checking for presence of existing %s: %+v", id, err)
+				}
+				if !response.WasNotFound(existing.HttpResponse) {
+					return metadata.ResourceRequiresImport(r.ResourceType(), id)
+				}
 			}
 
 			msixImageProperties, err := getMsixImageProperties(ctx, metadata, model.HostPoolReferences, model.ImageUri, model.PackageFullName)
