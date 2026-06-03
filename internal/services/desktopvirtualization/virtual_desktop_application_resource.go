@@ -189,7 +189,7 @@ func resourceVirtualDesktopApplicationCreateUpdate(d *pluginsdk.ResourceData, me
 	}
 
 	if applicationType := d.Get("application_type").(string); applicationType != "" {
-		payload.Properties.ApplicationType = pointer.To(application.RemoteApplicationType(applicationType))
+		payload.Properties.ApplicationType = pointer.ToEnum[application.RemoteApplicationType](applicationType)
 	}
 
 	if _, err := client.CreateOrUpdate(ctx, id, payload); err != nil {
@@ -239,7 +239,7 @@ func resourceVirtualDesktopApplicationRead(d *pluginsdk.ResourceData, meta inter
 		d.Set("icon_index", props.IconIndex)
 		d.Set("msix_package_application_id", props.MsixPackageApplicationId)
 		d.Set("msix_package_family_name", props.MsixPackageFamilyName)
-		d.Set("application_type", pointer.FromEnum[application.RemoteApplicationType](props.ApplicationType))
+		d.Set("application_type", pointer.FromEnum(props.ApplicationType))
 	}
 
 	return nil

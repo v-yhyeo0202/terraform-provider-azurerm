@@ -25,7 +25,22 @@ func TestAccVirtualDesktopAppAttachPackage_basic(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.Basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccVirtualDesktopAppAttachPackage_complete(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_virtual_desktop_app_attach_package", "test")
+	r := VirtualDesktopAppAttachPackageResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.complete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -149,19 +164,11 @@ resource "azurerm_virtual_desktop_host_pool_registration_info" "test" {
   expiration_date = "%[5]s"
 }
 
-resource "azurerm_virtual_desktop_application_group" "test" {
-  name                = "acctest-vdag-%[1]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  host_pool_id        = azurerm_virtual_desktop_host_pool.test.id
-  type                = "RemoteApp"
-}
-
 resource "azurerm_windows_virtual_machine" "test" {
   name                = "vm-%[3]s"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  size                = "Standard_F2as_v7"
+  size                = "Standard_F1als_v7"
   admin_password      = "Password1234"
   admin_username      = "adminuser"
   network_interface_ids = [
@@ -241,7 +248,7 @@ resource "azurerm_virtual_machine_extension" "test2" {
 `, data.RandomInteger, data.Locations.Secondary, data.RandomStringOfLength(10), fileShareConfig, time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339))
 }
 
-func (r VirtualDesktopAppAttachPackageResource) basic(data acceptance.TestData) string {
+func (r VirtualDesktopAppAttachPackageResource) Basic(data acceptance.TestData) string {
 
 	return fmt.Sprintf(`
 %[1]s
@@ -257,7 +264,6 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
   display_name      = "XmlNotepad"
   image_uri         = azurerm_storage_share_file.test6.id
   package_full_name = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
-  is_active         = true
 
   depends_on = [
     azurerm_virtual_machine_extension.test0,
@@ -265,16 +271,39 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
     azurerm_virtual_machine_extension.test2
   ]
 }
+`, r.template(data), data.RandomInteger)
+}
 
-resource "azurerm_virtual_desktop_application" "test" {
-  name                         = "acctest-vdapp-%[2]d"
-  application_group_id         = azurerm_virtual_desktop_application_group.test.id
-  application_type             = "MsixApplication"
-  command_line_argument_policy = "DoNotAllow"
-  icon_path                    = "\\\\${azurerm_storage_account.test.name}.file.core.windows.net\\${azurerm_storage_share.test.name}\\${azurerm_storage_share_file.test7.name}"
-  msix_package_application_id  = azurerm_virtual_desktop_app_attach_package.test.package_applications[0].app_id
-  msix_package_family_name     = azurerm_virtual_desktop_app_attach_package.test.package_family_name
-  show_in_portal               = true
+func (r VirtualDesktopAppAttachPackageResource) complete(data acceptance.TestData) string {
+
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_virtual_desktop_app_attach_package" "test" {
+  name                = "acctest-msix-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+  host_pool_references = [
+    azurerm_virtual_desktop_host_pool.test.id
+  ]
+
+  display_name                         = "XmlNotepad"
+  image_uri                            = azurerm_storage_share_file.test6.id
+  package_full_name                    = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
+  fail_health_check_on_staging_failure = "DoNotFail"
+  is_regular_registration              = false
+  is_active                            = true
+
+  tags = {
+    Environment = "Production"
+    Foo         = "Bar"
+  }
+
+  depends_on = [
+    azurerm_virtual_machine_extension.test0,
+    azurerm_virtual_machine_extension.test1,
+    azurerm_virtual_machine_extension.test2
+  ]
 }
 `, r.template(data), data.RandomInteger)
 }
