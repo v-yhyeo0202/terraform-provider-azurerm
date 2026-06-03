@@ -150,11 +150,11 @@ resource "azurerm_virtual_desktop_host_pool_registration_info" "test" {
 }
 
 resource "azurerm_virtual_desktop_application_group" "test" {
-  name                         = "acctest-vdag-%[1]d"
-  resource_group_name          = azurerm_resource_group.test.name
-  location                     = azurerm_resource_group.test.location
-  host_pool_id                 = azurerm_virtual_desktop_host_pool.test.id
-  type                         = "RemoteApp"
+  name                = "acctest-vdag-%[1]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+  host_pool_id        = azurerm_virtual_desktop_host_pool.test.id
+  type                = "RemoteApp"
 }
 
 resource "azurerm_windows_virtual_machine" "test" {
@@ -250,8 +250,8 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
   name                = "acctest-msix-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  host_pool_references      = [
-  	azurerm_virtual_desktop_host_pool.test.id
+  host_pool_references = [
+    azurerm_virtual_desktop_host_pool.test.id
   ]
 
   display_name      = "XmlNotepad"
@@ -271,7 +271,7 @@ resource "azurerm_virtual_desktop_application" "test" {
   application_group_id         = azurerm_virtual_desktop_application_group.test.id
   application_type             = "MsixApplication"
   command_line_argument_policy = "DoNotAllow"
-  icon_path = "\\\\${azurerm_storage_account.test.name}.file.core.windows.net\\${azurerm_storage_share.test.name}\\${azurerm_storage_share_file.test7.name}"
+  icon_path                    = "\\\\${azurerm_storage_account.test.name}.file.core.windows.net\\${azurerm_storage_share.test.name}\\${azurerm_storage_share_file.test7.name}"
   msix_package_application_id  = azurerm_virtual_desktop_app_attach_package.test.package_applications[0].app_id
   msix_package_family_name     = azurerm_virtual_desktop_app_attach_package.test.package_family_name
   show_in_portal               = true
