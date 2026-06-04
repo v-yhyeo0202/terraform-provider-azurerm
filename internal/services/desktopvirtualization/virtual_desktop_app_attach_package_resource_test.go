@@ -25,7 +25,7 @@ func TestAccVirtualDesktopAppAttachPackage_basic(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.Basic(data),
+			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -245,11 +245,10 @@ resource "azurerm_virtual_machine_extension" "test2" {
     azurerm_nat_gateway.test
   ]
 }
-`, data.RandomInteger, data.Locations.Secondary, data.RandomStringOfLength(10), fileShareConfig, time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339))
+`, data.RandomInteger, data.Locations.Secondary, data.RandomString, fileShareConfig, time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339))
 }
 
-func (r VirtualDesktopAppAttachPackageResource) Basic(data acceptance.TestData) string {
-
+func (r VirtualDesktopAppAttachPackageResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -275,7 +274,6 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
 }
 
 func (r VirtualDesktopAppAttachPackageResource) complete(data acceptance.TestData) string {
-
 	return fmt.Sprintf(`
 %[1]s
 

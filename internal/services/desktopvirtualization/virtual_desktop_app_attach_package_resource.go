@@ -81,15 +81,12 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 		"location": commonschema.Location(),
 
 		"host_pool_references": {
-			Type:     pluginsdk.TypeList,
+			Type:     pluginsdk.TypeSet,
 			Required: true,
 			MinItems: 1,
 			Elem: &pluginsdk.Schema{
 				Type:         pluginsdk.TypeString,
 				ValidateFunc: hostpool.ValidateHostPoolID,
-				DiffSuppressFunc: func(k, old, new string, d *pluginsdk.ResourceData) bool {
-					return strings.EqualFold(old, new)
-				},
 			},
 		},
 
@@ -388,7 +385,13 @@ func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMet
 		if props.FailHealthCheckOnStagingFailure != nil {
 			state.FailHealthCheckOnStagingFailure = pointer.FromEnum(props.FailHealthCheckOnStagingFailure)
 		}
+
 		state.HostPoolReferences = pointer.From(props.HostPoolReferences)
+		for i, hostPoolReference := range state.HostPoolReferences {
+			hostPoolReference = strings.ReplaceAll(hostPoolReference, "resourcegroups", "resourceGroups")
+			state.HostPoolReferences[i] = strings.ReplaceAll(hostPoolReference, "hostpools", "hostPools")
+		}
+
 		r.flattenVirtualDesktopAppAttachPackageImage(&state, props.Image)
 	}
 
@@ -494,18 +497,19 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 	}
 
 	var msixImageProperties *msiximage.ExpandMsixImageProperties = nil
-	availablePackageFullNames := make([]string, 0)
+	availablePackageFullNames := make(map[string][]string)
 
 	for _, hostPoolReference := range hostPoolReferences {
-		hostPoolId, err := hostpool.ParseHostPoolID(hostPoolReference)
+		availablePackageFullNames[hostPoolReference] = make([]string, 0)
+		hostPoolId, err := hostpool.ParseHostPoolIDInsensitively(hostPoolReference)
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("parsing host pool reference %s: %+v", hostPoolReference, err)
 		}
 
 		msixImageHostPoolId := msiximage.NewHostPoolID(hostPoolId.SubscriptionId, hostPoolId.ResourceGroupName, hostPoolId.HostPoolName)
 		result, err := method.ExpandCompleteMsixImage(ctx, metadata, msixImageHostPoolId, msixImageUri)
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("expanding MSIX image for host pool %s: %+v", hostPoolReference, err)
 		}
 
 		msixImages := result.Items
@@ -521,14 +525,23 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 		if msixImageProperties == nil {
 			for _, msixImage := range msixImages {
 				if properties := msixImage.Properties; properties != nil && properties.PackageFullName != nil {
-					availablePackageFullNames = append(availablePackageFullNames, pointer.From(properties.PackageFullName))
+					availablePackageFullNames[hostPoolReference] = append(availablePackageFullNames[hostPoolReference], pointer.From(properties.PackageFullName))
 				}
 			}
+		} else {
+			break
 		}
 	}
 
 	if msixImageProperties == nil {
-		return nil, fmt.Errorf("no matched MSIX image with package full name %s was found. The available package full names are: %v", packageFullName, availablePackageFullNames)
+		concatenatedAvailablePackageFullNames := ""
+		for hostPoolReference, packageFullNames := range availablePackageFullNames {
+			concatenatedAvailablePackageFullNames += fmt.Sprintf("%v from %s, ", packageFullNames, hostPoolReference)
+		}
+
+		concatenatedAvailablePackageFullNames = strings.TrimSuffix(concatenatedAvailablePackageFullNames, ", ")
+
+		return nil, fmt.Errorf("no matched MSIX image with package full name %s was found. The available package full names are %s", packageFullName, concatenatedAvailablePackageFullNames)
 	}
 
 	return msixImageProperties, nil

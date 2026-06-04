@@ -218,8 +218,6 @@ resource "azurerm_virtual_desktop_application" "import" {
 }
 
 func (r VirtualDesktopApplicationResource) appAttachPackage(data acceptance.TestData) string {
-	var virtualDesktopAppAttachPackageResource VirtualDesktopAppAttachPackageResource
-
 	return fmt.Sprintf(`
 %[1]s
 
@@ -241,5 +239,5 @@ resource "azurerm_virtual_desktop_application" "test" {
   msix_package_family_name     = azurerm_virtual_desktop_app_attach_package.test.package_family_name
   show_in_portal               = true
 }
-`, virtualDesktopAppAttachPackageResource.Basic(data), data.RandomInteger)
+`, VirtualDesktopAppAttachPackageResource{}.basic(data), data.RandomInteger)
 }
