@@ -28,9 +28,10 @@ import (
 type VirtualDesktopAppAttachPackageResource struct{}
 
 var (
-	_ sdk.Resource             = VirtualDesktopAppAttachPackageResource{}
-	_ sdk.ResourceWithUpdate   = VirtualDesktopAppAttachPackageResource{}
-	_ sdk.ResourceWithIdentity = VirtualDesktopAppAttachPackageResource{}
+	_ sdk.Resource                  = VirtualDesktopAppAttachPackageResource{}
+	_ sdk.ResourceWithUpdate        = VirtualDesktopAppAttachPackageResource{}
+	_ sdk.ResourceWithIdentity      = VirtualDesktopAppAttachPackageResource{}
+	_ sdk.ResourceWithCustomizeDiff = VirtualDesktopAppAttachPackageResource{}
 )
 
 func (r VirtualDesktopAppAttachPackageResource) Identity() resourceids.ResourceId {
@@ -371,6 +372,20 @@ func (r VirtualDesktopAppAttachPackageResource) IDValidationFunc() pluginsdk.Sch
 	return appattachpackage.ValidateAppAttachPackageID
 }
 
+func (r VirtualDesktopAppAttachPackageResource) CustomizeDiff() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			oldHostPoolReferences, newHostPoolReferences := metadata.ResourceDiff.GetChange("host_pool_references")
+			if oldHostPoolReferences.(*pluginsdk.Set).Len() != newHostPoolReferences.(*pluginsdk.Set).Len() {
+				metadata.ResourceDiff.ForceNew("host_pool_references")
+			}
+
+			return nil
+		},
+	}
+}
+
 func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMetaData, id *appattachpackage.AppAttachPackageId, model *appattachpackage.AppAttachPackage) error {
 	state := VirtualDesktopAppAttachPackageModel{
 		Name:              id.AppAttachPackageName,
@@ -388,11 +403,40 @@ func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMet
 
 		state.HostPoolReferences = pointer.From(props.HostPoolReferences)
 		for i, hostPoolReference := range state.HostPoolReferences {
-			hostPoolReference = strings.ReplaceAll(hostPoolReference, "resourcegroups", "resourceGroups")
-			state.HostPoolReferences[i] = strings.ReplaceAll(hostPoolReference, "hostpools", "hostPools")
+			// hostPoolReference = strings.ReplaceAll(hostPoolReference, "resourcegroups", "resourceGroups")
+			// state.HostPoolReferences[i] = strings.ReplaceAll(hostPoolReference, "hostpools", "hostPools")
+
+			parsedHostPoolId, err := hostpool.ParseHostPoolIDInsensitively(hostPoolReference)
+			if err != nil {
+				return fmt.Errorf("parsing host pool reference %s: %+v", hostPoolReference, err)
+			}
+			state.HostPoolReferences[i] = parsedHostPoolId.ID()
 		}
 
-		r.flattenVirtualDesktopAppAttachPackageImage(&state, props.Image)
+		if image := props.Image; image != nil {
+			if image.ImagePath != nil {
+				imageUri := strings.ReplaceAll(pointer.From(image.ImagePath), "\\", "/")
+				imageUri = fmt.Sprintf("https:%s", imageUri)
+				state.ImageUri = imageUri
+			}
+
+			if image.IsRegularRegistration != nil {
+				state.IsRegularRegistration = pointer.From(image.IsRegularRegistration)
+			}
+
+			if image.IsActive != nil {
+				state.IsActive = pointer.From(image.IsActive)
+			}
+
+			state.PackageFullName = pointer.From(image.PackageFullName)
+			state.DisplayName = pointer.From(image.DisplayName)
+			state.PackageApplications = r.flattenVirtualDesktopAppAttachPackageApplications(image.PackageApplications)
+			state.LastUpdated = pointer.From(image.LastUpdated)
+			state.PackageFamilyName = pointer.From(image.PackageFamilyName)
+			state.PackageName = pointer.From(image.PackageName)
+			state.PackageRelativePath = pointer.From(image.PackageRelativePath)
+			state.Version = pointer.From(image.Version)
+		}
 	}
 
 	if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, id); err != nil {
@@ -441,35 +485,6 @@ func (r VirtualDesktopAppAttachPackageResource) expandVirtualDesktopAppAttachPac
 	return pointer.To(outputs)
 }
 
-func (r VirtualDesktopAppAttachPackageResource) flattenVirtualDesktopAppAttachPackageImage(state *VirtualDesktopAppAttachPackageModel, input *appattachpackage.AppAttachPackageInfoProperties) {
-	if input == nil {
-		return
-	}
-
-	state.PackageFullName = pointer.From(input.PackageFullName)
-	state.DisplayName = pointer.From(input.DisplayName)
-	state.PackageApplications = r.flattenVirtualDesktopAppAttachPackageApplications(input.PackageApplications)
-	state.LastUpdated = pointer.From(input.LastUpdated)
-	state.PackageFamilyName = pointer.From(input.PackageFamilyName)
-	state.PackageName = pointer.From(input.PackageName)
-	state.PackageRelativePath = pointer.From(input.PackageRelativePath)
-	state.Version = pointer.From(input.Version)
-
-	if input.ImagePath != nil {
-		imageUri := strings.ReplaceAll(pointer.From(input.ImagePath), "\\", "/")
-		imageUri = fmt.Sprintf("https:%s", imageUri)
-		state.ImageUri = imageUri
-	}
-
-	if input.IsRegularRegistration != nil {
-		state.IsRegularRegistration = pointer.From(input.IsRegularRegistration)
-	}
-
-	if input.IsActive != nil {
-		state.IsActive = pointer.From(input.IsActive)
-	}
-}
-
 func (r VirtualDesktopAppAttachPackageResource) flattenVirtualDesktopAppAttachPackageApplications(inputs *[]appattachpackage.MsixPackageApplications) []MsixPackageApplicationModel {
 	outputs := make([]MsixPackageApplicationModel, 0)
 	if inputs == nil {
@@ -509,7 +524,7 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 		msixImageHostPoolId := msiximage.NewHostPoolID(hostPoolId.SubscriptionId, hostPoolId.ResourceGroupName, hostPoolId.HostPoolName)
 		result, err := method.ExpandCompleteMsixImage(ctx, metadata, msixImageHostPoolId, msixImageUri)
 		if err != nil {
-			return nil, fmt.Errorf("expanding MSIX image for host pool %s: %+v", hostPoolReference, err)
+			continue
 		}
 
 		msixImages := result.Items

@@ -49,6 +49,28 @@ func TestAccVirtualDesktopAppAttachPackage_complete(t *testing.T) {
 	})
 }
 
+func TestAccVirtualDesktopAppAttachPackage_update(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_virtual_desktop_app_attach_package", "test")
+	r := VirtualDesktopAppAttachPackageResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.complete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (VirtualDesktopAppAttachPackageResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := appattachpackage.ParseAppAttachPackageID(state.ID)
 	if err != nil {
@@ -285,9 +307,9 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
     azurerm_virtual_desktop_host_pool.test.id
   ]
 
-  display_name                         = "XmlNotepad"
+  display_name                         = "XmlNotepadComplete"
   image_uri                            = azurerm_storage_share_file.test6.id
-  package_full_name                    = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
+  package_full_name                    = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral_split.scale-100_hndwmj480pefj"
   fail_health_check_on_staging_failure = "DoNotFail"
   is_regular_registration              = false
   is_active                            = true
