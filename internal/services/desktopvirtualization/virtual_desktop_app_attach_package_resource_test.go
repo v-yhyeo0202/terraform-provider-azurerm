@@ -102,8 +102,8 @@ func (r VirtualDesktopAppAttachPackageResource) template(data acceptance.TestDat
 		fileShareConfig += fmt.Sprintf(`
 resource "azurerm_storage_share_file" "test%[1]d" {
   name              = "%[2]s"
-  storage_share_url = azurerm_storage_share.test.url
   source            = "${path.module}/testdata/%[2]s"
+  storage_share_url = azurerm_storage_share.test.url
 }
 `, i, cimFileName)
 	}
@@ -122,14 +122,14 @@ resource "azurerm_storage_account" "test" {
   name                     = "acctestst%[3]s"
   resource_group_name      = azurerm_resource_group.test.name
   location                 = azurerm_resource_group.test.location
-  account_tier             = "Standard"
   account_replication_type = "LRS"
+  account_tier             = "Standard"
 }
 
 resource "azurerm_storage_share" "test" {
   name               = "acctest-share-%[1]d"
-  storage_account_id = azurerm_storage_account.test.id
   quota              = 16
+  storage_account_id = azurerm_storage_account.test.id
 }
 
 %[4]s
@@ -177,26 +177,25 @@ resource "azurerm_virtual_desktop_host_pool" "test" {
   name                = "acctest-vdpool-%[1]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  type                = "Pooled"
   load_balancer_type  = "BreadthFirst"
+  type                = "Pooled"
 }
 
 resource "azurerm_virtual_desktop_host_pool_registration_info" "test" {
-  hostpool_id     = azurerm_virtual_desktop_host_pool.test.id
   expiration_date = "%[5]s"
+  hostpool_id     = azurerm_virtual_desktop_host_pool.test.id
 }
 
 resource "azurerm_windows_virtual_machine" "test" {
   name                = "vm-%[3]s"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  size                = "Standard_F1als_v7"
-  admin_password      = "Password1234"
-  admin_username      = "adminuser"
   network_interface_ids = [
     azurerm_network_interface.test.id
   ]
-
+  size                = "Standard_F1als_v7"
+  admin_password      = "Password1234"
+  admin_username      = "adminuser"
   secure_boot_enabled = true
   vtpm_enabled        = true
 
@@ -205,24 +204,24 @@ resource "azurerm_windows_virtual_machine" "test" {
     storage_account_type = "Standard_LRS"
   }
 
-  source_image_reference {
-    publisher = "microsoftwindowsdesktop"
-    offer     = "office-365"
-    sku       = "win11-24h2-avd-m365"
-    version   = "latest"
-  }
-
   identity {
     type = "SystemAssigned"
+  }
+
+  source_image_reference {
+    offer     = "office-365"
+    publisher = "microsoftwindowsdesktop"
+    sku       = "win11-24h2-avd-m365"
+    version   = "latest"
   }
 }
 
 resource "azurerm_virtual_machine_extension" "test0" {
   name                 = "acctest-vmext-0-%[1]d"
-  virtual_machine_id   = azurerm_windows_virtual_machine.test.id
   publisher            = "Microsoft.Azure.Security.WindowsAttestation"
   type                 = "GuestAttestation"
   type_handler_version = "1.0"
+  virtual_machine_id   = azurerm_windows_virtual_machine.test.id
 
   depends_on = [
     azurerm_nat_gateway.test
@@ -231,10 +230,10 @@ resource "azurerm_virtual_machine_extension" "test0" {
 
 resource "azurerm_virtual_machine_extension" "test1" {
   name                 = "acctest-vmext-1-%[1]d"
-  virtual_machine_id   = azurerm_windows_virtual_machine.test.id
   publisher            = "Microsoft.Powershell"
   type                 = "DSC"
   type_handler_version = "2.83"
+  virtual_machine_id   = azurerm_windows_virtual_machine.test.id
 
   protected_settings = jsonencode({
     properties = {
@@ -258,10 +257,10 @@ resource "azurerm_virtual_machine_extension" "test1" {
 
 resource "azurerm_virtual_machine_extension" "test2" {
   name                 = "acctest-vmext-2-%[1]d"
-  virtual_machine_id   = azurerm_windows_virtual_machine.test.id
   publisher            = "Microsoft.Azure.ActiveDirectory"
   type                 = "AADLoginForWindows"
   type_handler_version = "2.2"
+  virtual_machine_id   = azurerm_windows_virtual_machine.test.id
 
   depends_on = [
     azurerm_nat_gateway.test
