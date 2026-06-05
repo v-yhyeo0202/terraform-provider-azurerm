@@ -71,7 +71,7 @@ func (VirtualDesktopAppAttachPackageListResource) List(ctx context.Context, requ
 			result := request.NewListResult(ctx)
 			result.DisplayName = pointer.From(appAttachPackageResult.Name)
 
-			id, err := appattachpackage.ParseAppAttachPackageID(pointer.From(appAttachPackageResult.Id))
+			id, err := appattachpackage.ParseAppAttachPackageIDInsensitively(pointer.From(appAttachPackageResult.Id))
 			if err != nil {
 				sdk.SetErrorDiagnosticAndPushListResult(result, push, "parsing App Attach Package ID", err)
 				return
