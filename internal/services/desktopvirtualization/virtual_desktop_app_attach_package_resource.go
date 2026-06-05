@@ -39,23 +39,23 @@ func (r VirtualDesktopAppAttachPackageResource) Identity() resourceids.ResourceI
 }
 
 type VirtualDesktopAppAttachPackageModel struct {
-	Name                            string                        `tfschema:"name"`
-	ResourceGroupName               string                        `tfschema:"resource_group_name"`
-	Location                        string                        `tfschema:"location"`
-	HostPoolReferences              []string                      `tfschema:"host_pool_references"`
-	FailHealthCheckOnStagingFailure string                        `tfschema:"fail_health_check_on_staging_failure"`
-	ImageUri                        string                        `tfschema:"image_uri"`
-	PackageFullName                 string                        `tfschema:"package_full_name"`
-	DisplayName                     string                        `tfschema:"display_name"`
-	IsRegularRegistration           bool                          `tfschema:"is_regular_registration"`
-	IsActive                        bool                          `tfschema:"is_active"`
-	LastUpdated                     string                        `tfschema:"last_updated"`
-	PackageFamilyName               string                        `tfschema:"package_family_name"`
-	PackageName                     string                        `tfschema:"package_name"`
-	PackageRelativePath             string                        `tfschema:"package_relative_path"`
-	Version                         string                        `tfschema:"version"`
-	PackageApplications             []MsixPackageApplicationModel `tfschema:"package_applications"`
-	Tags                            map[string]string             `tfschema:"tags"`
+	Name                       string                        `tfschema:"name"`
+	ResourceGroupName          string                        `tfschema:"resource_group_name"`
+	Location                   string                        `tfschema:"location"`
+	HostPoolIds                []string                      `tfschema:"host_pool_ids"`
+	HealthCheckStatusOnFailure string                        `tfschema:"health_check_status_on_failure"`
+	StorageShareFileId         string                        `tfschema:"storage_share_file_id"`
+	MsixPackageName            string                        `tfschema:"msix_package_name"`
+	DisplayName                string                        `tfschema:"display_name"`
+	RegisterAtLogOnEnabled     bool                          `tfschema:"register_at_log_on_enabled"`
+	StateEnabled               bool                          `tfschema:"state_enabled"`
+	LastUpdated                string                        `tfschema:"last_updated"`
+	PackageFamilyName          string                        `tfschema:"package_family_name"`
+	PackageName                string                        `tfschema:"package_name"`
+	PackageRelativePath        string                        `tfschema:"package_relative_path"`
+	Version                    string                        `tfschema:"version"`
+	PackageApplications        []MsixPackageApplicationModel `tfschema:"package_applications"`
+	Tags                       map[string]string             `tfschema:"tags"`
 }
 
 type MsixPackageApplicationModel struct {
@@ -71,17 +71,17 @@ type MsixPackageApplicationModel struct {
 func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
-			Type:         pluginsdk.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.StringDoesNotContainAny("\\/+?&"),
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
+			// ValidateFunc: validation.StringDoesNotContainAny("\\/+?&"),
 		},
 
 		"resource_group_name": commonschema.ResourceGroupName(),
 
 		"location": commonschema.Location(),
 
-		"host_pool_references": {
+		"host_pool_ids": {
 			Type:     pluginsdk.TypeSet,
 			Required: true,
 			MinItems: 1,
@@ -91,38 +91,38 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 			},
 		},
 
-		"fail_health_check_on_staging_failure": {
+		"health_check_status_on_failure": {
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			Default:      appattachpackage.FailHealthCheckOnStagingFailureNeedsAssistance,
 			ValidateFunc: validation.StringInSlice(appattachpackage.PossibleValuesForFailHealthCheckOnStagingFailure(), false),
 		},
 
-		"image_uri": {
+		"storage_share_file_id": {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 		},
 
-		"package_full_name": {
+		"msix_package_name": {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"display_name": {
-			Type:         pluginsdk.TypeString,
-			Required:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			// ValidateFunc: validation.StringIsNotEmpty,
 		},
 
-		"is_regular_registration": {
+		"register_at_log_on_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
 			Default:  true,
 		},
 
-		"is_active": {
+		"state_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
 			Default:  false,
@@ -236,7 +236,7 @@ func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
 				}
 			}
 
-			msixImageProperties, err := getMsixImageProperties(ctx, metadata, model.HostPoolReferences, model.ImageUri, model.PackageFullName)
+			msixImageProperties, err := getMsixImageProperties(ctx, metadata, model.HostPoolIds, model.StorageShareFileId, model.MsixPackageName)
 			if err != nil {
 				return fmt.Errorf("retrieving MSIX image properties: %+v", err)
 			}
@@ -244,8 +244,8 @@ func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
 			param := appattachpackage.AppAttachPackage{
 				Location: location.Normalize(model.Location),
 				Properties: appattachpackage.AppAttachPackageProperties{
-					FailHealthCheckOnStagingFailure: pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.FailHealthCheckOnStagingFailure),
-					HostPoolReferences:              pointer.To(model.HostPoolReferences),
+					FailHealthCheckOnStagingFailure: pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.HealthCheckStatusOnFailure),
+					HostPoolReferences:              pointer.To(model.HostPoolIds),
 					Image:                           r.expandVirtualDesktopAppAttachPackageImage(model, msixImageProperties),
 				},
 			}
@@ -294,16 +294,16 @@ func (r VirtualDesktopAppAttachPackageResource) Update() sdk.ResourceFunc {
 
 			param := *existing.Model
 
-			if metadata.ResourceData.HasChange("fail_health_check_on_staging_failure") {
-				param.Properties.FailHealthCheckOnStagingFailure = pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.FailHealthCheckOnStagingFailure)
+			if metadata.ResourceData.HasChange("health_check_status_on_failure") {
+				param.Properties.FailHealthCheckOnStagingFailure = pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.HealthCheckStatusOnFailure)
 			}
 
-			if metadata.ResourceData.HasChange("host_pool_references") {
-				param.Properties.HostPoolReferences = pointer.To(model.HostPoolReferences)
+			if metadata.ResourceData.HasChange("host_pool_ids") {
+				param.Properties.HostPoolReferences = pointer.To(model.HostPoolIds)
 			}
 
-			if metadata.ResourceData.HasChanges("image_uri", "package_full_name", "display_name", "is_regular_registration", "is_active") {
-				msixImageProperties, err := getMsixImageProperties(ctx, metadata, model.HostPoolReferences, model.ImageUri, model.PackageFullName)
+			if metadata.ResourceData.HasChanges("storage_share_file_id", "msix_package_name", "display_name", "register_at_log_on_enabled", "state_enabled") {
+				msixImageProperties, err := getMsixImageProperties(ctx, metadata, model.HostPoolIds, model.StorageShareFileId, model.MsixPackageName)
 				if err != nil {
 					return fmt.Errorf("retrieving MSIX image properties: %+v", err)
 				}
@@ -376,9 +376,9 @@ func (r VirtualDesktopAppAttachPackageResource) CustomizeDiff() sdk.ResourceFunc
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			oldHostPoolReferences, newHostPoolReferences := metadata.ResourceDiff.GetChange("host_pool_references")
-			if oldHostPoolReferences.(*pluginsdk.Set).Len() != newHostPoolReferences.(*pluginsdk.Set).Len() {
-				metadata.ResourceDiff.ForceNew("host_pool_references")
+			oldHostPoolIds, newHostPoolIds := metadata.ResourceDiff.GetChange("host_pool_ids")
+			if oldHostPoolIds.(*pluginsdk.Set).Len() != newHostPoolIds.(*pluginsdk.Set).Len() {
+				metadata.ResourceDiff.ForceNew("host_pool_ids")
 			}
 
 			return nil
@@ -398,37 +398,34 @@ func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMet
 
 		props := model.Properties
 		if props.FailHealthCheckOnStagingFailure != nil {
-			state.FailHealthCheckOnStagingFailure = pointer.FromEnum(props.FailHealthCheckOnStagingFailure)
+			state.HealthCheckStatusOnFailure = pointer.FromEnum(props.FailHealthCheckOnStagingFailure)
 		}
 
-		state.HostPoolReferences = pointer.From(props.HostPoolReferences)
-		for i, hostPoolReference := range state.HostPoolReferences {
-			// hostPoolReference = strings.ReplaceAll(hostPoolReference, "resourcegroups", "resourceGroups")
-			// state.HostPoolReferences[i] = strings.ReplaceAll(hostPoolReference, "hostpools", "hostPools")
-
-			parsedHostPoolId, err := hostpool.ParseHostPoolIDInsensitively(hostPoolReference)
+		state.HostPoolIds = pointer.From(props.HostPoolReferences)
+		for i, hostPoolId := range state.HostPoolIds {
+			parsedHostPoolId, err := hostpool.ParseHostPoolIDInsensitively(hostPoolId)
 			if err != nil {
-				return fmt.Errorf("parsing host pool reference %s: %+v", hostPoolReference, err)
+				return fmt.Errorf("parsing host pool ID %s: %+v", hostPoolId, err)
 			}
-			state.HostPoolReferences[i] = parsedHostPoolId.ID()
+			state.HostPoolIds[i] = parsedHostPoolId.ID()
 		}
 
 		if image := props.Image; image != nil {
 			if image.ImagePath != nil {
-				imageUri := strings.ReplaceAll(pointer.From(image.ImagePath), "\\", "/")
-				imageUri = fmt.Sprintf("https:%s", imageUri)
-				state.ImageUri = imageUri
+				storageShareFileId := strings.ReplaceAll(pointer.From(image.ImagePath), "\\", "/")
+				storageShareFileId = fmt.Sprintf("https:%s", storageShareFileId)
+				state.StorageShareFileId = storageShareFileId
 			}
 
 			if image.IsRegularRegistration != nil {
-				state.IsRegularRegistration = pointer.From(image.IsRegularRegistration)
+				state.RegisterAtLogOnEnabled = pointer.From(image.IsRegularRegistration)
 			}
 
 			if image.IsActive != nil {
-				state.IsActive = pointer.From(image.IsActive)
+				state.StateEnabled = pointer.From(image.IsActive)
 			}
 
-			state.PackageFullName = pointer.From(image.PackageFullName)
+			state.MsixPackageName = pointer.From(image.PackageFullName)
 			state.DisplayName = pointer.From(image.DisplayName)
 			state.PackageApplications = r.flattenVirtualDesktopAppAttachPackageApplications(image.PackageApplications)
 			state.LastUpdated = pointer.From(image.LastUpdated)
@@ -446,18 +443,18 @@ func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMet
 }
 
 func (r VirtualDesktopAppAttachPackageResource) expandVirtualDesktopAppAttachPackageImage(model VirtualDesktopAppAttachPackageModel, msixImageProperties *msiximage.ExpandMsixImageProperties) *appattachpackage.AppAttachPackageInfoProperties {
-	imagePath := strings.ReplaceAll(model.ImageUri, "/", "\\")
+	imagePath := strings.ReplaceAll(model.StorageShareFileId, "/", "\\")
 	imagePath = strings.TrimLeft(imagePath, "https:")
 
 	return &appattachpackage.AppAttachPackageInfoProperties{
 		DisplayName:           pointer.To(model.DisplayName),
 		ImagePath:             pointer.To(imagePath),
-		IsActive:              pointer.To(model.IsActive),
-		IsRegularRegistration: pointer.To(model.IsRegularRegistration),
+		IsActive:              pointer.To(model.StateEnabled),
+		IsRegularRegistration: pointer.To(model.RegisterAtLogOnEnabled),
 		LastUpdated:           msixImageProperties.LastUpdated,
 		PackageApplications:   r.expandVirtualDesktopAppAttachPackageApplications(msixImageProperties.PackageApplications),
 		PackageFamilyName:     msixImageProperties.PackageFamilyName,
-		PackageFullName:       pointer.To(model.PackageFullName),
+		PackageFullName:       pointer.To(model.MsixPackageName),
 		PackageName:           msixImageProperties.PackageName,
 		PackageRelativePath:   msixImageProperties.PackageRelativePath,
 		Version:               msixImageProperties.Version,
@@ -506,19 +503,19 @@ func (r VirtualDesktopAppAttachPackageResource) flattenVirtualDesktopAppAttachPa
 	return outputs
 }
 
-func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, hostPoolReferences []string, imageUri string, packageFullName string) (*msiximage.ExpandMsixImageProperties, error) {
+func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, hostPoolIds []string, storageShareFileId string, msixPackageName string) (*msiximage.ExpandMsixImageProperties, error) {
 	msixImageUri := msiximage.MSIXImageURI{
-		Uri: pointer.To(imageUri),
+		Uri: pointer.To(storageShareFileId),
 	}
 
 	var msixImageProperties *msiximage.ExpandMsixImageProperties = nil
-	availablePackageFullNames := make(map[string][]string)
+	availableMsixPackageNames := make(map[string][]string)
 
-	for _, hostPoolReference := range hostPoolReferences {
-		availablePackageFullNames[hostPoolReference] = make([]string, 0)
+	for _, hostPoolReference := range hostPoolIds {
+		availableMsixPackageNames[hostPoolReference] = make([]string, 0)
 		hostPoolId, err := hostpool.ParseHostPoolIDInsensitively(hostPoolReference)
 		if err != nil {
-			return nil, fmt.Errorf("parsing host pool reference %s: %+v", hostPoolReference, err)
+			return nil, fmt.Errorf("parsing host pool ID %s: %+v", hostPoolReference, err)
 		}
 
 		msixImageHostPoolId := msiximage.NewHostPoolID(hostPoolId.SubscriptionId, hostPoolId.ResourceGroupName, hostPoolId.HostPoolName)
@@ -530,7 +527,7 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 		msixImages := result.Items
 		for _, msixImage := range msixImages {
 			if properties := msixImage.Properties; properties != nil {
-				if properties.PackageFullName != nil && strings.EqualFold(pointer.From(properties.PackageFullName), packageFullName) {
+				if properties.PackageFullName != nil && strings.EqualFold(pointer.From(properties.PackageFullName), msixPackageName) {
 					msixImageProperties = properties
 					break
 				}
@@ -540,7 +537,7 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 		if msixImageProperties == nil {
 			for _, msixImage := range msixImages {
 				if properties := msixImage.Properties; properties != nil && properties.PackageFullName != nil {
-					availablePackageFullNames[hostPoolReference] = append(availablePackageFullNames[hostPoolReference], pointer.From(properties.PackageFullName))
+					availableMsixPackageNames[hostPoolReference] = append(availableMsixPackageNames[hostPoolReference], pointer.From(properties.PackageFullName))
 				}
 			}
 		} else {
@@ -549,14 +546,14 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 	}
 
 	if msixImageProperties == nil {
-		concatenatedAvailablePackageFullNames := ""
-		for hostPoolReference, packageFullNames := range availablePackageFullNames {
-			concatenatedAvailablePackageFullNames += fmt.Sprintf("%v from %s, ", packageFullNames, hostPoolReference)
+		concatenatedAvailableMsixPackageNames := ""
+		for hostPoolReference, packageFullNames := range availableMsixPackageNames {
+			concatenatedAvailableMsixPackageNames += fmt.Sprintf("%v from %s, ", packageFullNames, hostPoolReference)
 		}
 
-		concatenatedAvailablePackageFullNames = strings.TrimSuffix(concatenatedAvailablePackageFullNames, ", ")
+		concatenatedAvailableMsixPackageNames = strings.TrimSuffix(concatenatedAvailableMsixPackageNames, ", ")
 
-		return nil, fmt.Errorf("no matched MSIX image with package full name %s was found. The available package full names are %s", packageFullName, concatenatedAvailablePackageFullNames)
+		return nil, fmt.Errorf("no matched MSIX image with package name %s was found. The available package names are %s", msixPackageName, concatenatedAvailableMsixPackageNames)
 	}
 
 	return msixImageProperties, nil

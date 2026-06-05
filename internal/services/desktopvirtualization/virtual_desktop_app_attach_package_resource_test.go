@@ -278,13 +278,13 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
   name                = "acctest-msix-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  host_pool_references = [
+  host_pool_ids = [
     azurerm_virtual_desktop_host_pool.test.id
   ]
 
   display_name      = "XmlNotepad"
-  image_uri         = azurerm_storage_share_file.test6.id
-  package_full_name = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
+  storage_share_file_id = azurerm_storage_share_file.test6.id
+  msix_package_name = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
 
   depends_on = [
     azurerm_virtual_machine_extension.test0,
@@ -303,16 +303,16 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
   name                = "acctest-msix-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  host_pool_references = [
+  host_pool_ids = [
     azurerm_virtual_desktop_host_pool.test.id
   ]
 
-  display_name                         = "XmlNotepadComplete"
-  image_uri                            = azurerm_storage_share_file.test6.id
-  package_full_name                    = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral_split.scale-100_hndwmj480pefj"
-  fail_health_check_on_staging_failure = "DoNotFail"
-  is_regular_registration              = false
-  is_active                            = true
+  display_name                       = "XmlNotepadComplete"
+  storage_share_file_id              = azurerm_storage_share_file.test6.id
+  msix_package_name                  = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral_split.scale-100_hndwmj480pefj"
+  health_check_status_on_failure     = "DoNotFail"
+  register_at_log_on_enabled         = false
+  state_enabled                      = true
 
   tags = {
     Environment = "Production"
