@@ -42,20 +42,20 @@ type VirtualDesktopAppAttachPackageModel struct {
 	Name                       string                        `tfschema:"name"`
 	ResourceGroupName          string                        `tfschema:"resource_group_name"`
 	Location                   string                        `tfschema:"location"`
-	HostPoolIds                []string                      `tfschema:"host_pool_ids"`
-	HealthCheckStatusOnFailure string                        `tfschema:"health_check_status_on_failure"`
-	StorageShareFileId         string                        `tfschema:"storage_share_file_id"`
-	MsixPackageName            string                        `tfschema:"msix_package_name"`
 	DisplayName                string                        `tfschema:"display_name"`
+	HostPoolIds                []string                      `tfschema:"host_pool_ids"`
+	MsixPackageName            string                        `tfschema:"msix_package_name"`
+	StorageShareFileId         string                        `tfschema:"storage_share_file_id"`
+	HealthCheckStatusOnFailure string                        `tfschema:"health_check_status_on_failure"`
 	RegisterAtLogOnEnabled     bool                          `tfschema:"register_at_log_on_enabled"`
 	StateEnabled               bool                          `tfschema:"state_enabled"`
+	Tags                       map[string]string             `tfschema:"tags"`
 	LastUpdated                string                        `tfschema:"last_updated"`
+	PackageApplications        []MsixPackageApplicationModel `tfschema:"package_applications"`
 	PackageFamilyName          string                        `tfschema:"package_family_name"`
 	PackageName                string                        `tfschema:"package_name"`
 	PackageRelativePath        string                        `tfschema:"package_relative_path"`
 	Version                    string                        `tfschema:"version"`
-	PackageApplications        []MsixPackageApplicationModel `tfschema:"package_applications"`
-	Tags                       map[string]string             `tfschema:"tags"`
 }
 
 type MsixPackageApplicationModel struct {
@@ -244,9 +244,9 @@ func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
 			param := appattachpackage.AppAttachPackage{
 				Location: location.Normalize(model.Location),
 				Properties: appattachpackage.AppAttachPackageProperties{
-					FailHealthCheckOnStagingFailure: pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.HealthCheckStatusOnFailure),
-					HostPoolReferences:              pointer.To(model.HostPoolIds),
 					Image:                           r.expandVirtualDesktopAppAttachPackageImage(model, msixImageProperties),
+					HostPoolReferences:              pointer.To(model.HostPoolIds),
+					FailHealthCheckOnStagingFailure: pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.HealthCheckStatusOnFailure),
 				},
 			}
 
@@ -294,21 +294,21 @@ func (r VirtualDesktopAppAttachPackageResource) Update() sdk.ResourceFunc {
 
 			param := *existing.Model
 
-			if metadata.ResourceData.HasChange("health_check_status_on_failure") {
-				param.Properties.FailHealthCheckOnStagingFailure = pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.HealthCheckStatusOnFailure)
-			}
-
-			if metadata.ResourceData.HasChange("host_pool_ids") {
-				param.Properties.HostPoolReferences = pointer.To(model.HostPoolIds)
-			}
-
-			if metadata.ResourceData.HasChanges("storage_share_file_id", "msix_package_name", "display_name", "register_at_log_on_enabled", "state_enabled") {
+			if metadata.ResourceData.HasChanges("display_name", "msix_package_name", "storage_share_file_id", "register_at_log_on_enabled", "state_enabled") {
 				msixImageProperties, err := getMsixImageProperties(ctx, metadata, model.HostPoolIds, model.StorageShareFileId, model.MsixPackageName)
 				if err != nil {
 					return fmt.Errorf("retrieving MSIX image properties: %+v", err)
 				}
 
 				param.Properties.Image = r.expandVirtualDesktopAppAttachPackageImage(model, msixImageProperties)
+			}
+
+			if metadata.ResourceData.HasChange("host_pool_ids") {
+				param.Properties.HostPoolReferences = pointer.To(model.HostPoolIds)
+			}
+
+			if metadata.ResourceData.HasChange("health_check_status_on_failure") {
+				param.Properties.FailHealthCheckOnStagingFailure = pointer.ToEnum[appattachpackage.FailHealthCheckOnStagingFailure](model.HealthCheckStatusOnFailure)
 			}
 
 			if metadata.ResourceData.HasChange("tags") {
@@ -394,23 +394,12 @@ func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMet
 
 	if model != nil {
 		state.Location = location.Normalize(model.Location)
-		state.Tags = pointer.From(model.Tags)
 
 		props := model.Properties
-		if props.FailHealthCheckOnStagingFailure != nil {
-			state.HealthCheckStatusOnFailure = pointer.FromEnum(props.FailHealthCheckOnStagingFailure)
-		}
-
-		state.HostPoolIds = pointer.From(props.HostPoolReferences)
-		for i, hostPoolId := range state.HostPoolIds {
-			parsedHostPoolId, err := hostpool.ParseHostPoolIDInsensitively(hostPoolId)
-			if err != nil {
-				return fmt.Errorf("parsing host pool ID %s: %+v", hostPoolId, err)
-			}
-			state.HostPoolIds[i] = parsedHostPoolId.ID()
-		}
-
 		if image := props.Image; image != nil {
+			state.DisplayName = pointer.From(image.DisplayName)
+			state.MsixPackageName = pointer.From(image.PackageFullName)
+
 			if image.ImagePath != nil {
 				storageShareFileId := strings.ReplaceAll(pointer.From(image.ImagePath), "\\", "/")
 				storageShareFileId = fmt.Sprintf("https:%s", storageShareFileId)
@@ -425,15 +414,28 @@ func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMet
 				state.StateEnabled = pointer.From(image.IsActive)
 			}
 
-			state.MsixPackageName = pointer.From(image.PackageFullName)
-			state.DisplayName = pointer.From(image.DisplayName)
-			state.PackageApplications = r.flattenVirtualDesktopAppAttachPackageApplications(image.PackageApplications)
 			state.LastUpdated = pointer.From(image.LastUpdated)
+			state.PackageApplications = r.flattenVirtualDesktopAppAttachPackageApplications(image.PackageApplications)
 			state.PackageFamilyName = pointer.From(image.PackageFamilyName)
 			state.PackageName = pointer.From(image.PackageName)
 			state.PackageRelativePath = pointer.From(image.PackageRelativePath)
 			state.Version = pointer.From(image.Version)
 		}
+
+		state.HostPoolIds = pointer.From(props.HostPoolReferences)
+		for i, hostPoolId := range state.HostPoolIds {
+			parsedHostPoolId, err := hostpool.ParseHostPoolIDInsensitively(hostPoolId)
+			if err != nil {
+				return fmt.Errorf("parsing host pool ID %s: %+v", hostPoolId, err)
+			}
+			state.HostPoolIds[i] = parsedHostPoolId.ID()
+		}
+
+		if props.FailHealthCheckOnStagingFailure != nil {
+			state.HealthCheckStatusOnFailure = pointer.FromEnum(props.FailHealthCheckOnStagingFailure)
+		}
+
+		state.Tags = pointer.From(model.Tags)
 	}
 
 	if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, id); err != nil {
@@ -448,13 +450,13 @@ func (r VirtualDesktopAppAttachPackageResource) expandVirtualDesktopAppAttachPac
 
 	return &appattachpackage.AppAttachPackageInfoProperties{
 		DisplayName:           pointer.To(model.DisplayName),
+		PackageFullName:       pointer.To(model.MsixPackageName),
 		ImagePath:             pointer.To(imagePath),
-		IsActive:              pointer.To(model.StateEnabled),
 		IsRegularRegistration: pointer.To(model.RegisterAtLogOnEnabled),
+		IsActive:              pointer.To(model.StateEnabled),
 		LastUpdated:           msixImageProperties.LastUpdated,
 		PackageApplications:   r.expandVirtualDesktopAppAttachPackageApplications(msixImageProperties.PackageApplications),
 		PackageFamilyName:     msixImageProperties.PackageFamilyName,
-		PackageFullName:       pointer.To(model.MsixPackageName),
 		PackageName:           msixImageProperties.PackageName,
 		PackageRelativePath:   msixImageProperties.PackageRelativePath,
 		Version:               msixImageProperties.Version,
