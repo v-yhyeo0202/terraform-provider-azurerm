@@ -71,10 +71,10 @@ type MsixPackageApplicationModel struct {
 func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
-			ForceNew: true,
-			// ValidateFunc: validation.StringDoesNotContainAny("\\/+?&"),
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringDoesNotContainAny("\\/+?&"),
 		},
 
 		"resource_group_name": commonschema.ResourceGroupName(),
@@ -82,9 +82,9 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 		"location": commonschema.Location(),
 
 		"display_name": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
-			// ValidateFunc: validation.StringIsNotEmpty,
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"host_pool_ids": {
