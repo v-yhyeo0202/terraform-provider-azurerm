@@ -81,6 +81,12 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 
 		"location": commonschema.Location(),
 
+		"display_name": {
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			// ValidateFunc: validation.StringIsNotEmpty,
+		},
+
 		"host_pool_ids": {
 			Type:     pluginsdk.TypeSet,
 			Required: true,
@@ -91,11 +97,10 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 			},
 		},
 
-		"health_check_status_on_failure": {
+		"msix_package_name": {
 			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			Default:      appattachpackage.FailHealthCheckOnStagingFailureNeedsAssistance,
-			ValidateFunc: validation.StringInSlice(appattachpackage.PossibleValuesForFailHealthCheckOnStagingFailure(), false),
+			Required:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"storage_share_file_id": {
@@ -104,16 +109,11 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 		},
 
-		"msix_package_name": {
+		"health_check_status_on_failure": {
 			Type:         pluginsdk.TypeString,
-			Required:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
-		},
-
-		"display_name": {
-			Type:     pluginsdk.TypeString,
-			Required: true,
-			// ValidateFunc: validation.StringIsNotEmpty,
+			Optional:     true,
+			Default:      appattachpackage.FailHealthCheckOnStagingFailureNeedsAssistance,
+			ValidateFunc: validation.StringInSlice(appattachpackage.PossibleValuesForFailHealthCheckOnStagingFailure(), false),
 		},
 
 		"register_at_log_on_enabled": {
@@ -135,26 +135,6 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 func (r VirtualDesktopAppAttachPackageResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"last_updated": {
-			Type:     pluginsdk.TypeString,
-			Computed: true,
-		},
-
-		"package_family_name": {
-			Type:     pluginsdk.TypeString,
-			Computed: true,
-		},
-
-		"package_name": {
-			Type:     pluginsdk.TypeString,
-			Computed: true,
-		},
-
-		"package_relative_path": {
-			Type:     pluginsdk.TypeString,
-			Computed: true,
-		},
-
-		"version": {
 			Type:     pluginsdk.TypeString,
 			Computed: true,
 		},
@@ -200,6 +180,26 @@ func (r VirtualDesktopAppAttachPackageResource) Attributes() map[string]*plugins
 					},
 				},
 			},
+		},
+
+		"package_family_name": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
+
+		"package_name": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
+
+		"package_relative_path": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
+
+		"version": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
 		},
 	}
 }
