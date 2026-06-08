@@ -5,6 +5,7 @@ package desktopvirtualization
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -281,10 +282,10 @@ func virtualDesktopApplicationCustomizeDiff(ctx context.Context, d *pluginsdk.Re
 
 	if applicationTypeOk && applicationType == string(application.RemoteApplicationTypeMsixApplication) {
 		if pathOk {
-			return fmt.Errorf("`path` cannot be set when `application_type` is `MsixApplication`")
+			return errors.New("`path` cannot be set when `application_type` is `MsixApplication`")
 		}
 	} else if !pathOk {
-		return fmt.Errorf("`path` must be set when `application_type` is not `MsixApplication`")
+		return errors.New("`path` must be set when `application_type` is not `MsixApplication`")
 	}
 
 	return nil
