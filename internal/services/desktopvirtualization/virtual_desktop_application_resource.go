@@ -4,6 +4,7 @@
 package desktopvirtualization
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -65,25 +66,6 @@ func resourceVirtualDesktopApplication() *pluginsdk.Resource {
 				ValidateFunc: applicationgroup.ValidateApplicationGroupID,
 			},
 
-			"friendly_name": {
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-				// NOTE: O+C The API will use the value in `name` as the default
-				Computed: true,
-			},
-
-			"description": {
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-
-			"path": {
-				Type:     pluginsdk.TypeString,
-				Optional: true,
-			},
-
 			"command_line_argument_policy": {
 				Type:     pluginsdk.TypeString,
 				Required: true,
@@ -94,13 +76,35 @@ func resourceVirtualDesktopApplication() *pluginsdk.Resource {
 				}, false),
 			},
 
+			"application_type": {
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      string(application.RemoteApplicationTypeInBuilt),
+				ValidateFunc: validation.StringInSlice(application.PossibleValuesForRemoteApplicationType(), false),
+			},
+
 			"command_line_arguments": {
 				Type:     pluginsdk.TypeString,
 				Optional: true,
 			},
 
-			"show_in_portal": {
-				Type:     pluginsdk.TypeBool,
+			"description": {
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 512),
+			},
+
+			"friendly_name": {
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
+				// NOTE: O+C The API will use the value in `name` as the default
+				Computed: true,
+			},
+
+			"icon_index": {
+				Type:     pluginsdk.TypeInt,
 				Optional: true,
 			},
 
@@ -111,28 +115,31 @@ func resourceVirtualDesktopApplication() *pluginsdk.Resource {
 				Computed: true,
 			},
 
-			"icon_index": {
-				Type:     pluginsdk.TypeInt,
-				Optional: true,
-			},
-
 			"msix_package_application_id": {
-				Type:     pluginsdk.TypeString,
-				Optional: true,
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"msix_package_family_name": {
-				Type:     pluginsdk.TypeString,
-				Optional: true,
-			},
-
-			"application_type": {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(application.PossibleValuesForRemoteApplicationType(), false),
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
+
+			"path": {
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
+
+			"show_in_portal": {
+				Type:     pluginsdk.TypeBool,
+				Optional: true,
 			},
 		},
+
+		CustomizeDiff: pluginsdk.CustomizeDiffShim(virtualDesktopApplicationCustomizeDiff),
 	}
 }
 
@@ -239,7 +246,10 @@ func resourceVirtualDesktopApplicationRead(d *pluginsdk.ResourceData, meta inter
 		d.Set("icon_index", props.IconIndex)
 		d.Set("msix_package_application_id", props.MsixPackageApplicationId)
 		d.Set("msix_package_family_name", props.MsixPackageFamilyName)
-		d.Set("application_type", pointer.FromEnum(props.ApplicationType))
+
+		if props.ApplicationType != nil {
+			d.Set("application_type", pointer.FromEnum(props.ApplicationType))
+		}
 	}
 
 	return nil
@@ -260,6 +270,21 @@ func resourceVirtualDesktopApplicationDelete(d *pluginsdk.ResourceData, meta int
 	defer cancel()
 	if _, err = client.Delete(ctx, *id); err != nil {
 		return fmt.Errorf("deleting %s: %+v", *id, err)
+	}
+
+	return nil
+}
+
+func virtualDesktopApplicationCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
+	_, pathOk := d.GetOk("path")
+	applicationType, applicationTypeOk := d.GetOk("application_type")
+
+	if applicationTypeOk && applicationType == string(application.RemoteApplicationTypeMsixApplication) {
+		if pathOk {
+			return fmt.Errorf("`path` cannot be set when `application_type` is `MsixApplication`")
+		}
+	} else if !pathOk {
+		return fmt.Errorf("`path` must be set when `application_type` is not `MsixApplication`")
 	}
 
 	return nil

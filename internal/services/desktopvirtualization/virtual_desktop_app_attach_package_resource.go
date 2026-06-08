@@ -71,9 +71,10 @@ type MsixPackageApplicationModel struct {
 func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
-			Type:         pluginsdk.TypeString,
-			Required:     true,
-			ForceNew:     true,
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
+			// `ValidateFunc` coded according to portal
 			ValidateFunc: validation.StringDoesNotContainAny("\\/+?&"),
 		},
 
@@ -88,6 +89,7 @@ func (r VirtualDesktopAppAttachPackageResource) Arguments() map[string]*pluginsd
 		},
 
 		"host_pool_ids": {
+			// `TypeSet` because order is not guaranteed
 			Type:     pluginsdk.TypeSet,
 			Required: true,
 			MinItems: 1,
@@ -236,6 +238,7 @@ func (r VirtualDesktopAppAttachPackageResource) Create() sdk.ResourceFunc {
 				}
 			}
 
+			// Replicate portal behavior where MSIX image properties required for app attach package creation are retrieved with API
 			msixImageProperties, err := getMsixImageProperties(ctx, metadata, model.HostPoolIds, model.StorageShareFileId, model.MsixPackageName)
 			if err != nil {
 				return fmt.Errorf("retrieving MSIX image properties: %+v", err)
@@ -294,6 +297,7 @@ func (r VirtualDesktopAppAttachPackageResource) Update() sdk.ResourceFunc {
 
 			param := *existing.Model
 
+			// Update `param.Properties.Image` if any of the child properties has changed
 			if metadata.ResourceData.HasChanges("display_name", "msix_package_name", "storage_share_file_id", "register_at_log_on_enabled", "state_enabled") {
 				msixImageProperties, err := getMsixImageProperties(ctx, metadata, model.HostPoolIds, model.StorageShareFileId, model.MsixPackageName)
 				if err != nil {
@@ -377,6 +381,8 @@ func (r VirtualDesktopAppAttachPackageResource) CustomizeDiff() sdk.ResourceFunc
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			oldHostPoolIds, newHostPoolIds := metadata.ResourceDiff.GetChange("host_pool_ids")
+
+			// If number of `host_pool_ids` elements has changed, actual elements will be updated incorrectly to be different from Terraform configurations
 			if oldHostPoolIds.(*pluginsdk.Set).Len() != newHostPoolIds.(*pluginsdk.Set).Len() {
 				metadata.ResourceDiff.ForceNew("host_pool_ids")
 			}
@@ -401,6 +407,7 @@ func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMet
 			state.MsixPackageName = pointer.From(image.PackageFullName)
 
 			if image.ImagePath != nil {
+				// Convert from UNC format (`ImagePath`) to URL format (`StorageShareFileId`)
 				storageShareFileId := strings.ReplaceAll(pointer.From(image.ImagePath), "\\", "/")
 				storageShareFileId = fmt.Sprintf("https:%s", storageShareFileId)
 				state.StorageShareFileId = storageShareFileId
@@ -445,6 +452,7 @@ func (r VirtualDesktopAppAttachPackageResource) flatten(metadata sdk.ResourceMet
 }
 
 func (r VirtualDesktopAppAttachPackageResource) expandVirtualDesktopAppAttachPackageImage(model VirtualDesktopAppAttachPackageModel, msixImageProperties *msiximage.ExpandMsixImageProperties) *appattachpackage.AppAttachPackageInfoProperties {
+	// Convert from URL format (`StorageShareFileId`) to UNC format (`ImagePath`)
 	imagePath := strings.ReplaceAll(model.StorageShareFileId, "/", "\\")
 	imagePath = strings.TrimLeft(imagePath, "https:")
 
@@ -510,7 +518,6 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 		Uri: pointer.To(storageShareFileId),
 	}
 
-	var msixImageProperties *msiximage.ExpandMsixImageProperties = nil
 	availableMsixPackageNames := make(map[string][]string)
 
 	for _, hostPoolReference := range hostPoolIds {
@@ -521,42 +528,38 @@ func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, 
 		}
 
 		msixImageHostPoolId := msiximage.NewHostPoolID(hostPoolId.SubscriptionId, hostPoolId.ResourceGroupName, hostPoolId.HostPoolName)
+
+		// Replicate portal behavior where MSIX image properties required for app attach package creation are retrieved with API
 		result, err := method.ExpandCompleteMsixImage(ctx, metadata, msixImageHostPoolId, msixImageUri)
 		if err != nil {
+			// Continue to check next host pool if there is error with expanding MSIX image of current host pool
 			continue
 		}
 
 		msixImages := result.Items
 		for _, msixImage := range msixImages {
 			if properties := msixImage.Properties; properties != nil {
+				// Return MSIX image with matched `PackageFullName`
 				if properties.PackageFullName != nil && strings.EqualFold(pointer.From(properties.PackageFullName), msixPackageName) {
-					msixImageProperties = properties
-					break
+					return properties, nil
 				}
 			}
 		}
 
-		if msixImageProperties == nil {
-			for _, msixImage := range msixImages {
-				if properties := msixImage.Properties; properties != nil && properties.PackageFullName != nil {
-					availableMsixPackageNames[hostPoolReference] = append(availableMsixPackageNames[hostPoolReference], pointer.From(properties.PackageFullName))
-				}
+		// Store available `PackageFullName` for user reference if no matched MSIX image is found after checking all host pools
+		for _, msixImage := range msixImages {
+			if properties := msixImage.Properties; properties != nil && properties.PackageFullName != nil {
+				availableMsixPackageNames[hostPoolReference] = append(availableMsixPackageNames[hostPoolReference], pointer.From(properties.PackageFullName))
 			}
-		} else {
-			break
 		}
 	}
 
-	if msixImageProperties == nil {
-		concatenatedAvailableMsixPackageNames := ""
-		for hostPoolReference, packageFullNames := range availableMsixPackageNames {
-			concatenatedAvailableMsixPackageNames += fmt.Sprintf("%v from %s, ", packageFullNames, hostPoolReference)
-		}
-
-		concatenatedAvailableMsixPackageNames = strings.TrimSuffix(concatenatedAvailableMsixPackageNames, ", ")
-
-		return nil, fmt.Errorf("no matched MSIX image with package name %s was found. The available package names are %s", msixPackageName, concatenatedAvailableMsixPackageNames)
+	concatenatedAvailableMsixPackageNames := ""
+	for hostPoolReference, packageFullNames := range availableMsixPackageNames {
+		concatenatedAvailableMsixPackageNames += fmt.Sprintf("%v from %s, ", packageFullNames, hostPoolReference)
 	}
 
-	return msixImageProperties, nil
+	concatenatedAvailableMsixPackageNames = strings.TrimSuffix(concatenatedAvailableMsixPackageNames, ", ")
+
+	return nil, fmt.Errorf("no matched MSIX image with package name %s was found. The available package names are %s", msixPackageName, concatenatedAvailableMsixPackageNames)
 }

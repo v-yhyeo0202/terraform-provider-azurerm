@@ -237,7 +237,6 @@ resource "azurerm_virtual_desktop_application" "test" {
   icon_path                    = "\\\\${azurerm_storage_account.test.name}.file.core.windows.net\\${azurerm_storage_share.test.name}\\${azurerm_storage_share_file.test7.name}"
   msix_package_application_id  = azurerm_virtual_desktop_app_attach_package.test.package_applications[0].app_id
   msix_package_family_name     = azurerm_virtual_desktop_app_attach_package.test.package_family_name
-  show_in_portal               = true
 }
-`, VirtualDesktopAppAttachPackageResource{}.basic(data), data.RandomInteger)
+`, VirtualDesktopAppAttachPackageResource{}.complete(data), data.RandomInteger)
 }

@@ -274,7 +274,7 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
   host_pool_ids = [
     azurerm_virtual_desktop_host_pool.test.id
   ]
-  msix_package_name     = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
+  msix_package_name     = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral_split.scale-100_hndwmj480pefj"
   storage_share_file_id = azurerm_storage_share_file.test6.id
 
   depends_on = [
@@ -298,7 +298,7 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
   host_pool_ids = [
     azurerm_virtual_desktop_host_pool.test.id
   ]
-  msix_package_name              = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral_split.scale-100_hndwmj480pefj"
+  msix_package_name              = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
   storage_share_file_id          = azurerm_storage_share_file.test6.id
   health_check_status_on_failure = "DoNotFail"
   register_at_log_on_enabled     = false
