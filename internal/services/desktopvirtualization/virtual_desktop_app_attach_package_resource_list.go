@@ -70,30 +70,34 @@ func (VirtualDesktopAppAttachPackageListResource) List(ctx context.Context, requ
 		for _, appAttachPackageResult := range results {
 			result := request.NewListResult(ctx)
 			result.DisplayName = pointer.From(appAttachPackageResult.Name)
-
+			fmt.Println("debug0")
 			id, err := appattachpackage.ParseAppAttachPackageIDInsensitively(pointer.From(appAttachPackageResult.Id))
 			if err != nil {
 				sdk.SetErrorDiagnosticAndPushListResult(result, push, "parsing App Attach Package ID", err)
 				return
 			}
-
+			fmt.Println("debug1")
 			rmd := sdk.NewResourceMetaData(metadata.Client, r)
 			rmd.SetID(id)
-
+			fmt.Println("debug2")
 			if err := r.flatten(rmd, id, &appAttachPackageResult); err != nil {
 				sdk.SetErrorDiagnosticAndPushListResult(result, push, fmt.Sprintf("encoding `%s` resource data", r.ResourceType()), err)
+				fmt.Println("debug6")
 				return
 			}
-
+			fmt.Println("debug3")
 			sdk.EncodeListResult(ctx, rmd.ResourceData, &result)
 			if result.Diagnostics.HasError() {
 				push(result)
+				fmt.Println("debug7")
 				return
 			}
-
+			fmt.Println("debug4")
 			if !push(result) {
+				fmt.Println("debug8")
 				return
 			}
+			fmt.Println("debug5")
 		}
 	}
 }
