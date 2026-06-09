@@ -4,28 +4,35 @@
 package desktopvirtualization_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/desktopvirtualization/2025-10-10/msixpackage"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
-type VirtualDesktopMsixPackageResource struct{}
-
-func TestAccVirtualDesktopMsixPackage_basic(t *testing.T) {
+func TestAccVirtualDesktopMsixPackage_update_resource_group_name(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_virtual_desktop_msix_package", "test")
 	r := VirtualDesktopMsixPackageResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.updateResourceGroupName(data, false),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.updateResourceGroupName(data, true),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.updateResourceGroupName(data, false),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -34,36 +41,7 @@ func TestAccVirtualDesktopMsixPackage_basic(t *testing.T) {
 	})
 }
 
-func TestAccVirtualDesktopMsixPackage_complete(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_virtual_desktop_msix_package", "test")
-	r := VirtualDesktopMsixPackageResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.complete(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
-func (VirtualDesktopMsixPackageResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
-	id, err := msixpackage.ParseMsixPackageID(state.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := clients.DesktopVirtualization.MsixPackagesClient.Get(ctx, *id)
-	if err != nil {
-		return nil, fmt.Errorf("retrieving %s: %+v", *id, err)
-	}
-
-	return pointer.To(resp.Model != nil), nil
-}
-
-func (r VirtualDesktopMsixPackageResource) template(data acceptance.TestData) string {
+func (r VirtualDesktopMsixPackageResource) updateResourceGroupNameTemplate(data acceptance.TestData, useSecond bool) string {
 	cimFileNames := []string{
 		"objectid_c57e6597-3a9f-4723-8865-3272302f8c12_0",
 		"objectid_c57e6597-3a9f-4723-8865-3272302f8c12_1",
@@ -73,6 +51,11 @@ func (r VirtualDesktopMsixPackageResource) template(data acceptance.TestData) st
 		"region_c57e6597-3a9f-4723-8865-3272302f8c12_2",
 		"xmlNotepad.cim",
 		"icon.png",
+	}
+
+	activeRG := "azurerm_resource_group.test.name"
+	if useSecond {
+		activeRG = "azurerm_resource_group.test2.name"
 	}
 
 	fileShareConfig := ""
@@ -96,6 +79,11 @@ resource "azurerm_resource_group" "test" {
   location = "%[2]s"
 }
 
+resource "azurerm_resource_group" "test2" {
+  name     = "acctestRG-vdesktop2-%[1]d"
+  location = "%[2]s"
+}
+
 resource "azurerm_storage_account" "test" {
   name                     = "acctestst%[3]s"
   resource_group_name      = azurerm_resource_group.test.name
@@ -114,29 +102,29 @@ resource "azurerm_storage_share" "test" {
 
 resource "azurerm_virtual_network" "test" {
   name                = "acctest-vnet-%[1]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
+  resource_group_name = %[6]s
+  location            = "%[2]s"
   address_space       = ["10.0.0.0/24"]
 }
 
 resource "azurerm_subnet" "test0" {
   name                 = "acctest-snet-%[1]d"
-  resource_group_name  = azurerm_resource_group.test.name
+  resource_group_name  = %[6]s
   virtual_network_name = azurerm_virtual_network.test.name
   address_prefixes     = ["10.0.0.0/28"]
 }
 
 resource "azurerm_subnet" "test1" {
   name                 = "GatewaySubnet"
-  resource_group_name  = azurerm_resource_group.test.name
+  resource_group_name  = %[6]s
   virtual_network_name = azurerm_virtual_network.test.name
   address_prefixes     = ["10.0.0.16/28"]
 }
 
 resource "azurerm_network_interface" "test" {
   name                = "acctest-nic-%[1]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
+  resource_group_name = %[6]s
+  location            = "%[2]s"
 
   ip_configuration {
     name                          = "acctest-ipconfig-%[1]d"
@@ -147,14 +135,14 @@ resource "azurerm_network_interface" "test" {
 
 resource "azurerm_nat_gateway" "test" {
   name                = "acctest-ng-%[1]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
+  resource_group_name = %[6]s
+  location            = "%[2]s"
 }
 
 resource "azurerm_virtual_desktop_host_pool" "test" {
   name                = "acctest-vdpool-%[1]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
+  resource_group_name = %[6]s
+  location            = "%[2]s"
   type                = "Pooled"
   load_balancer_type  = "BreadthFirst"
 }
@@ -165,18 +153,18 @@ resource "azurerm_virtual_desktop_host_pool_registration_info" "test" {
 }
 
 resource "azurerm_virtual_desktop_application_group" "test" {
-  name                         = "acctest-vdag-%[1]d"
-  resource_group_name          = azurerm_resource_group.test.name
-  location                     = azurerm_resource_group.test.location
-  host_pool_id                 = azurerm_virtual_desktop_host_pool.test.id
-  type                         = "RemoteApp"
+  name                = "acctest-vdag-%[1]d"
+  resource_group_name = %[6]s
+  location            = "%[2]s"
+  host_pool_id        = azurerm_virtual_desktop_host_pool.test.id
+  type                = "RemoteApp"
 }
 
 resource "azurerm_windows_virtual_machine" "test" {
   name                = "vm-%[3]s"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  size                = "Standard_F2as_v7"
+  resource_group_name = %[6]s
+  location            = "%[2]s"
+  size                = "Standard_F1als_v7"
   admin_password      = "Password1234"
   admin_username      = "adminuser"
   network_interface_ids = [
@@ -253,22 +241,54 @@ resource "azurerm_virtual_machine_extension" "test2" {
     azurerm_nat_gateway.test
   ]
 }
-`, data.RandomInteger, data.Locations.Secondary, data.RandomStringOfLength(10), fileShareConfig, time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339))
+`, data.RandomInteger, data.Locations.Secondary, data.RandomStringOfLength(10), fileShareConfig, time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339), activeRG)
 }
 
-func (r VirtualDesktopMsixPackageResource) basic(data acceptance.TestData) string {
+func TestAccVirtualDesktopMsixPackage_update_package_full_name(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_virtual_desktop_msix_package", "test")
+	r := VirtualDesktopMsixPackageResource{}
 
+	firstPackageFullName := "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
+	secondPackageFullName := "43906ChrisLovett.XmlNotepad_2.9.0.22_neutral__hndwmj480pefj"
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.updatePackageFullName(data, firstPackageFullName),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.updatePackageFullName(data, secondPackageFullName),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.updatePackageFullName(data, firstPackageFullName),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func (r VirtualDesktopMsixPackageResource) updatePackageFullName(data acceptance.TestData, packageFullName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azurerm_virtual_desktop_msix_package" "test" {
-  name                = "acctest-msix-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  display_name        = "XmlNotepad"
-  host_pool_name      = azurerm_virtual_desktop_host_pool.test.name
-  image_uri           = azurerm_storage_share_file.test6.id
-  package_full_name   = "43906ChrisLovett.XmlNotepad_2.9.0.21_neutral__hndwmj480pefj"
-  is_active = true
+  name                    = "acctest-msix-%[2]d"
+  resource_group_name     = azurerm_resource_group.test.name
+  display_name            = "XmlNotepad"
+  host_pool_name          = azurerm_virtual_desktop_host_pool.test.name
+  image_uri               = azurerm_storage_share_file.test6.id
+  package_full_name       = "%[3]s"
+  is_regular_registration = false
+  is_active               = true
 
   depends_on = [
     azurerm_virtual_machine_extension.test0,
@@ -276,28 +296,21 @@ resource "azurerm_virtual_desktop_msix_package" "test" {
     azurerm_virtual_machine_extension.test2
   ]
 }
-
-resource "azurerm_virtual_desktop_application" "test" {
-  name                         = "acctest-vdapp-%[2]d"
-  application_group_id         = azurerm_virtual_desktop_application_group.test.id
-  application_type             = "MsixApplication"
-  command_line_argument_policy = "DoNotAllow"
-  icon_path = "\\\\${azurerm_storage_account.test.name}.file.core.windows.net\\${azurerm_storage_share.test.name}\\${azurerm_storage_share_file.test7.name}"
-  msix_package_application_id  = azurerm_virtual_desktop_msix_package.test.id
-  msix_package_family_name     = azurerm_virtual_desktop_msix_package.test.package_family_name
-  show_in_portal               = true
-}
-`, r.template(data), data.RandomInteger)
+`, r.updateResourceGroupNameTemplate(data, false), data.RandomInteger, packageFullName)
 }
 
-func (r VirtualDesktopMsixPackageResource) complete(data acceptance.TestData) string {
+func (r VirtualDesktopMsixPackageResource) updateResourceGroupName(data acceptance.TestData, useSecond bool) string {
+	activeRG := "azurerm_resource_group.test.name"
+	if useSecond {
+		activeRG = "azurerm_resource_group.test2.name"
+	}
 
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azurerm_virtual_desktop_msix_package" "test" {
   name                    = "acctest-msix-%[2]d"
-  resource_group_name     = azurerm_resource_group.test.name
+  resource_group_name     = %[3]s
   display_name            = "XmlNotepad"
   host_pool_name          = azurerm_virtual_desktop_host_pool.test.name
   image_uri               = azurerm_storage_share_file.test6.id
@@ -311,5 +324,5 @@ resource "azurerm_virtual_desktop_msix_package" "test" {
     azurerm_virtual_machine_extension.test2
   ]
 }
-`, r.template(data), data.RandomInteger)
+`, r.updateResourceGroupNameTemplate(data, useSecond), data.RandomInteger, activeRG)
 }

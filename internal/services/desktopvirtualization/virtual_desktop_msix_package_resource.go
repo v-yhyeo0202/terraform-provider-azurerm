@@ -37,14 +37,30 @@ func (r VirtualDesktopMsixPackageResource) Identity() resourceids.ResourceId {
 }
 
 type VirtualDesktopMsixPackageModel struct {
-	ResourceGroupName     string `tfschema:"resource_group_name"`
-	HostPoolName          string `tfschema:"host_pool_name"`
-	Name                  string `tfschema:"name"`
-	PackageFullName       string `tfschema:"package_full_name"`
-	ImageUri              string `tfschema:"image_uri"`
-	DisplayName           string `tfschema:"display_name"`
-	IsRegularRegistration bool   `tfschema:"is_regular_registration"`
-	IsActive              bool   `tfschema:"is_active"`
+	ResourceGroupName     string                        `tfschema:"resource_group_name"`
+	HostPoolName          string                        `tfschema:"host_pool_name"`
+	Name                  string                        `tfschema:"name"`
+	PackageFullName       string                        `tfschema:"package_full_name"`
+	ImageUri              string                        `tfschema:"image_uri"`
+	DisplayName           string                        `tfschema:"display_name"`
+	IsRegularRegistration bool                          `tfschema:"is_regular_registration"`
+	IsActive              bool                          `tfschema:"is_active"`
+	LastUpdated           string                        `tfschema:"last_updated"`
+	PackageFamilyName     string                        `tfschema:"package_family_name"`
+	PackageName           string                        `tfschema:"package_name"`
+	PackageRelativePath   string                        `tfschema:"package_relative_path"`
+	Version               string                        `tfschema:"version"`
+	PackageApplications   []MsixPackageApplicationModel `tfschema:"package_applications"`
+}
+
+type MsixPackageApplicationModel struct {
+	AppId          string `tfschema:"app_id"`
+	AppUserModelID string `tfschema:"app_user_model_id"`
+	Description    string `tfschema:"description"`
+	FriendlyName   string `tfschema:"friendly_name"`
+	IconImageName  string `tfschema:"icon_image_name"`
+	RawIcon        string `tfschema:"raw_icon"`
+	RawPng         string `tfschema:"raw_png"`
 }
 
 func (r VirtualDesktopMsixPackageResource) ModelObject() interface{} {
@@ -102,7 +118,75 @@ func (r VirtualDesktopMsixPackageResource) Arguments() map[string]*pluginsdk.Sch
 }
 
 func (r VirtualDesktopMsixPackageResource) Attributes() map[string]*pluginsdk.Schema {
-	return map[string]*pluginsdk.Schema{}
+	return map[string]*pluginsdk.Schema{
+		"last_updated": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
+
+		"package_family_name": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
+
+		"package_name": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
+
+		"package_relative_path": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
+
+		"version": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
+
+		"package_applications": {
+			Type:     pluginsdk.TypeList,
+			Computed: true,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"app_id": {
+						Type:     pluginsdk.TypeString,
+						Computed: true,
+					},
+
+					"app_user_model_id": {
+						Type:     pluginsdk.TypeString,
+						Computed: true,
+					},
+
+					"description": {
+						Type:     pluginsdk.TypeString,
+						Computed: true,
+					},
+
+					"friendly_name": {
+						Type:     pluginsdk.TypeString,
+						Computed: true,
+					},
+
+					"icon_image_name": {
+						Type:     pluginsdk.TypeString,
+						Computed: true,
+					},
+
+					"raw_icon": {
+						Type:     pluginsdk.TypeString,
+						Computed: true,
+					},
+
+					"raw_png": {
+						Type:     pluginsdk.TypeString,
+						Computed: true,
+					},
+				},
+			},
+		},
+	}
 }
 
 func (r VirtualDesktopMsixPackageResource) Create() sdk.ResourceFunc {
@@ -162,6 +246,7 @@ func (r VirtualDesktopMsixPackageResource) Create() sdk.ResourceFunc {
 			if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, &id); err != nil {
 				return err
 			}
+			panic("debug0")
 			return nil
 		},
 	}
@@ -298,14 +383,10 @@ func (r VirtualDesktopMsixPackageResource) flatten(ctx context.Context, metadata
 				return fmt.Errorf("retrieving MSIX image properties: %+v", err)
 			}
 
-			if packageFullName := msixImageProperties.PackageFullName; packageFullName != nil {
-				state.PackageFullName = pointer.From(packageFullName)
-			}
+			state.PackageFullName = pointer.From(msixImageProperties.PackageFullName)
 		}
 
-		if displayName := props.DisplayName; displayName != nil {
-			state.DisplayName = pointer.From(displayName)
-		}
+		state.DisplayName = pointer.From(props.DisplayName)
 
 		if isRegularRegistration := props.IsRegularRegistration; isRegularRegistration != nil {
 			state.IsRegularRegistration = pointer.From(isRegularRegistration)
@@ -314,6 +395,13 @@ func (r VirtualDesktopMsixPackageResource) flatten(ctx context.Context, metadata
 		if isActive := props.IsActive; isActive != nil {
 			state.IsActive = pointer.From(isActive)
 		}
+
+		state.LastUpdated = pointer.From(props.LastUpdated)
+		state.PackageFamilyName = pointer.From(props.PackageFamilyName)
+		state.PackageName = pointer.From(props.PackageName)
+		state.PackageRelativePath = pointer.From(props.PackageRelativePath)
+		state.Version = pointer.From(props.Version)
+		state.PackageApplications = r.flattenPackageApplications(props.PackageApplications)
 	}
 
 	if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, id); err != nil {
@@ -341,6 +429,27 @@ func (r VirtualDesktopMsixPackageResource) expandPackageApplications(inputs *[]m
 	}
 
 	return pointer.To(outputs)
+}
+
+func (r VirtualDesktopMsixPackageResource) flattenPackageApplications(inputs *[]msixpackage.MsixPackageApplications) []MsixPackageApplicationModel {
+	outputs := make([]MsixPackageApplicationModel, 0)
+	if inputs == nil {
+		return outputs
+	}
+
+	for _, input := range *inputs {
+		outputs = append(outputs, MsixPackageApplicationModel{
+			AppId:          pointer.From(input.AppId),
+			AppUserModelID: pointer.From(input.AppUserModelID),
+			Description:    pointer.From(input.Description),
+			FriendlyName:   pointer.From(input.FriendlyName),
+			IconImageName:  pointer.From(input.IconImageName),
+			RawIcon:        pointer.From(input.RawIcon),
+			RawPng:         pointer.From(input.RawPng),
+		})
+	}
+
+	return outputs
 }
 
 func getMsixImageProperties(ctx context.Context, metadata sdk.ResourceMetaData, hostPoolId msiximage.HostPoolId, imageUri string, packageFullName string, packageRelativePath string) (*msiximage.ExpandMsixImageProperties, error) {
