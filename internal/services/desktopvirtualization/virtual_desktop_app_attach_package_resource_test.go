@@ -34,6 +34,21 @@ func TestAccVirtualDesktopAppAttachPackage_basic(t *testing.T) {
 	})
 }
 
+func TestAccVirtualDesktopAppAttachPackage_requiresImport(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_virtual_desktop_app_attach_package", "test")
+	r := VirtualDesktopAppAttachPackageResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.RequiresImportErrorStep(r.requiresImport),
+	})
+}
+
 func TestAccVirtualDesktopAppAttachPackage_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_virtual_desktop_app_attach_package", "test")
 	r := VirtualDesktopAppAttachPackageResource{}
@@ -284,6 +299,22 @@ resource "azurerm_virtual_desktop_app_attach_package" "test" {
   ]
 }
 `, r.template(data), data.RandomInteger)
+}
+
+func (r VirtualDesktopAppAttachPackageResource) requiresImport(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_virtual_desktop_app_attach_package" "import" {
+  name                = azurerm_virtual_desktop_app_attach_package.test.name
+  resource_group_name = azurerm_virtual_desktop_app_attach_package.test.resource_group_name
+  location            = azurerm_virtual_desktop_app_attach_package.test.location
+  display_name        = azurerm_virtual_desktop_app_attach_package.test.display_name
+  host_pool_ids       = azurerm_virtual_desktop_app_attach_package.test.host_pool_ids
+  msix_package_name   = azurerm_virtual_desktop_app_attach_package.test.msix_package_name
+  storage_share_file_id = azurerm_virtual_desktop_app_attach_package.test.storage_share_file_id
+}
+`, r.basic(data))
 }
 
 func (r VirtualDesktopAppAttachPackageResource) complete(data acceptance.TestData) string {
