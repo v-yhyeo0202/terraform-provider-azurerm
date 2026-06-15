@@ -53,7 +53,7 @@ The `timeouts` block allows you to specify [timeouts](https://developer.hashicor
 
 ## Import
 
-Cosmos DB Fleets can be imported using the `resource id`, e.g.
+Cosmos DB Fleet can be imported using the `resource id`, e.g.
 
 ```shell
 terraform import azurerm_cosmosdb_fleet.example /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.DocumentDB/fleets/fleet1
