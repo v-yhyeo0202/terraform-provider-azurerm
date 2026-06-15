@@ -48,7 +48,7 @@ func (r CosmosdbFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			ForceNew: true,
 			ValidateFunc: validation.StringMatch(
 				regexp.MustCompile("^[a-zA-Z0-9-]+$"),
-				"Cosmos DB fleet name must contain only lowercase letters, numbers, and hyphens.",
+				"Cosmos DB fleet name must contain only letters, numbers, and hyphens.",
 			),
 		},
 
