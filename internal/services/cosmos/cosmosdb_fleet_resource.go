@@ -6,6 +6,7 @@ package cosmos
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/cosmosdb/2025-10-15/fleets"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 )
 
 //go:generate go run ../../tools/generator-tests resourceidentity -resource-name cosmosdb_fleet -service-package-name cosmos -properties "name,resource_group_name" -known-values "subscription_id:data.Subscriptions.Primary"
@@ -44,6 +46,10 @@ func (r CosmosdbFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			Type:     pluginsdk.TypeString,
 			Required: true,
 			ForceNew: true,
+			ValidateFunc: validation.StringMatch(
+				regexp.MustCompile("^[a-zA-Z0-9-]+$"),
+				"Cosmos DB fleet name must contain only lowercase letters, numbers, and hyphens.",
+			),
 		},
 
 		"resource_group_name": commonschema.ResourceGroupName(),
