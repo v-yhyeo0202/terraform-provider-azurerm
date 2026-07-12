@@ -24,8 +24,9 @@ import (
 type GeoCatalogResource struct{}
 
 var (
-	_ sdk.ResourceWithUpdate   = GeoCatalogResource{}
-	_ sdk.ResourceWithIdentity = GeoCatalogResource{}
+	_ sdk.ResourceWithUpdate        = GeoCatalogResource{}
+	_ sdk.ResourceWithIdentity      = GeoCatalogResource{}
+	_ sdk.ResourceWithCustomizeDiff = GeoCatalogResource{}
 )
 
 func (r GeoCatalogResource) Identity() resourceids.ResourceId {
@@ -206,6 +207,23 @@ func (r GeoCatalogResource) Delete() sdk.ResourceFunc {
 
 func (r GeoCatalogResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return geocatalogs.ValidateGeoCatalogID
+}
+
+func (r GeoCatalogResource) CustomizeDiff() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			if rawIdentityIds, ok := metadata.ResourceDiff.GetOk("identity.0.identity_ids"); ok {
+				identityIds := rawIdentityIds.(*pluginsdk.Set)
+				identityType := metadata.ResourceDiff.Get("identity.0.type").(string)
+				if identityIds.Len() > 0 && identityType != string(identity.TypeSystemAssignedUserAssigned) && identityType != string(identity.TypeUserAssigned) {
+					return fmt.Errorf("`identity_ids` can only be specified when `type` is set to %q or %q", string(identity.TypeSystemAssignedUserAssigned), string(identity.TypeUserAssigned))
+				}
+			}
+
+			return nil
+		},
+	}
 }
 
 func (r GeoCatalogResource) expandIdentity(input []identity.ModelSystemAssignedUserAssigned) *geocatalogs.ManagedServiceIdentityUpdate {
