@@ -52,11 +52,11 @@ func (r GeoCatalogResource) basic(data acceptance.TestData) string {
 %s
 
 resource "azurerm_orbital_geo_catalog" "test" {
-  name                = "acctest-geocatalog-%d"
+  name                = "acctest-geocatalog-%s"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
 }
-`, r.template(data), data.RandomInteger)
+`, r.template(data), data.RandomString)
 }
 
 func (r GeoCatalogResource) template(data acceptance.TestData) string {

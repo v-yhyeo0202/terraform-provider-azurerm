@@ -6,6 +6,7 @@ package orbitalplanetarycomputer
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/orbitalplanetarycomputer/2026-04-15/geocatalogs"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 )
 
 //go:generate go run ../../tools/generator-tests resourceidentity -resource-name geo_catalog -service-package-name orbitalplanetarycomputer -properties "name,resource_group_name" -known-values "subscription_id:data.Subscriptions.Primary"
@@ -47,7 +49,10 @@ func (r GeoCatalogResource) Arguments() map[string]*pluginsdk.Schema {
 			Type:     pluginsdk.TypeString,
 			Required: true,
 			ForceNew: true,
-			// ValidateFunc: validation.StringIsNotEmpty
+			ValidateFunc: validation.StringMatch(
+				regexp.MustCompile("^[a-zA-Z0-9-]{3,24}$"),
+				"GeoCatalog name must consist only of letters, numbers, hyphens (-), and have length between 3 and 24 characters (inclusive)",
+			),
 		},
 
 		"resource_group_name": commonschema.ResourceGroupName(),
