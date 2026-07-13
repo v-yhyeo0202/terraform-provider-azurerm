@@ -79,7 +79,7 @@ func (r GeoCatalogResource) ResourceType() string {
 
 func (r GeoCatalogResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
-		Timeout: 30 * time.Minute,
+		Timeout: 90 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.OrbitalPlanetaryComputer.GeoCatalogsClient
 			subscriptionId := metadata.Client.Account.SubscriptionId
@@ -133,7 +133,7 @@ func (r GeoCatalogResource) Create() sdk.ResourceFunc {
 
 func (r GeoCatalogResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
-		Timeout: 30 * time.Minute,
+		Timeout: 90 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.OrbitalPlanetaryComputer.GeoCatalogsClient
 
@@ -192,7 +192,7 @@ func (r GeoCatalogResource) Read() sdk.ResourceFunc {
 
 func (r GeoCatalogResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
-		Timeout: 30 * time.Minute,
+		Timeout: 60 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.OrbitalPlanetaryComputer.GeoCatalogsClient
 
