@@ -234,14 +234,16 @@ func (r GeoCatalogResource) CustomizeDiff() sdk.ResourceFunc {
 }
 
 func (r GeoCatalogResource) expandIdentity(input []identity.ModelSystemAssignedUserAssigned) *geocatalogs.ManagedServiceIdentityUpdate {
-	if len(input) == 0 {
-		return nil
-	}
-
 	managedServiceIdentityUpdate := &geocatalogs.ManagedServiceIdentityUpdate{
-		Type:                   pointer.ToEnum[geocatalogs.ManagedServiceIdentityType](string(input[0].Type)),
+		Type:                   pointer.To(geocatalogs.ManagedServiceIdentityTypeNone),
 		UserAssignedIdentities: &map[string]geocatalogs.UserAssignedIdentity{},
 	}
+
+	if len(input) == 0 {
+		return managedServiceIdentityUpdate
+	}
+
+	managedServiceIdentityUpdate.Type = pointer.ToEnum[geocatalogs.ManagedServiceIdentityType](string(input[0].Type))
 
 	for _, identityId := range input[0].IdentityIds {
 		(*managedServiceIdentityUpdate.UserAssignedIdentities)[identityId] = geocatalogs.UserAssignedIdentity{}
