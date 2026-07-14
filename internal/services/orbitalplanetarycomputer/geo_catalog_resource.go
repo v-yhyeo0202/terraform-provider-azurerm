@@ -74,7 +74,7 @@ func (r GeoCatalogResource) ModelObject() interface{} {
 }
 
 func (r GeoCatalogResource) ResourceType() string {
-	return "azurerm_orbital_geo_catalog"
+	return "azurerm_geo_catalog"
 }
 
 func (r GeoCatalogResource) Create() sdk.ResourceFunc {
@@ -221,8 +221,10 @@ func (r GeoCatalogResource) CustomizeDiff() sdk.ResourceFunc {
 			if rawIdentityIds, ok := metadata.ResourceDiff.GetOk("identity.0.identity_ids"); ok {
 				identityIds := rawIdentityIds.(*pluginsdk.Set)
 				identityType := metadata.ResourceDiff.Get("identity.0.type").(string)
-				if identityIds.Len() > 0 && identityType != string(identity.TypeSystemAssignedUserAssigned) && identityType != string(identity.TypeUserAssigned) {
-					return fmt.Errorf("`identity_ids` can only be specified when `type` is set to %q or %q", string(identity.TypeSystemAssignedUserAssigned), string(identity.TypeUserAssigned))
+				if identityType == string(identity.TypeSystemAssignedUserAssigned) {
+					return fmt.Errorf("%q resource identity is not supported", string(identity.TypeSystemAssignedUserAssigned))
+				} else if identityIds.Len() > 0 && identityType != string(identity.TypeUserAssigned) {
+					return fmt.Errorf("`identity_ids` can only be specified when `type` is set to %q", string(identity.TypeUserAssigned))
 				}
 			}
 

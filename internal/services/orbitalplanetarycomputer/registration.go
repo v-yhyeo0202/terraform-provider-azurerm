@@ -13,7 +13,7 @@ type Registration struct{}
 
 var (
 	_ sdk.TypedServiceRegistration     = Registration{}
-    _ sdk.FrameworkServiceRegistration = Registration{}
+	_ sdk.FrameworkServiceRegistration = Registration{}
 )
 
 func (r Registration) DataSources() []sdk.DataSource {

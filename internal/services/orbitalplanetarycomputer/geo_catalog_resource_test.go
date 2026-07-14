@@ -19,12 +19,42 @@ import (
 type GeoCatalogResource struct{}
 
 func TestAccGeoCatalog_basic(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_orbital_geo_catalog", "test")
+	data := acceptance.BuildTestData(t, "azurerm_geo_catalog", "test")
 	r := GeoCatalogResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccGeoCatalog_requiresImport(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_geo_catalog", "test")
+	r := GeoCatalogResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.RequiresImportErrorStep(r.requiresImport),
+	})
+}
+
+func TestAccGeoCatalog_complete(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_geo_catalog", "test")
+	r := GeoCatalogResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.complete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -51,12 +81,54 @@ func (r GeoCatalogResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
 
-resource "azurerm_orbital_geo_catalog" "test" {
+resource "azurerm_geo_catalog" "test" {
   name                = "acctest-geocatalog-%s"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
 }
 `, r.template(data), data.RandomString)
+}
+
+func (r GeoCatalogResource) requiresImport(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_geo_catalog" "import" {
+  name                = azurerm_geo_catalog.test.name
+  resource_group_name = azurerm_geo_catalog.test.resource_group_name
+  location            = azurerm_geo_catalog.test.location
+}
+`, r.basic(data))
+}
+
+func (r GeoCatalogResource) complete(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_user_assigned_identity" "test" {
+  name                = "acctest-uai-%d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+}
+
+resource "azurerm_geo_catalog" "test" {
+  name                = "acctest-geocatalog-%s"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.test.id,
+    ]
+  }
+
+  tags = {
+    Environment = "Production"
+    Label = "Test"
+  }
+}
+`, r.template(data), data.RandomInteger, data.RandomString)
 }
 
 func (r GeoCatalogResource) template(data acceptance.TestData) string {
