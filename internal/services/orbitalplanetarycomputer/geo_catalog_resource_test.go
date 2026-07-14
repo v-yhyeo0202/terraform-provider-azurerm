@@ -63,6 +63,28 @@ func TestAccGeoCatalog_complete(t *testing.T) {
 	})
 }
 
+func TestAccGeoCatalog_update(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_geo_catalog", "test")
+	r := GeoCatalogResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.complete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r GeoCatalogResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := geocatalogs.ParseGeoCatalogID(state.ID)
 	if err != nil {
@@ -139,7 +161,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "test" {
   name     = "acctest-planetarycomputer-%d"
-  location = "%s"
+  location = "uksouth"
 }
-`, data.RandomInteger, data.Locations.Primary)
+`, data.RandomInteger)
 }
