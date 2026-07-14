@@ -147,7 +147,7 @@ resource "azurerm_geo_catalog" "test" {
 
   tags = {
     Environment = "Production"
-    Label = "Test"
+    Label       = "Test"
   }
 }
 `, r.template(data), data.RandomInteger, data.RandomString)

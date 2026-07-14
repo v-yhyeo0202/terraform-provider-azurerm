@@ -17,4 +17,5 @@ var WorkaroundServiceNameToDirectory = map[string]string{
 	"Resources":                       "resource",
 	"Service Fabric Managed Clusters": "servicefabricmanaged",
 	"Container Services":              "containers",
+	"Planetary Computer":              "orbitalplanetarycomputer",
 }

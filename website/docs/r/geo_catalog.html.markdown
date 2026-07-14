@@ -68,7 +68,7 @@ The `timeouts` block allows you to specify [timeouts](https://developer.hashicor
 * `create` - (Defaults to 90 minutes) Used when creating the GeoCatalog.
 * `read` - (Defaults to 5 minutes) Used when retrieving the GeoCatalog.
 * `update` - (Defaults to 90 minutes) Used when updating the GeoCatalog.
-* `delete` - (Defaults to 60 minutes) Used when deleting the GeoCatalog.
+* `delete` - (Defaults to 1 hour) Used when deleting the GeoCatalog.
 
 ## Import
 

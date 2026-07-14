@@ -258,7 +258,7 @@ service/oracle:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azurerm_oracle_((.|\n)*)###'
 
 service/orbital:
-  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azurerm_orbital_((.|\n)*)###'
+  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azurerm_(geo_catalog|orbital_)((.|\n)*)###'
 
 service/paloalto:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azurerm_palo_alto_((.|\n)*)###'
