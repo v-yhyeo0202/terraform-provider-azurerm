@@ -565,6 +565,12 @@ func resourceStorageAccount() *pluginsdk.Resource {
 					Schema: map[string]*pluginsdk.Schema{
 						"cors_rule": helpers.SchemaStorageAccountCorsRule(true),
 
+						"nfs_encryption_in_transit_enabled": {
+							Type:     pluginsdk.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+
 						"retention_policy": {
 							Type:     pluginsdk.TypeList,
 							Optional: true,
@@ -610,6 +616,12 @@ func resourceStorageAccount() *pluginsdk.Resource {
 												"AES-256-GCM",
 											}, false),
 										},
+									},
+
+									"encryption_in_transit_enabled": {
+										Type:     pluginsdk.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 
 									"kerberos_ticket_encryption_type": {
@@ -2732,6 +2744,11 @@ func expandAccountShareProperties(input []interface{}) fileservices.FileServiceP
 		props.Properties.Cors = expandAccountSharePropertiesCorsRule(v["cors_rule"].([]interface{}))
 
 		props.Properties.ProtocolSettings = &fileservices.ProtocolSettings{
+			Nfs: &fileservices.NfsSetting{
+				EncryptionInTransit: &fileservices.EncryptionInTransit{
+					Required: pointer.To(v["nfs_encryption_in_transit_enabled"].(bool)),
+				},
+			},
 			Smb: expandAccountSharePropertiesSMB(v["smb"].([]interface{})),
 		}
 	}
@@ -2745,9 +2762,10 @@ func flattenAccountShareProperties(input *fileservices.FileServiceProperties) []
 	if input != nil {
 		if props := input.Properties; props != nil {
 			output = append(output, map[string]interface{}{
-				"cors_rule":        flattenAccountSharePropertiesCorsRule(props.Cors),
-				"retention_policy": flattenAccountShareDeleteRetentionPolicy(props.ShareDeleteRetentionPolicy),
-				"smb":              flattenAccountSharePropertiesSMB(props.ProtocolSettings),
+				"cors_rule":                         flattenAccountSharePropertiesCorsRule(props.Cors),
+				"nfs_encryption_in_transit_enabled": flattenAccountSharePropertiesNfsEncryptionInTransitEnabled(props.ProtocolSettings),
+				"retention_policy":                  flattenAccountShareDeleteRetentionPolicy(props.ShareDeleteRetentionPolicy),
+				"smb":                               flattenAccountSharePropertiesSMB(props.ProtocolSettings),
 			})
 		}
 	}
@@ -2800,6 +2818,14 @@ func flattenAccountSharePropertiesCorsRule(input *fileservices.CorsRules) []inte
 	return corsRules
 }
 
+func flattenAccountSharePropertiesNfsEncryptionInTransitEnabled(input *fileservices.ProtocolSettings) bool {
+	if input == nil || input.Nfs == nil || input.Nfs.EncryptionInTransit == nil {
+		return false
+	}
+
+	return pointer.From(input.Nfs.EncryptionInTransit.Required)
+}
+
 func expandAccountShareDeleteRetentionPolicy(input []interface{}) *fileservices.DeleteRetentionPolicy {
 	result := fileservices.DeleteRetentionPolicy{
 		Enabled: pointer.To(false),
@@ -2849,8 +2875,11 @@ func expandAccountSharePropertiesSMB(input []interface{}) *fileservices.SmbSetti
 	v := input[0].(map[string]interface{})
 
 	return &fileservices.SmbSetting{
-		AuthenticationMethods:    providerhelpers.ExpandStringSliceWithDelimiter(v["authentication_types"].(*pluginsdk.Set).List(), ";"),
-		ChannelEncryption:        providerhelpers.ExpandStringSliceWithDelimiter(v["channel_encryption_type"].(*pluginsdk.Set).List(), ";"),
+		AuthenticationMethods: providerhelpers.ExpandStringSliceWithDelimiter(v["authentication_types"].(*pluginsdk.Set).List(), ";"),
+		ChannelEncryption:     providerhelpers.ExpandStringSliceWithDelimiter(v["channel_encryption_type"].(*pluginsdk.Set).List(), ";"),
+		EncryptionInTransit: &fileservices.EncryptionInTransit{
+			Required: pointer.To(v["encryption_in_transit_enabled"].(bool)),
+		},
 		KerberosTicketEncryption: providerhelpers.ExpandStringSliceWithDelimiter(v["kerberos_ticket_encryption_type"].(*pluginsdk.Set).List(), ";"),
 		Versions:                 providerhelpers.ExpandStringSliceWithDelimiter(v["versions"].(*pluginsdk.Set).List(), ";"),
 		Multichannel: &fileservices.Multichannel{
@@ -2889,7 +2918,12 @@ func flattenAccountSharePropertiesSMB(input *fileservices.ProtocolSettings) []in
 		multichannelEnabled = *input.Smb.Multichannel.Enabled
 	}
 
-	if len(versions) == 0 && len(authenticationMethods) == 0 && len(kerberosTicketEncryption) == 0 && len(channelEncryption) == 0 && (input.Smb.Multichannel == nil || input.Smb.Multichannel.Enabled == nil) {
+	encryptionInTransitEnabled := false
+	if input.Smb.EncryptionInTransit != nil {
+		encryptionInTransitEnabled = pointer.From(input.Smb.EncryptionInTransit.Required)
+	}
+
+	if len(versions) == 0 && len(authenticationMethods) == 0 && len(kerberosTicketEncryption) == 0 && len(channelEncryption) == 0 && (input.Smb.Multichannel == nil || input.Smb.Multichannel.Enabled == nil) && (input.Smb.EncryptionInTransit == nil || input.Smb.EncryptionInTransit.Required == nil) {
 		return []interface{}{}
 	}
 
@@ -2897,6 +2931,7 @@ func flattenAccountSharePropertiesSMB(input *fileservices.ProtocolSettings) []in
 		map[string]interface{}{
 			"authentication_types":            authenticationMethods,
 			"channel_encryption_type":         channelEncryption,
+			"encryption_in_transit_enabled":   encryptionInTransitEnabled,
 			"kerberos_ticket_encryption_type": kerberosTicketEncryption,
 			"multichannel_enabled":            multichannelEnabled,
 			"versions":                        versions,
