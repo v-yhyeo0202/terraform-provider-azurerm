@@ -379,7 +379,7 @@ A `share_properties` block supports the following:
 
 * `cors_rule` - (Optional) A `cors_rule` block as defined below.
 
-* `nfs_encryption_in_transit_enabled` - (Optional) Indicates whether encryption in transit is required for NFS shares. Defaults to `false`.
+* `nfs_encryption_in_transit_enabled` - (Optional) Indicates whether encryption in transit is enabled for NFS. Defaults to `false`.
 
 * `retention_policy` - (Optional) A `retention_policy` block as defined below.
 
@@ -405,7 +405,7 @@ A `smb` block supports the following:
 
 * `multichannel_enabled` - (Optional) Indicates whether multichannel is enabled. Defaults to `false`. This is only supported on Premium storage accounts.
 
-* `encryption_in_transit_required` - (Optional) Indicates whether encryption in transit is required for SMB shares. Defaults to `false`.
+* `encryption_in_transit_enabled` - (Optional) Indicates whether encryption in transit is enabled for SMB. Defaults to `false`.
 
 ---
 
