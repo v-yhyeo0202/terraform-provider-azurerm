@@ -1166,6 +1166,19 @@ func resourceStorageAccount() *pluginsdk.Resource {
 					keys := sortedKeysFromSlice(storageKindsSupportHns)
 					return fmt.Errorf("`is_hns_enabled` can only be used for accounts with `account_kind` set to one of: %+v", strings.Join(keys, " / "))
 				}
+
+				// Based on portal
+				accountTier := d.Get("account_tier").(string)
+				nfsEncryptionInTransitEnabled := d.Get("share_properties.0.nfs_encryption_in_transit_enabled").(bool)
+				if (accountKind != storageaccounts.KindFileStorage || accountTier != string(storageaccounts.SkuTierPremium)) && nfsEncryptionInTransitEnabled {
+					return fmt.Errorf("`share_properties.0.nfs_encryption_in_transit_enabled` can only be set to `true` when `account_kind` is `%s` and `account_tier` is `%s`", storageaccounts.KindFileStorage, storageaccounts.SkuTierPremium)
+				}
+
+				smbEncryptionInTransitEnabled := d.Get("share_properties.0.smb.0.encryption_in_transit_enabled").(bool)
+				if accountKind == storageaccounts.KindBlockBlobStorage && accountTier == string(storageaccounts.SkuTierPremium) && smbEncryptionInTransitEnabled {
+					return fmt.Errorf("`share_properties.0.smb.0.encryption_in_transit_enabled` cannot be set to `true` when `account_kind` is `%s` and `account_tier` is `%s`", storageaccounts.KindBlockBlobStorage, storageaccounts.SkuTierPremium)
+				}
+
 				return nil
 			}),
 			pluginsdk.ForceNewIfChange("account_replication_type", func(ctx context.Context, old, new, meta interface{}) bool {
@@ -1441,7 +1454,7 @@ func resourceStorageAccountCreate(d *pluginsdk.ResourceData, meta interface{}) e
 			return fmt.Errorf("`share_properties` aren't supported for account kind %q in sku tier %q", accountKind, accountTier)
 		}
 
-		sharePayload := expandAccountShareProperties(val.([]interface{}))
+		sharePayload := expandAccountShareProperties(val.([]interface{}), accountTier)
 
 		// The API complains if any multichannel info is sent on non premium fileshares. Even if multichannel is set to false
 		if accountTier != storageaccounts.SkuTierPremium && sharePayload.Properties != nil && sharePayload.Properties.ProtocolSettings != nil {
@@ -1758,7 +1771,7 @@ func resourceStorageAccountUpdate(d *pluginsdk.ResourceData, meta interface{}) e
 			return fmt.Errorf("`share_properties` aren't supported for account kind %q in sku tier %q", accountKind, accountTier)
 		}
 
-		sharePayload := expandAccountShareProperties(d.Get("share_properties").([]interface{}))
+		sharePayload := expandAccountShareProperties(d.Get("share_properties").([]interface{}), accountTier)
 		// The API complains if any multichannel info is sent on non premium fileshares. Even if multichannel is set to false
 		if accountTier != storageaccounts.SkuTierPremium {
 			// Error if the user has tried to enable multichannel on a standard tier storage account
@@ -2724,7 +2737,7 @@ func flattenAccountBlobPropertiesCorsRule(input *blobservices.CorsRules) []inter
 	return corsRules
 }
 
-func expandAccountShareProperties(input []interface{}) fileservices.FileServiceProperties {
+func expandAccountShareProperties(input []interface{}, accountTier storageaccounts.SkuTier) fileservices.FileServiceProperties {
 	props := fileservices.FileServiceProperties{
 		Properties: &fileservices.FileServicePropertiesProperties{
 			Cors: &fileservices.CorsRules{
@@ -2744,12 +2757,15 @@ func expandAccountShareProperties(input []interface{}) fileservices.FileServiceP
 		props.Properties.Cors = expandAccountSharePropertiesCorsRule(v["cors_rule"].([]interface{}))
 
 		props.Properties.ProtocolSettings = &fileservices.ProtocolSettings{
-			Nfs: &fileservices.NfsSetting{
+			Smb: expandAccountSharePropertiesSMB(v["smb"].([]interface{})),
+		}
+		// REST API returns error for specifying `Nfs.EncryptionInTransit.Required` when `accountTier` is `SkuTierStandard`
+		if accountTier == storageaccounts.SkuTierPremium {
+			props.Properties.ProtocolSettings.Nfs = &fileservices.NfsSetting{
 				EncryptionInTransit: &fileservices.EncryptionInTransit{
 					Required: pointer.To(v["nfs_encryption_in_transit_enabled"].(bool)),
 				},
-			},
-			Smb: expandAccountSharePropertiesSMB(v["smb"].([]interface{})),
+			}
 		}
 	}
 
