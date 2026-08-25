@@ -4911,12 +4911,12 @@ resource "azurerm_resource_group" "test" {
 }
 
 resource "azurerm_storage_account" "test" {
-  name                = "unlikely23exst2acct%s"
-  resource_group_name = azurerm_resource_group.test.name
-  location                          = azurerm_resource_group.test.location
-  account_kind                      = "FileStorage"
-  account_tier                      = "Standard"
-  account_replication_type          = "LRS"
+  name                     = "unlikely23exst2acct%s"
+  resource_group_name      = azurerm_resource_group.test.name
+  location                 = azurerm_resource_group.test.location
+  account_kind             = "FileStorage"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
 
   share_properties {
     nfs_encryption_in_transit_enabled = true
@@ -4942,8 +4942,8 @@ resource "azurerm_resource_group" "test" {
 }
 
 resource "azurerm_storage_account" "test" {
-  name                = "unlikely23exst2acct%s"
-  resource_group_name = azurerm_resource_group.test.name
+  name                     = "unlikely23exst2acct%s"
+  resource_group_name      = azurerm_resource_group.test.name
   location                 = azurerm_resource_group.test.location
   account_kind             = "BlockBlobStorage"
   account_tier             = "Premium"
@@ -4951,8 +4951,8 @@ resource "azurerm_storage_account" "test" {
 
   share_properties {
     smb {
-	  encryption_in_transit_enabled = true
-	}
+      encryption_in_transit_enabled = true
+    }
   }
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomString)
