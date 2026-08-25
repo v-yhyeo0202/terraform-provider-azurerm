@@ -381,6 +381,8 @@ A `share_properties` block supports the following:
 
 * `nfs_encryption_in_transit_enabled` - (Optional) Indicates whether encryption in transit is enabled for NFS. Defaults to `false`.
 
+~> **Note:** `nfs_encryption_in_transit_enabled` can only be set to `true` when `account_kind` is `FileStorage` and `account_tier` is `Premium`.
+
 * `retention_policy` - (Optional) A `retention_policy` block as defined below.
 
 * `smb` - (Optional) A `smb` block as defined below.
@@ -406,6 +408,8 @@ A `smb` block supports the following:
 * `multichannel_enabled` - (Optional) Indicates whether multichannel is enabled. Defaults to `false`. This is only supported on Premium storage accounts.
 
 * `encryption_in_transit_enabled` - (Optional) Indicates whether encryption in transit is enabled for SMB. Defaults to `false`.
+
+~> **Note:** `encryption_in_transit_enabled` cannot be set to `true` when `account_kind` is `BlockBlobStorage` and `account_tier` is `Premium`.
 
 ---
 

@@ -1174,6 +1174,7 @@ func resourceStorageAccount() *pluginsdk.Resource {
 					return fmt.Errorf("`share_properties.0.nfs_encryption_in_transit_enabled` can only be set to `true` when `account_kind` is `%s` and `account_tier` is `%s`", storageaccounts.KindFileStorage, storageaccounts.SkuTierPremium)
 				}
 
+				// Based on portal
 				smbEncryptionInTransitEnabled := d.Get("share_properties.0.smb.0.encryption_in_transit_enabled").(bool)
 				if accountKind == storageaccounts.KindBlockBlobStorage && accountTier == string(storageaccounts.SkuTierPremium) && smbEncryptionInTransitEnabled {
 					return fmt.Errorf("`share_properties.0.smb.0.encryption_in_transit_enabled` cannot be set to `true` when `account_kind` is `%s` and `account_tier` is `%s`", storageaccounts.KindBlockBlobStorage, storageaccounts.SkuTierPremium)
