@@ -3360,7 +3360,7 @@ resource "azurerm_storage_account" "test" {
       authentication_types            = ["NTLMv2", "Kerberos"]
       kerberos_ticket_encryption_type = ["AES-256", "RC4-HMAC"]
       channel_encryption_type         = ["AES-128-CCM", "AES-256-GCM"]
-	  encryption_in_transit_enabled = true
+      encryption_in_transit_enabled   = true
     }
   }
 }
@@ -3720,7 +3720,7 @@ resource "azurerm_storage_account" "test" {
   infrastructure_encryption_enabled = true
 
   share_properties {
-	nfs_encryption_in_transit_enabled = true
+    nfs_encryption_in_transit_enabled = true
   }
 
   # Ignore changes based on https://github.com/hashicorp/terraform-provider-azurerm/pull/21226
