@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/eventgrid/2025-02-15/namespaces"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/eventgrid/2025-02-15/namespacetopics"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/locks"
@@ -14,9 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
+//go:generate go run ../../tools/generator-tests resourceidentity -parent-id "eventgrid_namespace_id"
+
 type EventgridNamespaceTopicIdAssociationResource struct{}
 
 var (
+	_ sdk.ResourceWithUpdate   = EventgridNamespaceTopicIdAssociationResource{}
 	_ sdk.ResourceWithIdentity = EventgridNamespaceTopicIdAssociationResource{}
 )
 
@@ -37,7 +41,6 @@ func (EventgridNamespaceTopicIdAssociationResource) Arguments() map[string]*plug
 		"eventgrid_namespace_topic_id": {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
-			ForceNew:     true,
 			ValidateFunc: namespacetopics.ValidateNamespaceTopicID,
 		},
 	}
@@ -55,7 +58,19 @@ func (EventgridNamespaceTopicIdAssociationResource) ResourceType() string {
 	return "azurerm_eventgrid_namespace_topic_id_association"
 }
 
-func (r EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc {
+func (EventgridNamespaceTopicIdAssociationResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+	return namespaces.ValidateNamespaceID
+}
+
+func (EventgridNamespaceTopicIdAssociationResource) Identity() resourceids.ResourceId {
+	return &namespaces.NamespaceId{}
+}
+
+func (EventgridNamespaceTopicIdAssociationResource) IdentityType() pluginsdk.ResourceTypeForIdentity {
+	return pluginsdk.ResourceTypeForIdentityVirtual
+}
+
+func (EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -65,7 +80,7 @@ func (r EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc 
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			eventgridNamespaceId, err := namespaces.ParseNamespaceID(config.EventgridNamespaceId)
+			id, err := namespaces.ParseNamespaceID(config.EventgridNamespaceId)
 			if err != nil {
 				return err
 			}
@@ -73,35 +88,73 @@ func (r EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc 
 			locks.ByID(config.EventgridNamespaceId)
 			defer locks.UnlockByID(config.EventgridNamespaceId)
 
-			existing, err := client.Get(ctx, *eventgridNamespaceId)
+			existing, err := client.Get(ctx, *id)
 			if err != nil {
-				return fmt.Errorf("retrieving %s: %+v", *eventgridNamespaceId, err)
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
 			}
 
 			if existing.Model == nil {
-				return fmt.Errorf("retrieving %s: `model` was nil", *eventgridNamespaceId)
+				return fmt.Errorf("retrieving %s: `model` was nil", *id)
 			}
 			if existing.Model.Properties == nil {
-				return fmt.Errorf("retrieving %s: `properties` was nil", *eventgridNamespaceId)
+				return fmt.Errorf("retrieving %s: `properties` was nil", *id)
+			}
+
+			if existing.Model.Properties.TopicSpacesConfiguration == nil {
+				existing.Model.Properties.TopicSpacesConfiguration = &namespaces.TopicSpacesConfiguration{}
+			} else if existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId != nil {
+				return fmt.Errorf("updating %s: topic ID of `azurerm_eventgrid_namespace` resource is found to be set in multiple resources, ensure that only 1 `azurerm_eventgrid_namespace_topic_id_association` resource is set without setting `topic_spaces_configuration.0.route_topic_id` property of `azurerm_eventgrid_namespace`, or only `topic_spaces_configuration.0.route_topic_id` property of `azurerm_eventgrid_namespace` is set without creating `azurerm_eventgrid_namespace_topic_id_association`, run `terraform import` on `azurerm_eventgrid_namespace_topic_id_association` if this message keeps showing up due to existing topic ID", *id)
+			}
+
+			existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId = pointer.To(config.EventgridNamespaceTopicId)
+
+			if err := client.CreateOrUpdateCallbackThenPoll(ctx, *id, *existing.Model, metadata.SetIDAndIdentityCallback(id)); err != nil {
+				return fmt.Errorf("updating Namespace Topic ID for %s: %+v", *id, err)
+			}
+
+			metadata.SetID(id)
+			return pluginsdk.SetResourceIdentityData(metadata.ResourceData, id, pluginsdk.ResourceTypeForIdentityVirtual)
+		},
+	}
+}
+
+func (EventgridNamespaceTopicIdAssociationResource) Update() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.EventGrid.NamespacesClient_v2025_02_15
+			var config EventgridNamespaceTopicIdAssociationModel
+			if err := metadata.Decode(&config); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			id, err := namespaces.ParseNamespaceID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			existing, err := client.Get(ctx, *id)
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
+			}
+
+			if existing.Model == nil {
+				return fmt.Errorf("retrieving %s: `model` was nil", *id)
+			}
+			if existing.Model.Properties == nil {
+				return fmt.Errorf("retrieving %s: `properties` was nil", *id)
 			}
 
 			if existing.Model.Properties.TopicsConfiguration == nil {
 				existing.Model.Properties.TopicSpacesConfiguration = &namespaces.TopicSpacesConfiguration{}
 			}
 
-			if !metadata.ResourceData.IsNewResource() {
-				if existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId != nil {
-					return fmt.Errorf("updating %s: topic ID of `azurerm_eventgrid_namespace` resource is found to be set in multiple resources, ensure that only 1 `azurerm_eventgrid_namespace_topic_id_association` resource is set, or only `topic_spaces_configuration.0.route_topic_id` property of `azurerm_eventgrid_namespace` is set without creating `azurerm_eventgrid_namespace_topic_id_association`, run `terraform import` on `azurerm_eventgrid_namespace_topic_id_association` if this message keeps showing up due to existing topic ID", *eventgridNamespaceId)
-				}
-			}
-
 			existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId = pointer.To(config.EventgridNamespaceTopicId)
 
-			if err := client.CreateOrUpdateCallbackThenPoll(ctx, *eventgridNamespaceId, *existing.Model, metadata.SetIDCallback(eventgridNamespaceId)); err != nil {
-				return fmt.Errorf("updating Namespace Topic ID for %s: %+v", *eventgridNamespaceId, err)
+			if err := client.CreateOrUpdateCallbackThenPoll(ctx, *id, *existing.Model, metadata.SetIDCallback(id)); err != nil {
+				return fmt.Errorf("updating Namespace Topic ID for %s: %+v", *id, err)
 			}
 
-			metadata.SetID(eventgridNamespaceId)
 			return nil
 		},
 	}
@@ -141,6 +194,11 @@ func (EventgridNamespaceTopicIdAssociationResource) Read() sdk.ResourceFunc {
 					}
 				}
 			}
+
+			if err := pluginsdk.SetResourceIdentityData(metadata.ResourceData, id, pluginsdk.ResourceTypeForIdentityVirtual); err != nil {
+				return err
+			}
+
 			return metadata.Encode(&state)
 		},
 	}
@@ -156,20 +214,24 @@ func (EventgridNamespaceTopicIdAssociationResource) Delete() sdk.ResourceFunc {
 				return err
 			}
 
+			// If parent resource is not found or `TopicSpacesConfiguration` property cannot be accessed, assume that `RouteTopicResourceId` is already unset and continue to remove this resource from state
 			resp, err := client.Get(ctx, *id)
 			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return nil
+				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
 
 			if resp.Model == nil {
-				return fmt.Errorf("retrieving %s: `model` was nil", *id)
+				return nil
 			}
 			if resp.Model.Properties == nil {
-				return fmt.Errorf("retrieving %s: `properties` was nil", *id)
+				return nil
 			}
 
 			if resp.Model.Properties.TopicSpacesConfiguration == nil {
-				return fmt.Errorf("retrieving %s: `topicSpacesConfiguration` was nil", *id)
+				return nil
 			}
 
 			resp.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId = nil

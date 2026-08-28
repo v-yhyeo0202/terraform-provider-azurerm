@@ -48,8 +48,9 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 		return nil, fmt.Errorf("building EventGrid client: %+v", err)
 	}
 	return &Client{
-		NamespacesClient:      NamespacesClient,
-		NamespaceTopicsClient: NamespaceTopicsClient,
-		Client:                client,
+		NamespacesClient:             NamespacesClient,
+		NamespacesClient_v2025_02_15: NamespacesClient_v2025_02_15,
+		NamespaceTopicsClient:        NamespaceTopicsClient,
+		Client:                       client,
 	}, nil
 }
