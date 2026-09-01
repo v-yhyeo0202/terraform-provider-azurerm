@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 package eventgrid
 
 import (
@@ -17,18 +20,16 @@ import (
 
 //go:generate go run ../../tools/generator-tests resourceidentity -parent-id "eventgrid_namespace_id"
 
-type EventgridNamespaceTopicIdAssociationResource struct{}
+type EventGridNamespaceTopicIdAssociationResource struct{}
 
-var (
-	_ sdk.ResourceWithIdentity = EventgridNamespaceTopicIdAssociationResource{}
-)
+var _ sdk.ResourceWithIdentity = EventGridNamespaceTopicIdAssociationResource{}
 
-type EventgridNamespaceTopicIdAssociationModel struct {
-	EventgridNamespaceId      string `tfschema:"eventgrid_namespace_id"`
-	EventgridNamespaceTopicId string `tfschema:"eventgrid_namespace_topic_id"`
+type EventGridNamespaceTopicIdAssociationModel struct {
+	EventGridNamespaceId      string `tfschema:"eventgrid_namespace_id"`
+	EventGridNamespaceTopicId string `tfschema:"eventgrid_namespace_topic_id"`
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) Arguments() map[string]*pluginsdk.Schema {
+func (EventGridNamespaceTopicIdAssociationResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"eventgrid_namespace_id": {
 			Type:         pluginsdk.TypeString,
@@ -47,47 +48,44 @@ func (EventgridNamespaceTopicIdAssociationResource) Arguments() map[string]*plug
 	}
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) Attributes() map[string]*pluginsdk.Schema {
+func (EventGridNamespaceTopicIdAssociationResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{}
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) ModelObject() interface{} {
-	return &EventgridNamespaceTopicIdAssociationModel{}
+func (EventGridNamespaceTopicIdAssociationResource) ModelObject() interface{} {
+	return &EventGridNamespaceTopicIdAssociationModel{}
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) ResourceType() string {
+func (EventGridNamespaceTopicIdAssociationResource) ResourceType() string {
 	return "azurerm_eventgrid_namespace_topic_id_association"
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+func (EventGridNamespaceTopicIdAssociationResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return namespaces.ValidateNamespaceID
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) Identity() resourceids.ResourceId {
+func (EventGridNamespaceTopicIdAssociationResource) Identity() resourceids.ResourceId {
 	return &namespaces.NamespaceId{}
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) IdentityType() pluginsdk.ResourceTypeForIdentity {
+func (EventGridNamespaceTopicIdAssociationResource) IdentityType() pluginsdk.ResourceTypeForIdentity {
 	return pluginsdk.ResourceTypeForIdentityVirtual
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc {
+func (EventGridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.EventGrid.NamespacesClient_v2025_02_15
-			var config EventgridNamespaceTopicIdAssociationModel
+			var config EventGridNamespaceTopicIdAssociationModel
 			if err := metadata.Decode(&config); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			id, err := namespaces.ParseNamespaceID(config.EventgridNamespaceId)
+			id, err := namespaces.ParseNamespaceID(config.EventGridNamespaceId)
 			if err != nil {
 				return err
 			}
-
-			locks.ByID(config.EventgridNamespaceId)
-			defer locks.UnlockByID(config.EventgridNamespaceId)
 
 			existing, err := client.Get(ctx, *id)
 			if err != nil {
@@ -105,7 +103,7 @@ func (EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc {
 				existing.Model.Properties.TopicSpacesConfiguration = &namespaces.TopicSpacesConfiguration{}
 			}
 
-			existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId = pointer.To(config.EventgridNamespaceTopicId)
+			existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId = pointer.To(config.EventGridNamespaceTopicId)
 
 			if err := client.CreateOrUpdateCallbackThenPoll(ctx, *id, *existing.Model, metadata.SetIDAndIdentityCallback(id)); err != nil {
 				return fmt.Errorf("updating Namespace Topic ID for %s: %+v", *id, err)
@@ -117,12 +115,12 @@ func (EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc {
 	}
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) Read() sdk.ResourceFunc {
+func (EventGridNamespaceTopicIdAssociationResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.EventGrid.NamespacesClient_v2025_02_15
-			var config EventgridNamespaceTopicIdAssociationModel
+			var config EventGridNamespaceTopicIdAssociationModel
 			if err := metadata.Decode(&config); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
@@ -140,14 +138,14 @@ func (EventgridNamespaceTopicIdAssociationResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
 
-			state := EventgridNamespaceTopicIdAssociationModel{}
+			state := EventGridNamespaceTopicIdAssociationModel{}
 
 			if model := resp.Model; model != nil {
-				state.EventgridNamespaceId = pointer.From(model.Id)
+				state.EventGridNamespaceId = pointer.From(model.Id)
 
 				if props := model.Properties; props != nil {
 					if topicSpacesConfiguration := props.TopicSpacesConfiguration; topicSpacesConfiguration != nil {
-						state.EventgridNamespaceTopicId = pointer.From(topicSpacesConfiguration.RouteTopicResourceId)
+						state.EventGridNamespaceTopicId = pointer.From(topicSpacesConfiguration.RouteTopicResourceId)
 					}
 				}
 			}
@@ -161,7 +159,7 @@ func (EventgridNamespaceTopicIdAssociationResource) Read() sdk.ResourceFunc {
 	}
 }
 
-func (EventgridNamespaceTopicIdAssociationResource) Delete() sdk.ResourceFunc {
+func (EventGridNamespaceTopicIdAssociationResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {

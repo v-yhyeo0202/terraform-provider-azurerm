@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 package eventgrid_test
 
 import (
@@ -62,7 +65,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "test" {
-  name = "acctest-evg-%[1]d"
+  name     = "acctest-evg-%[1]d"
   location = "%[2]s"
 }
 
@@ -73,7 +76,7 @@ resource "azurerm_eventgrid_namespace" "test" {
 }
 
 resource "azurerm_eventgrid_namespace_topic" "test" {
-  name = "acctest-evgnst-%[1]d"
+  name                   = "acctest-evgnst-%[1]d"
   eventgrid_namespace_id = azurerm_eventgrid_namespace.test.id
 }
 `, data.RandomInteger, data.Locations.Primary)

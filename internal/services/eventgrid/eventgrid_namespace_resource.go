@@ -587,7 +587,7 @@ func expandStaticRoutingEnrichments(input []RoutingEnrichmentModel) *[]namespace
 func flattenTopicSpacesConfiguration(topicSpacesConfig *namespaces.TopicSpacesConfiguration) ([]TopicSpacesConfigurationModel, error) {
 	var output TopicSpacesConfigurationModel
 	if topicSpacesConfig == nil {
-		return nil, nil
+		return []TopicSpacesConfigurationModel{}, nil
 	}
 
 	output.MaximumSessionExpiryInHours = pointer.From(topicSpacesConfig.MaximumSessionExpiryInHours)
@@ -601,7 +601,7 @@ func flattenTopicSpacesConfiguration(topicSpacesConfig *namespaces.TopicSpacesCo
 			namespaceTopicId, namespaceTopicIdErr := namespacetopics.ParseNamespaceTopicID(*topicSpacesConfig.RouteTopicResourceId)
 			if namespaceTopicIdErr != nil {
 				err = multierror.Append(err, namespaceTopicIdErr)
-				return nil, err
+				return []TopicSpacesConfigurationModel{}, err
 			}
 
 			routeId = namespaceTopicId.ID()
