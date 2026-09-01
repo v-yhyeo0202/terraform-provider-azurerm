@@ -20,7 +20,6 @@ import (
 type EventgridNamespaceTopicIdAssociationResource struct{}
 
 var (
-	_ sdk.ResourceWithUpdate   = EventgridNamespaceTopicIdAssociationResource{}
 	_ sdk.ResourceWithIdentity = EventgridNamespaceTopicIdAssociationResource{}
 )
 
@@ -39,8 +38,10 @@ func (EventgridNamespaceTopicIdAssociationResource) Arguments() map[string]*plug
 		},
 
 		"eventgrid_namespace_topic_id": {
-			Type:         pluginsdk.TypeString,
-			Required:     true,
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			// `ForceNew` as `eventgrid_namespace_topic_id` can only be assigned to `eventgrid_namespace_id` of same namespace and `eventgrid_namespace_topic_id` is unique for each namespace
+			ForceNew:     true,
 			ValidateFunc: namespacetopics.ValidateNamespaceTopicID,
 		},
 	}
@@ -102,8 +103,6 @@ func (EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc {
 
 			if existing.Model.Properties.TopicSpacesConfiguration == nil {
 				existing.Model.Properties.TopicSpacesConfiguration = &namespaces.TopicSpacesConfiguration{}
-			} else if existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId != nil {
-				return fmt.Errorf("updating %s: topic ID of `azurerm_eventgrid_namespace` resource is found to be set in multiple resources, ensure that only 1 `azurerm_eventgrid_namespace_topic_id_association` resource is set without setting `topic_spaces_configuration.0.route_topic_id` property of `azurerm_eventgrid_namespace`, or only `topic_spaces_configuration.0.route_topic_id` property of `azurerm_eventgrid_namespace` is set without creating `azurerm_eventgrid_namespace_topic_id_association`, run `terraform import` on `azurerm_eventgrid_namespace_topic_id_association` if this message keeps showing up due to existing topic ID", *id)
 			}
 
 			existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId = pointer.To(config.EventgridNamespaceTopicId)
@@ -114,48 +113,6 @@ func (EventgridNamespaceTopicIdAssociationResource) Create() sdk.ResourceFunc {
 
 			metadata.SetID(id)
 			return pluginsdk.SetResourceIdentityData(metadata.ResourceData, id, pluginsdk.ResourceTypeForIdentityVirtual)
-		},
-	}
-}
-
-func (EventgridNamespaceTopicIdAssociationResource) Update() sdk.ResourceFunc {
-	return sdk.ResourceFunc{
-		Timeout: 30 * time.Minute,
-		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.EventGrid.NamespacesClient_v2025_02_15
-			var config EventgridNamespaceTopicIdAssociationModel
-			if err := metadata.Decode(&config); err != nil {
-				return fmt.Errorf("decoding: %+v", err)
-			}
-
-			id, err := namespaces.ParseNamespaceID(metadata.ResourceData.Id())
-			if err != nil {
-				return err
-			}
-
-			existing, err := client.Get(ctx, *id)
-			if err != nil {
-				return fmt.Errorf("retrieving %s: %+v", *id, err)
-			}
-
-			if existing.Model == nil {
-				return fmt.Errorf("retrieving %s: `model` was nil", *id)
-			}
-			if existing.Model.Properties == nil {
-				return fmt.Errorf("retrieving %s: `properties` was nil", *id)
-			}
-
-			if existing.Model.Properties.TopicsConfiguration == nil {
-				existing.Model.Properties.TopicSpacesConfiguration = &namespaces.TopicSpacesConfiguration{}
-			}
-
-			existing.Model.Properties.TopicSpacesConfiguration.RouteTopicResourceId = pointer.To(config.EventgridNamespaceTopicId)
-
-			if err := client.CreateOrUpdateCallbackThenPoll(ctx, *id, *existing.Model, metadata.SetIDCallback(id)); err != nil {
-				return fmt.Errorf("updating Namespace Topic ID for %s: %+v", *id, err)
-			}
-
-			return nil
 		},
 	}
 }

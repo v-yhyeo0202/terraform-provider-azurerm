@@ -157,8 +157,6 @@ func (r EventGridNamespaceResource) Arguments() map[string]*pluginsdk.Schema {
 					"route_topic_id": {
 						Type:     pluginsdk.TypeString,
 						Optional: true,
-						// NOTE: O+C Value is computed when `azurerm_eventgrid_namespace_topic_id_association` resource is created
-						// Computed: true,
 						ValidateFunc: validation.Any(
 							topics.ValidateTopicID,
 							namespacetopics.ValidateNamespaceTopicID,
