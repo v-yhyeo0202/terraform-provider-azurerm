@@ -10,9 +10,13 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
+	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/provider/framework"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
@@ -250,6 +254,59 @@ func TestAccVpnGatewayConnection_routeMap(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+	})
+}
+
+func TestAccVpnGatewayConnection_writeOnlySharedKey(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_vpn_gateway_connection", "test")
+	r := VPNGatewayConnectionResource{}
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
+		Steps: []resource.TestStep{
+			{
+				Config: r.writeOnlySharedKey(data, "a-secret-from-kv", 1),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("shared_key_wo_version"),
+			{
+				Config: r.writeOnlySharedKey(data, "a-secret-from-kv-updated", 2),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("shared_key_wo_version"),
+		},
+	})
+}
+
+func TestAccVpnGatewayConnection_updateToWriteOnlySharedKey(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_vpn_gateway_connection", "test")
+	r := VPNGatewayConnectionResource{}
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: framework.ProtoV5ProviderFactoriesInit(context.Background(), "azurerm"),
+		Steps: []resource.TestStep{
+			{
+				Config: r.basic(data),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("shared_key"),
+			{
+				Config: r.writeOnlySharedKey(data, "a-secret-from-kv", 1),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("shared_key", "shared_key_wo_version"),
+			{
+				Config: r.basic(data),
+				Check:  check.That(data.ResourceName).ExistsInAzure(r),
+			},
+			data.ImportStep("shared_key"),
+		},
 	})
 }
 
@@ -851,4 +908,57 @@ resource "azurerm_vpn_site" "test" {
   depends_on = [azurerm_vpn_gateway.test]
 }
 `, data.RandomInteger, data.Locations.Primary)
+}
+
+func (r VPNGatewayConnectionResource) writeOnlySharedKey(data acceptance.TestData, secret string, version int) string {
+	return fmt.Sprintf(`
+%s
+
+%s
+
+resource "azurerm_vpn_gateway_connection" "test" {
+  name               = "acctest-VpnGwConn-%[3]d"
+  vpn_gateway_id     = azurerm_vpn_gateway.test.id
+  remote_vpn_site_id = azurerm_vpn_site.test.id
+
+  routing {
+    associated_route_table = azurerm_virtual_hub.test.default_route_table_id
+
+    propagated_route_table {
+      route_table_ids = [azurerm_virtual_hub.test.default_route_table_id]
+      labels          = ["label1"]
+    }
+  }
+
+  vpn_link {
+    name             = "link1"
+    vpn_site_link_id = azurerm_vpn_site.test.link[0].id
+
+    ipsec_policy {
+      sa_lifetime_sec          = 300
+      sa_data_size_kb          = 0
+      encryption_algorithm     = "AES256"
+      integrity_algorithm      = "SHA256"
+      ike_encryption_algorithm = "AES128"
+      ike_integrity_algorithm  = "SHA256"
+      dh_group                 = "DHGroup14"
+      pfs_group                = "PFS14"
+    }
+
+    bandwidth_mbps                        = 30
+    protocol                              = "IKEv2"
+    ratelimit_enabled                     = true
+    route_weight                          = 2
+    shared_key_wo                            = ephemeral.azurerm_key_vault_secret.test.value
+	shared_key_wo_version = %[4]d
+    local_azure_ip_address_enabled        = true
+    policy_based_traffic_selector_enabled = true
+  }
+
+  vpn_link {
+    name             = "link3"
+    vpn_site_link_id = azurerm_vpn_site.test.link[1].id
+  }
+}
+`, r.template(data), acceptance.WriteOnlyKeyVaultSecretTemplate(data, secret), data.RandomInteger, version)
 }

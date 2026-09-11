@@ -4,6 +4,7 @@
 package network
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -13,6 +14,9 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2025-01-01/virtualwans"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	v2_validation "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -200,11 +204,23 @@ func resourceVPNGatewayConnection() *pluginsdk.Resource {
 						},
 
 						"shared_key": {
-							Type:     pluginsdk.TypeString,
-							Optional: true,
-							// NOTE: O+C the API generates a key for the user if not supplied
-							Computed:     true,
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							Sensitive:    true,
 							ValidateFunc: validation.StringIsNotEmpty,
+						},
+
+						"shared_key_wo": {
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							WriteOnly:    true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
+
+						"shared_key_wo_version": {
+							Type:         pluginsdk.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 
 						"bgp_enabled": {
@@ -335,6 +351,15 @@ func resourceVPNGatewayConnection() *pluginsdk.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: pluginsdk.CustomizeDiffShim(vpnGatewayConnectionCustomizeDiff),
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			v2_validation.PreferWriteOnlyAttribute(
+				cty.GetAttrPath("vpn_link").Index(cty.UnknownVal(cty.Number)).GetAttr("shared_key"),
+				cty.GetAttrPath("vpn_link").Index(cty.UnknownVal(cty.Number)).GetAttr("shared_key_wo"),
+			),
+		},
 	}
 }
 
@@ -373,13 +398,17 @@ func resourceVpnGatewayConnectionResourceCreate(d *pluginsdk.ResourceData, meta 
 			RemoteVpnSite: &virtualwans.SubResource{
 				Id: pointer.To(d.Get("remote_vpn_site_id").(string)),
 			},
-			VpnLinkConnections:   expandVpnGatewayConnectionVpnSiteLinkConnections(d.Get("vpn_link").([]interface{})),
 			RoutingConfiguration: expandVpnGatewayConnectionRoutingConfiguration(d.Get("routing").([]interface{})),
 		},
 	}
 
 	if v, ok := d.GetOk("traffic_selector_policy"); ok {
 		payload.Properties.TrafficSelectorPolicies = expandVpnGatewayConnectionTrafficSelectorPolicy(v.(*pluginsdk.Set).List())
+	}
+
+	payload.Properties.VpnLinkConnections, err = expandVpnGatewayConnectionVpnSiteLinkConnections(d.Get("vpn_link").([]interface{}), d)
+	if err != nil {
+		return err
 	}
 
 	if err := client.VpnConnectionsCreateOrUpdateCallbackThenPoll(ctx, id, payload, sdk.SetIDCallback(meta, &id, d)); err != nil {
@@ -432,7 +461,7 @@ func resourceVpnGatewayConnectionResourceRead(d *pluginsdk.ResourceData, meta in
 				return fmt.Errorf(`setting "routing": %v`, err)
 			}
 
-			if err := d.Set("vpn_link", flattenVpnGatewayConnectionVpnSiteLinkConnections(props.VpnLinkConnections)); err != nil {
+			if err := d.Set("vpn_link", flattenVpnGatewayConnectionVpnSiteLinkConnections(props.VpnLinkConnections, d)); err != nil {
 				return fmt.Errorf(`setting "vpn_link": %v`, err)
 			}
 
@@ -484,7 +513,10 @@ func resourceVpnGatewayConnectionResourceUpdate(d *pluginsdk.ResourceData, meta 
 	}
 
 	if d.HasChange("vpn_link") {
-		payload.Properties.VpnLinkConnections = expandVpnGatewayConnectionVpnSiteLinkConnections(d.Get("vpn_link").([]interface{}))
+		payload.Properties.VpnLinkConnections, err = expandVpnGatewayConnectionVpnSiteLinkConnections(d.Get("vpn_link").([]interface{}), d)
+		if err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange("traffic_selector_policy") {
@@ -519,13 +551,13 @@ func resourceVpnGatewayConnectionResourceDelete(d *pluginsdk.ResourceData, meta 
 	return nil
 }
 
-func expandVpnGatewayConnectionVpnSiteLinkConnections(input []interface{}) *[]virtualwans.VpnSiteLinkConnection {
+func expandVpnGatewayConnectionVpnSiteLinkConnections(input []interface{}, d *pluginsdk.ResourceData) (*[]virtualwans.VpnSiteLinkConnection, error) {
 	if len(input) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	result := make([]virtualwans.VpnSiteLinkConnection, 0)
-	for _, itemRaw := range input {
+	for i, itemRaw := range input {
 		item := itemRaw.(map[string]interface{})
 		v := virtualwans.VpnSiteLinkConnection{
 			Name: pointer.To(item["name"].(string)),
@@ -561,20 +593,29 @@ func expandVpnGatewayConnectionVpnSiteLinkConnections(input []interface{}) *[]vi
 		if sharedKey := item["shared_key"]; sharedKey != "" {
 			v.Properties.SharedKey = pointer.To(sharedKey.(string))
 		}
+
+		sharedKeyWo, err := pluginsdk.GetWriteOnly(d, fmt.Sprintf("vpn_link.%d.shared_key_wo", i), cty.String)
+		if err != nil {
+			return nil, err
+		}
+
+		if !sharedKeyWo.IsNull() {
+			v.Properties.SharedKey = pointer.To(sharedKeyWo.AsString())
+		}
 		result = append(result, v)
 	}
 
-	return &result
+	return &result, nil
 }
 
-func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnSiteLinkConnection) interface{} {
+func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnSiteLinkConnection, d *pluginsdk.ResourceData) interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
 
 	output := make([]interface{}, 0)
 
-	for _, item := range *input {
+	for i, item := range *input {
 		if item.Properties == nil {
 			continue
 		}
@@ -606,7 +647,7 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 			"protocol":                              connectionProtocolType,
 			"connection_mode":                       vpnLinkConnectionMode,
 			"bandwidth_mbps":                        int(pointer.From(props.ConnectionBandwidth)),
-			"shared_key":                            pointer.From(props.SharedKey),
+			"shared_key_wo_version":                 d.Get(fmt.Sprintf("vpn_link.%d.shared_key_wo_version", i)),
 			"bgp_enabled":                           pointer.From(props.EnableBgp),
 			"ipsec_policy":                          flattenVpnGatewayConnectionIpSecPolicies(props.IPsecPolicies),
 			"ratelimit_enabled":                     pointer.From(props.EnableRateLimiting),
@@ -864,4 +905,22 @@ func flattenVpnGatewayConnectionCustomBgpAddresses(input *[]virtualwans.GatewayC
 	}
 
 	return results
+}
+
+func vpnGatewayConnectionCustomizeDiff(ctx context.Context, d *pluginsdk.ResourceDiff, _ interface{}) error {
+	if vpnLinks, ok := d.GetOk("vpn_link"); ok {
+		for i := range vpnLinks.([]interface{}) {
+			_, sharedKeyOk := d.GetOk(fmt.Sprintf("vpn_link.%d.shared_key", i))
+			_, sharedKeyWoOk := d.GetOk(fmt.Sprintf("vpn_link.%d.shared_key_wo", i))
+			_, sharedKeyWoVersionOk := d.GetOk(fmt.Sprintf("vpn_link.%d.shared_key_wo_version", i))
+
+			if sharedKeyOk && sharedKeyWoOk {
+				return fmt.Errorf("`vpn_link.%d.shared_key` cannot be set at the same time with `vpn_link.%d.shared_key_wo`", i, i)
+			} else if sharedKeyWoOk != sharedKeyWoVersionOk {
+				return fmt.Errorf("both `vpn_link.%d.shared_key_wo` and `vpn_link.%d.shared_key_wo_version` should be set at the same time", i, i)
+			}
+		}
+	}
+
+	return nil
 }
