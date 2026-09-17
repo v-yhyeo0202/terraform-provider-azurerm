@@ -637,6 +637,11 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 			vpnSiteLinkId = *props.VpnSiteLink.Id
 		}
 
+		sharedKey := ""
+		if rawSharedKey, ok := d.GetOk(fmt.Sprintf("vpn_link.%d.shared_key", i)); ok {
+			sharedKey = rawSharedKey.(string)
+		}
+
 		output = append(output, map[string]interface{}{
 			"name":                                  pointer.From(item.Name),
 			"dpd_timeout_seconds":                   int(pointer.From(props.DpdTimeoutSeconds)),
@@ -647,6 +652,7 @@ func flattenVpnGatewayConnectionVpnSiteLinkConnections(input *[]virtualwans.VpnS
 			"protocol":                              connectionProtocolType,
 			"connection_mode":                       vpnLinkConnectionMode,
 			"bandwidth_mbps":                        int(pointer.From(props.ConnectionBandwidth)),
+			"shared_key":                            sharedKey,
 			"shared_key_wo_version":                 d.Get(fmt.Sprintf("vpn_link.%d.shared_key_wo_version", i)),
 			"bgp_enabled":                           pointer.From(props.EnableBgp),
 			"ipsec_policy":                          flattenVpnGatewayConnectionIpSecPolicies(props.IPsecPolicies),
@@ -911,7 +917,8 @@ func vpnGatewayConnectionCustomizeDiff(ctx context.Context, d *pluginsdk.Resourc
 	if vpnLinks, ok := d.GetOk("vpn_link"); ok {
 		for i := range vpnLinks.([]interface{}) {
 			_, sharedKeyOk := d.GetOk(fmt.Sprintf("vpn_link.%d.shared_key", i))
-			_, sharedKeyWoOk := d.GetOk(fmt.Sprintf("vpn_link.%d.shared_key_wo", i))
+			// Not sure if `GetRawConfig` can be used with `WriteOnly` property, but from the tests it seems to work
+			sharedKeyWoOk := !d.GetRawConfig().AsValueMap()["vpn_link"].AsValueSlice()[i].AsValueMap()["shared_key_wo"].IsNull()
 			_, sharedKeyWoVersionOk := d.GetOk(fmt.Sprintf("vpn_link.%d.shared_key_wo_version", i))
 
 			if sharedKeyOk && sharedKeyWoOk {
