@@ -80,8 +80,9 @@ func resourceVirtualNetworkGatewayConnection() *pluginsdk.Resource {
 				Type:     pluginsdk.TypeString,
 				Optional: true,
 				// NOTE: O+C the API generates a key for the user if not supplied
-				Computed:  true,
-				Sensitive: true,
+				Computed:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"key_vault_certificate"},
 			},
 
 			"authorization_key": {
@@ -290,6 +291,39 @@ func resourceVirtualNetworkGatewayConnection() *pluginsdk.Resource {
 				},
 			},
 
+			// Naming based on portal
+			"key_vault_certificate": {
+				Type:          pluginsdk.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"shared_key"},
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"inbound_certificate_chains": {
+							Type:     pluginsdk.TypeList,
+							Required: true,
+							MinItems: 1,
+							Elem: &pluginsdk.Schema{
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+						},
+
+						"inbound_certificate_subject_name": {
+							Type:         pluginsdk.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
+
+						"outbound_certificate_path": {
+							Type:         pluginsdk.TypeString,
+							Required:     true,
+							ValidateFunc: validation.IsURLWithHTTPS,
+						},
+					},
+				},
+			},
+
 			"tags": commonschema.Tags(),
 		},
 	}
@@ -490,6 +524,10 @@ func resourceVirtualNetworkGatewayConnectionRead(d *pluginsdk.ResourceData, meta
 			return fmt.Errorf("setting `ingress_nat_rule_ids`: %+v", err)
 		}
 
+		if err := d.Set("key_vault_certificate", flattenVirtualNetworkGatewayConnectionCertificateAuthentication(props.CertificateAuthentication)); err != nil {
+			return fmt.Errorf("setting `key_vault_certificate`: %+v", err)
+		}
+
 		if err := tags.FlattenAndSet(d, model.Tags); err != nil {
 			return err
 		}
@@ -610,6 +648,10 @@ func resourceVirtualNetworkGatewayConnectionUpdate(d *pluginsdk.ResourceData, me
 		payload.Properties.IPsecPolicies = expandVirtualNetworkGatewayConnectionIpsecPolicies(d.Get("ipsec_policy").([]interface{}))
 	}
 
+	if d.HasChange("key_vault_certificate") {
+		payload.Properties.CertificateAuthentication = expandVirtualNetworkGatewayConnectionCertificateAuthentication(d)
+	}
+
 	if d.HasChange("tags") {
 		payload.Tags = tags.Expand(d.Get("tags").(map[string]interface{}))
 	}
@@ -681,6 +723,7 @@ func getVirtualNetworkGatewayConnectionProperties(d *pluginsdk.ResourceData, vir
 	connectionMode := virtualnetworkgatewayconnections.VirtualNetworkGatewayConnectionMode(d.Get("connection_mode").(string))
 
 	props := &virtualnetworkgatewayconnections.VirtualNetworkGatewayConnectionPropertiesFormat{
+		CertificateAuthentication:      expandVirtualNetworkGatewayConnectionCertificateAuthentication(d),
 		ConnectionType:                 connectionType,
 		ConnectionMode:                 pointer.To(connectionMode),
 		EnableBgp:                      pointer.To(d.Get("bgp_enabled").(bool)),
@@ -944,6 +987,27 @@ func expandGatewayCustomBgpIPAddresses(d *pluginsdk.ResourceData, bgpPeeringAddr
 	return &customBgpIpAddresses, nil
 }
 
+func expandVirtualNetworkGatewayConnectionCertificateAuthentication(d *pluginsdk.ResourceData) *virtualnetworkgatewayconnections.CertificateAuthentication {
+	rawKeyVaultCertificate, ok := d.GetOk("key_vault_certificate")
+	if !ok {
+		return nil
+	}
+
+	keyVaultCertificate := rawKeyVaultCertificate.([]interface{})[0].(map[string]interface{})
+	inboundCertificateChains := make([]string, 0)
+	for _, inboundCertificateChain := range keyVaultCertificate["inbound_certificate_chain"].([]interface{}) {
+		inboundCertificateChains = append(inboundCertificateChains, inboundCertificateChain.(string))
+	}
+
+	certificateAuthentication := &virtualnetworkgatewayconnections.CertificateAuthentication{
+		InboundAuthCertificateChain:       pointer.To(inboundCertificateChains),
+		InboundAuthCertificateSubjectName: pointer.To(keyVaultCertificate["inbound_certificate_subject_name"].(string)),
+		OutboundAuthCertificate:           pointer.To(keyVaultCertificate["outbound_certificate_path"].(string)),
+	}
+
+	return certificateAuthentication
+}
+
 func flattenVirtualNetworkGatewayConnectionIpsecPolicies(ipsecPolicies *[]virtualnetworkgatewayconnections.IPsecPolicy) []interface{} {
 	schemaIpsecPolicies := make([]interface{}, 0)
 
@@ -998,6 +1062,27 @@ func flattenVirtualNetworkGatewayConnectionTrafficSelectorPolicies(trafficSelect
 	}
 
 	return schemaTrafficSelectorPolicies
+}
+
+func flattenVirtualNetworkGatewayConnectionCertificateAuthentication(certificateAuthentication *virtualnetworkgatewayconnections.CertificateAuthentication) []interface{} {
+	if certificateAuthentication == nil {
+		return make([]interface{}, 0)
+	}
+
+	keyVaultCertificate := make(map[string]interface{})
+	if inboundAuthCertificateChain := certificateAuthentication.InboundAuthCertificateChain; inboundAuthCertificateChain != nil {
+		keyVaultCertificate["inbound_certificate_chains"] = pointer.From(inboundAuthCertificateChain)
+	}
+
+	if inboundAuthCertificateSubjectName := certificateAuthentication.InboundAuthCertificateSubjectName; inboundAuthCertificateSubjectName != nil {
+		keyVaultCertificate["inbound_certificate_subject_name"] = pointer.From(inboundAuthCertificateSubjectName)
+	}
+
+	if outboundAuthCertificate := certificateAuthentication.OutboundAuthCertificate; outboundAuthCertificate != nil {
+		keyVaultCertificate["outbound_certificate_path"] = pointer.From(outboundAuthCertificate)
+	}
+
+	return []interface{}{keyVaultCertificate}
 }
 
 func expandVirtualNetworkGatewayConnectionNatRuleIds(input []interface{}) *[]virtualnetworkgatewayconnections.SubResource {
