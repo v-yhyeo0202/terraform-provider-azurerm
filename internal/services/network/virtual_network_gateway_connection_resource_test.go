@@ -1997,7 +1997,7 @@ provider "azurerm" {
 }
 
 locals {
-  outbound_pfx_filename = "outbound.pfx"
+  outbound_pfx_filename = "/tmp/outbound.pfx"
 }
 
 resource "tls_private_key" "root" {
@@ -2095,6 +2095,9 @@ resource "tls_locally_signed_cert" "inbound" {
 resource "azurerm_resource_group" "test" {
   name     = "acctest-rg-vcn0-%[1]d"
   location = "%[2]s"
+  tags = {
+    working_dir = path.cwd
+  }
 }
 
 resource "azurerm_resource_group" "test2" {
@@ -2125,7 +2128,7 @@ resource "azurerm_key_vault_certificate" "test" {
   key_vault_id = azurerm_key_vault.test.id
 
   certificate {
-    contents = data.local_file.outbound_pfx.content_base64
+	contents = data.local_file.outbound_pfx.content_base64
     password = "Password1234!"
   }
 
