@@ -2309,8 +2309,8 @@ resource "azurerm_virtual_network_gateway" "test" {
   sku      = "VpnGw1AZ"
 
   identity {
-    type = "UserAssigned"
-	identity_ids = [azurerm_user_assigned_identity.test.id]
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.test.id]
   }
 
   ip_configuration {

@@ -409,7 +409,7 @@ func resourceVirtualNetworkGatewayConnectionCreate(d *pluginsdk.ResourceData, me
 			return fmt.Errorf("waiting for update of %s: %+v", id, err)
 		}
 	}
-
+	panic("debug0")
 	return resourceVirtualNetworkGatewayConnectionRead(d, meta)
 }
 
@@ -435,21 +435,22 @@ func resourceVirtualNetworkGatewayConnectionRead(d *pluginsdk.ResourceData, meta
 	d.Set("name", id.ConnectionName)
 	d.Set("resource_group_name", id.ResourceGroupName)
 
-	respKey, err := client.GetSharedKey(ctx, *id)
-	if err != nil {
-		return fmt.Errorf("retrieving Shared Key for %s: %+v", id, err)
-	}
-
-	if model := respKey.Model; model != nil {
-		if model.Value != "" {
-			d.Set("shared_key", model.Value)
-		}
-	}
-
 	if model := resp.Model; model != nil {
 		d.Set("location", location.NormalizeNilable(model.Location))
 
 		props := model.Properties
+		if pointer.From(props.AuthenticationType) == virtualnetworkgatewayconnections.ConnectionAuthenticationTypePSK {
+			respKey, err := client.GetSharedKey(ctx, *id)
+			if err != nil {
+				return fmt.Errorf("retrieving Shared Key for %s: %+v", id, err)
+			}
+
+			if model := respKey.Model; model != nil {
+				if model.Value != "" {
+					d.Set("shared_key", model.Value)
+				}
+			}
+		}
 
 		if string(props.ConnectionType) != "" {
 			d.Set("type", string(props.ConnectionType))
@@ -650,6 +651,17 @@ func resourceVirtualNetworkGatewayConnectionUpdate(d *pluginsdk.ResourceData, me
 
 	if d.HasChange("key_vault_certificate") {
 		payload.Properties.CertificateAuthentication = expandVirtualNetworkGatewayConnectionCertificateAuthentication(d)
+		payload.Properties.AuthenticationType = nil
+		if payload.Properties.CertificateAuthentication != nil {
+			payload.Properties.AuthenticationType = pointer.To(virtualnetworkgatewayconnections.ConnectionAuthenticationTypeCertificate)
+		}
+	}
+
+	if d.HasChange("shared_key") {
+		payload.Properties.AuthenticationType = nil
+		if _, ok := d.GetOk("shared_key"); ok {
+			payload.Properties.AuthenticationType = pointer.To(virtualnetworkgatewayconnections.ConnectionAuthenticationTypePSK)
+		}
 	}
 
 	if d.HasChange("tags") {
@@ -804,6 +816,12 @@ func getVirtualNetworkGatewayConnectionProperties(d *pluginsdk.ResourceData, vir
 
 	if v, ok := d.GetOk("shared_key"); ok {
 		props.SharedKey = pointer.To(v.(string))
+	}
+
+	if props.CertificateAuthentication != nil {
+		props.AuthenticationType = pointer.To(virtualnetworkgatewayconnections.ConnectionAuthenticationTypeCertificate)
+	} else if props.SharedKey != nil {
+		props.AuthenticationType = pointer.To(virtualnetworkgatewayconnections.ConnectionAuthenticationTypePSK)
 	}
 
 	if v, ok := d.GetOk("connection_protocol"); ok {
@@ -995,7 +1013,7 @@ func expandVirtualNetworkGatewayConnectionCertificateAuthentication(d *pluginsdk
 
 	keyVaultCertificate := rawKeyVaultCertificate.([]interface{})[0].(map[string]interface{})
 	inboundCertificateChains := make([]string, 0)
-	for _, inboundCertificateChain := range keyVaultCertificate["inbound_certificate_chain"].([]interface{}) {
+	for _, inboundCertificateChain := range keyVaultCertificate["inbound_certificate_chains"].([]interface{}) {
 		inboundCertificateChains = append(inboundCertificateChains, inboundCertificateChain.(string))
 	}
 
