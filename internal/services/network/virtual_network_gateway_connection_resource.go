@@ -409,7 +409,7 @@ func resourceVirtualNetworkGatewayConnectionCreate(d *pluginsdk.ResourceData, me
 			return fmt.Errorf("waiting for update of %s: %+v", id, err)
 		}
 	}
-	panic("debug0")
+
 	return resourceVirtualNetworkGatewayConnectionRead(d, meta)
 }
 
