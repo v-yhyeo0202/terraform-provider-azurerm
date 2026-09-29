@@ -261,6 +261,10 @@ A `virtual_machine_scale_set_fabric` block supports the following:
 
 -> **Note:** Please refer to the [Microsoft Documentation](https://learn.microsoft.com/azure/devops/managed-devops-pools/configure-pool-settings?view=azure-devops&tabs=azure-portal#agent-size) for more information about available SKUs.
 
+* `agent_sizes` - (Optional) The list of virtual machine sizes for instance-mix allocation. At least 1 and at most 5 sizes can be specified.
+
+~> **Note:** `sku_name` must be set as `Mix` when `agent_sizes` is specified.
+
 * `os_disk_storage_account_type` - (Optional) The storage account type for the OS disk. Possible values are `Premium`, `Standard`, and `StandardSSD`. Defaults to `Standard`.
 
 * `security` - (Optional) A `security` block as defined below.

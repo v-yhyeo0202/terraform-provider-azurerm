@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/devopsinfrastructure/2025-09-20/pools"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/devopsinfrastructure/2026-06-02/pools"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -513,7 +513,11 @@ resource "azurerm_managed_devops_pool" "test" {
       well_known_image_name = "ubuntu-24.04/latest"
       buffer                = "100"
     }
-    sku_name  = "Standard_B1ms"
+    sku_name = "Mix"
+    agent_sizes = [
+      "Standard_D2ads_v5",
+      "Standard_D2alds_v5"
+    ]
     subnet_id = azurerm_subnet.test.id
     security {
       interactive_logon_enabled = true
