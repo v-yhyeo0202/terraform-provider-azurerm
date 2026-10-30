@@ -172,7 +172,7 @@ func TestAccManagedDevOpsPool_creatorOnlyPermission(t *testing.T) {
 	})
 }
 
-func TestAccManagedDevOpsPool_multipleAgentSizeError(t *testing.T) {
+func TestAccManagedDevOpsPool_skuNameMixError(t *testing.T) {
 	requiresBasicEnvVars(t)
 
 	data := acceptance.BuildTestData(t, "azurerm_managed_devops_pool", "test")
@@ -180,7 +180,21 @@ func TestAccManagedDevOpsPool_multipleAgentSizeError(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config:      r.multipleAgentSizeError(data),
+			Config:      r.skuNameMixError(data),
+			ExpectError: regexp.MustCompile("`virtual_machine_scale_set_fabric.0.agent_sizes` property must be set when `virtual_machine_scale_set_fabric.0.sku_name` property is set to `Mix`"),
+		},
+	})
+}
+
+func TestAccManagedDevOpsPool_skuNameNotMixError(t *testing.T) {
+	requiresBasicEnvVars(t)
+
+	data := acceptance.BuildTestData(t, "azurerm_managed_devops_pool", "test")
+	r := ManagedDevOpsPoolResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config:      r.skuNameNotMixError(data),
 			ExpectError: regexp.MustCompile("`virtual_machine_scale_set_fabric.0.sku_name` property must be set to `Mix` when `virtual_machine_scale_set_fabric.0.agent_sizes` property is set"),
 		},
 	})
@@ -333,6 +347,7 @@ func (ManagedDevOpsPoolResource) roleAssignmentsConfig() string {
 provider "azuread" {}
 
 data "azuread_service_principal" "devops_infrastructure" {
+  # DevOps infrastructure application ID according to https://www.azadvertizer.net/azresourcetypes/microsoft.devopsinfrastructure_operations.html
   client_id = "31687f79-5e43-4c1e-8c63-d9f4bff5cf8b"
 }
 
@@ -813,7 +828,50 @@ resource "azurerm_managed_devops_pool" "test" {
 `, r.template(data), r.keyVaultConfig(), r.networkingConfig(data), r.roleAssignmentsConfig(), data.RandomInteger, os.Getenv("ARM_MANAGED_DEVOPS_ORG_URL_UPDATED"), os.Getenv("ARM_MANAGED_DEVOPS_ORG_PROJECT"), os.Getenv("ARM_MANAGED_DEVOPS_ADMIN_EMAIL"))
 }
 
-func (r ManagedDevOpsPoolResource) multipleAgentSizeError(data acceptance.TestData) string {
+func (r ManagedDevOpsPoolResource) skuNameMixError(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%s
+
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_managed_devops_pool" "test" {
+  name                = "acctest-pool-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+
+  maximum_concurrency   = 2
+  dev_center_project_id = azurerm_dev_center_project.test.id
+
+  azure_devops_organization {
+    organization {
+      parallelism = 2
+      url         = "%s"
+    }
+  }
+
+  stateless_agent {}
+
+  virtual_machine_scale_set_fabric {
+	image {
+      id      = data.azurerm_platform_image.test.id
+      aliases = ["marketplace image"]
+      buffer  = "0"
+    }
+    image {
+      id      = data.azurerm_platform_image.test2.id
+      aliases = ["marketplace image 2"]
+      buffer  = "100"
+    }
+
+    sku_name = "Mix"
+  }
+}
+`, r.template(data), data.RandomInteger, os.Getenv("ARM_MANAGED_DEVOPS_ORG_URL"))
+}
+
+func (r ManagedDevOpsPoolResource) skuNameNotMixError(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
 

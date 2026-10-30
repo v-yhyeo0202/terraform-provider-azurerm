@@ -728,8 +728,12 @@ func (ManagedDevOpsPoolResource) CustomizeDiff() sdk.ResourceFunc {
 				}
 			}
 
-			if len(model.VirtualMachineScaleSetFabric) > 0 && len(model.VirtualMachineScaleSetFabric[0].AgentSizes) > 0 && model.VirtualMachineScaleSetFabric[0].SkuName != "Mix" {
-				return errors.New("`virtual_machine_scale_set_fabric.0.sku_name` property must be set to `Mix` when `virtual_machine_scale_set_fabric.0.agent_sizes` property is set")
+			if len(model.VirtualMachineScaleSetFabric) > 0 {
+				if len(model.VirtualMachineScaleSetFabric[0].AgentSizes) > 0 && model.VirtualMachineScaleSetFabric[0].SkuName != "Mix" {
+					return errors.New("`virtual_machine_scale_set_fabric.0.sku_name` property must be set to `Mix` when `virtual_machine_scale_set_fabric.0.agent_sizes` property is set")
+				} else if len(model.VirtualMachineScaleSetFabric[0].AgentSizes) == 0 && model.VirtualMachineScaleSetFabric[0].SkuName == "Mix" {
+					return errors.New("`virtual_machine_scale_set_fabric.0.agent_sizes` property must be set when `virtual_machine_scale_set_fabric.0.sku_name` property is set to `Mix`")
+				}
 			}
 
 			return nil
