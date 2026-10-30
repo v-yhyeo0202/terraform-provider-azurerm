@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/devopsinfrastructure/2025-09-20/pools"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/devopsinfrastructure/2026-06-02/pools"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -150,7 +150,7 @@ func TestAccManagedDevOpsPool_CompleteWithPermission(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("azure_devops_organization.0.permission"),
 	})
 }
 
@@ -167,7 +167,7 @@ func TestAccManagedDevOpsPool_creatorOnlyPermission(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("azure_devops_organization.0.permission"),
 	})
 }
 
@@ -318,7 +318,7 @@ func (ManagedDevOpsPoolResource) roleAssignmentsConfig() string {
 provider "azuread" {}
 
 data "azuread_service_principal" "devops_infrastructure" {
-  display_name = "DevOpsInfrastructure"
+  client_id = "31687f79-5e43-4c1e-8c63-d9f4bff5cf8b"
 }
 
 resource "azurerm_role_assignment" "devops_infrastructure_vnet_reader" {
@@ -361,9 +361,9 @@ resource "azurerm_managed_devops_pool" "test" {
 
   virtual_machine_scale_set_fabric {
     image {
-      well_known_image_name = "ubuntu-24.04/latest"
+      id = data.azurerm_platform_image.test.id
     }
-    sku_name = "Standard_B1s"
+    sku_name = "Standard_D2plds_v5"
   }
 }
 `, r.template(data), data.RandomInteger, os.Getenv("ARM_MANAGED_DEVOPS_ORG_URL"))
@@ -400,9 +400,9 @@ resource "azurerm_managed_devops_pool" "test" {
 
   virtual_machine_scale_set_fabric {
     image {
-      well_known_image_name = "ubuntu-24.04/latest"
+      id = data.azurerm_platform_image.test.id
     }
-    sku_name = "Standard_B1s"
+    sku_name = "Standard_D2plds_v5"
   }
 }
 `, r.template(data), data.RandomInteger, os.Getenv("ARM_MANAGED_DEVOPS_ORG_URL"))
@@ -431,10 +431,9 @@ resource "azurerm_managed_devops_pool" "import" {
 
   virtual_machine_scale_set_fabric {
     image {
-      well_known_image_name = "ubuntu-24.04/latest"
-      buffer                = "*"
+      id = data.azurerm_platform_image.test.id
     }
-    sku_name = "Standard_B1s"
+    sku_name = "Standard_D2plds_v5"
   }
 }
 `, r.basic(data), os.Getenv("ARM_MANAGED_DEVOPS_ORG_URL"))
@@ -509,11 +508,15 @@ resource "azurerm_managed_devops_pool" "test" {
       buffer  = "0"
     }
     image {
-      aliases               = ["well known image", "22.04 version"]
-      well_known_image_name = "ubuntu-24.04/latest"
-      buffer                = "100"
+      id      = data.azurerm_platform_image.test2.id
+      aliases = ["marketplace image 2"]
+      buffer  = "100"
     }
-    sku_name  = "Standard_B1ms"
+    sku_name = "Mix"
+    agent_sizes = [
+      "Standard_D2plds_v5",
+      "Standard_D2pls_v5"
+    ]
     subnet_id = azurerm_subnet.test.id
     security {
       interactive_logon_enabled = true
@@ -625,11 +628,11 @@ resource "azurerm_managed_devops_pool" "test" {
       buffer  = "0"
     }
     image {
-      aliases               = ["well known image", "22.04 version"]
-      well_known_image_name = "ubuntu-24.04/latest"
-      buffer                = "100"
+      id      = data.azurerm_platform_image.test2.id
+      aliases = ["marketplace image 2"]
+      buffer  = "100"
     }
-    sku_name = "Standard_B1ms"
+    sku_name = "Standard_D2plds_v5"
     security {
       interactive_logon_enabled = true
       key_vault_management {
@@ -748,11 +751,11 @@ resource "azurerm_managed_devops_pool" "test" {
       buffer  = "0"
     }
     image {
-      aliases               = ["well known image", "22.04 version"]
-      well_known_image_name = "ubuntu-24.04/latest"
-      buffer                = "100"
+      id      = data.azurerm_platform_image.test2.id
+      aliases = ["marketplace image 2"]
+      buffer  = "100"
     }
-    sku_name  = "Standard_B1ms"
+    sku_name  = "Standard_D2plds_v5"
     subnet_id = azurerm_subnet.test.id
     security {
       interactive_logon_enabled = true
@@ -833,9 +836,16 @@ resource "azurerm_dev_center_project" "test" {
 
 data "azurerm_platform_image" "test" {
   location  = azurerm_resource_group.test.location
-  publisher = "Canonical"
+  publisher = "canonical"
   offer     = "0001-com-ubuntu-server-jammy"
-  sku       = "22_04-lts"
+  sku       = "22_04-lts-arm64"
+}
+
+data "azurerm_platform_image" "test2" {
+  location  = azurerm_resource_group.test.location
+  publisher = "canonical"
+  offer     = "ubuntu-24_04-lts"
+  sku       = "server-arm64"
 }
 `, data.Locations.Primary, data.RandomInteger, data.RandomString)
 }
